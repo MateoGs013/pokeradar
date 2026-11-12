@@ -23,11 +23,17 @@ export const LAYER_ORDER: readonly HabitatName[] = [
 ];
 
 /**
- * Fracción del mundo por debajo de cada franja de altura (percentiles). Las proporciones quedan
- * fijas: endurecer la caída de `fields.ts` cambia la forma del continente, no cuánto mar hay.
- * Por eso el borde de mar se garantiza con un hundimiento propio (borderSink), no con la caída.
+ * Fracción del terreno natural (antes del hundimiento del borde) por debajo de cada franja de
+ * altura (percentiles). Las proporciones quedan fijas: endurecer la caída de `fields.ts` cambia la
+ * forma del continente, no cuánto mar hay. Con 55 % de mar la isla entra lejos del borde; el mar
+ * del borde lo asegura un hundimiento propio (sinkBorder), que se aplica después de los umbrales.
  */
-const HEIGHT_SHARES = { coast: 0.4, lowland: 0.48, mountain: 0.85, peak: 0.95 };
+const HEIGHT_SHARES = {
+  coast: 0.55,
+  lowland: 0.61,
+  mountain: 0.88,
+  peak: 0.955,
+};
 
 /** Dentro de la tierra baja: el 25 % más seco es árido y el 40 % más húmedo, bosque. */
 const MOISTURE_SHARES = { dry: 0.25, wet: 0.6 };

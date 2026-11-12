@@ -65,6 +65,11 @@ export function borderCells(): number[] {
   return cells;
 }
 
+/** Distancia, en celdas, de un punto de la grilla al borde más cercano. */
+export function distanceToEdge(x: number, y: number): number {
+  return Math.min(x, GRID_WIDTH - x, y, GRID_HEIGHT - y);
+}
+
 /** Distancia en celdas entre los centros de dos celdas. */
 export function cellDistance(a: number, b: number): number {
   const [ax, ay] = cellCenter(a);
