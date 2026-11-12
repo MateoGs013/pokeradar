@@ -37,6 +37,19 @@ export function gridToLngLat(x: number, y: number): Position {
   ];
 }
 
+/**
+ * [lng, lat] → índice de la celda que contiene ese punto: la vuelta de gridToLngLat. La usa el
+ * chequeo de las señales para ver, desde la posición que viaja al mapa, en qué celda cayó cada una.
+ */
+export function lngLatToCell([lng, lat]: Position): number {
+  const x = Math.floor((lng - WORLD_BOUNDS.west) / DEGREES_PER_CELL);
+  const y = Math.floor((WORLD_BOUNDS.north - lat) / DEGREES_PER_CELL);
+  if (x < 0 || x >= GRID_WIDTH || y < 0 || y >= GRID_HEIGHT) {
+    throw new RangeError(`Punto fuera del mundo: [${lng}, ${lat}]`);
+  }
+  return cellIndex(x, y);
+}
+
 function round4(value: number): number {
   return Math.round(value * 10_000) / 10_000;
 }

@@ -18,6 +18,17 @@ export interface BiomeCollection {
   features: BiomeFeature[];
 }
 
+/**
+ * Una señal del mundo: dónde aparece una especie. Es lo único de las señales que viaja al
+ * navegador; el nombre y los datos de la especie se piden al identificarla.
+ */
+export interface Spawn {
+  /** id de la especie en PokéAPI. Cada especie aparece una sola vez, así que identifica a la señal. */
+  speciesId: number;
+  habitat: HabitatName;
+  position: Position;
+}
+
 export interface World {
   seed: number;
   /** Polígonos de los 9 biomas, en el orden en que se pintan (de abajo hacia arriba). */
