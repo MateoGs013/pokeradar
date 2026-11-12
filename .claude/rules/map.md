@@ -10,8 +10,9 @@ paths:
   Client Component que envuelve al mapa, nunca en un Server Component.
 - El mapa se crea una sola vez (en un efecto, guardado en un ref) y se destruye con `map.remove()` al desmontar.
   Nada de recrearlo cuando cambian props: se actualizan fuentes y capas.
-- Muchos elementos (señales, biomas, cobertura) van como **capas** con fuentes GeoJSON. Marcadores DOM solo para
-  pocos elementos (la señal seleccionada, las antenas).
+- Lo que son muchos elementos (biomas, cobertura de la niebla) va como **capas** con fuentes GeoJSON. Marcadores DOM
+  solo para decenas como mucho: las señales (un `<button>` dentro de un `Marker`; docs/decisiones.md, "Señales") y
+  las antenas.
 - La niebla es una **capa del mapa** (máscara), no elementos HTML encima del canvas.
 - Cámara: `flyTo` con `padding` según el panel abierto (lateral en desktop, abajo en mobile). Con movimiento reducido,
   `jumpTo` con el mismo destino y padding.

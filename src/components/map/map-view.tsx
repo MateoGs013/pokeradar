@@ -10,10 +10,12 @@ import {
   Map as MapLibreMap,
   setWorkerUrl,
 } from "maplibre-gl";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
-import type { BiomeCollection } from "@/lib/world/types";
+import type { BiomeCollection, Spawn } from "@/lib/world/types";
+
+import { SignalMarkers } from "./signal-markers";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
 // vacía. Turbopack reemplaza ese valor por una ruta `file:///ROOT/...`, así que el worker terminaba
@@ -28,6 +30,8 @@ export interface MapViewProps {
   biomes: BiomeCollection;
   /** Extensión del mundo: [[oeste, sur], [este, norte]]. */
   bounds: Bounds;
+  /** Las señales del mundo, ya ubicadas en el servidor. */
+  spawns: readonly Spawn[];
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -55,11 +59,15 @@ function biomeLayers(biomes: BiomeCollection): FillLayerSpecification[] {
   }));
 }
 
-export function MapView({ biomes, bounds }: MapViewProps) {
+export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   // Props con las que se crea el mapa. Después no se recrea: se actualizan sus fuentes.
   const initialRef = useRef({ biomes, bounds });
+  // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales. El ref sirve para
+  // usarlo desde efectos; este estado le avisa a React que puede renderizarlas.
+  const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // Crea el mapa una sola vez y lo destruye al desmontar.
   useEffect(() => {
@@ -102,12 +110,16 @@ export function MapView({ biomes, bounds }: MapViewProps) {
       map.fitBounds(initial.bounds, { animate: false });
     };
     map.on("resize", onResize);
+    const onLoad = () => setLoadedMap(map);
+    map.on("load", onLoad);
     mapRef.current = map;
 
     return () => {
       map.off("resize", onResize);
+      map.off("load", onLoad);
       map.remove();
       mapRef.current = null;
+      setLoadedMap(null);
     };
   }, []);
 
@@ -122,6 +134,17 @@ export function MapView({ biomes, bounds }: MapViewProps) {
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" />
+      {loadedMap && (
+        <SignalMarkers
+          map={loadedMap}
+          spawns={spawns}
+          selectedId={selectedId}
+          // Tocar la señal marcada la desmarca (por eso el botón usa aria-pressed).
+          onSelect={(id) =>
+            setSelectedId((current) => (current === id ? null : id))
+          }
+        />
+      )}
     </div>
   );
 }
