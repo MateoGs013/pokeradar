@@ -58,7 +58,7 @@ export default async function Home() {
       <h1 className="text-lg tracking-widest text-hud uppercase">PokéRadar</h1>
       <svg
         viewBox={`0 0 ${WORLD_BOUNDS.east - WORLD_BOUNDS.west} ${WORLD_BOUNDS.north - WORLD_BOUNDS.south}`}
-        className="aspect-[4/3] w-full rounded-md border border-border"
+        className="aspect-4/3 w-full rounded-md border border-border"
         role="img"
         aria-label="Vista previa del mundo generado, con sus 9 biomas"
       >

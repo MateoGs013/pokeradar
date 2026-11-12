@@ -2,8 +2,9 @@
 // siempre el mismo. Nunca se usa Math.random() para generar el mundo.
 
 /**
- * Generador pseudoaleatorio mulberry32 (Tommy Ettinger, dominio público; versión en JS de
- * github.com/bryc/code, jshash/PRNGs.md). Guarda un solo entero de 32 bits como estado: cada
+ * Generador pseudoaleatorio mulberry32: original en C de Tommy Ettinger (2017); versión en JS de
+ * bryc (github.com/bryc/code, jshash/PRNGs.md, en dominio público), comprobada valor por valor
+ * contra esta. Guarda un solo entero de 32 bits como estado: cada
  * llamada lo avanza con una constante y lo mezcla con multiplicaciones y desplazamientos.
  * Devuelve números en [0, 1).
  */
