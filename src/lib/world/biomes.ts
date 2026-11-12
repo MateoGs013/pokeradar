@@ -22,7 +22,11 @@ export const LAYER_ORDER: readonly HabitatName[] = [
   "rare",
 ];
 
-/** Fracción del mundo por debajo de cada franja de altura (percentiles). */
+/**
+ * Fracción del mundo por debajo de cada franja de altura (percentiles). Las proporciones quedan
+ * fijas: endurecer la caída de `fields.ts` cambia la forma del continente, no cuánto mar hay.
+ * Por eso el borde de mar se garantiza con un hundimiento propio (borderSink), no con la caída.
+ */
 const HEIGHT_SHARES = { coast: 0.4, lowland: 0.48, mountain: 0.85, peak: 0.95 };
 
 /** Dentro de la tierra baja: el 25 % más seco es árido y el 40 % más húmedo, bosque. */
@@ -87,6 +91,8 @@ export interface FieldInputs {
   cityDistance: readonly number[];
   /** Distancia de cada celda al volcán. */
   volcanoDistance: readonly number[];
+  /** Celdas de agua encerradas en tierra (ver water.ts). */
+  lakes: ReadonlySet<number>;
 }
 
 /**
@@ -102,7 +108,8 @@ export function layerFields(input: FieldInputs): Record<HabitatName, number[]> {
 
   return {
     sea: field(() => 1),
-    "waters-edge": field((i) => h(i) - t.coast),
+    // Costa (sobre el nivel del mar) y lagos: una celda de lago vale 1 para quedar adentro.
+    "waters-edge": field((i) => (input.lakes.has(i) ? 1 : h(i) - t.coast)),
     grassland: field((i) => h(i) - t.lowland),
     "rough-terrain": field((i) => Math.min(h(i) - t.lowland, t.dry - m(i))),
     forest: field((i) => Math.min(h(i) - t.lowland, m(i) - t.wet)),

@@ -20,6 +20,7 @@ import { valueAt } from "./grid";
 import { fieldToPolygons } from "./polygons";
 import { distanceField, highestCell, placeCities } from "./sites";
 import type { World } from "./types";
+import { findLakes } from "./water";
 
 /** La semilla del mundo. Cambiarla genera otro mundo; la misma semilla, siempre el mismo. */
 export const WORLD_SEED = 151;
@@ -45,6 +46,7 @@ export function generateWorld(seed: number = WORLD_SEED): World {
     thresholds,
     cityDistance: distanceField(cities),
     volcanoDistance: distanceField([highestCell(height)]),
+    lakes: findLakes(height, thresholds.coast),
   });
 
   const cells = classifyCells(fields);
