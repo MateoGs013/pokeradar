@@ -5,6 +5,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 
 import { createRandom, deriveSeed } from "@/lib/geo/random";
+import type { HabitatName } from "@/lib/pokeapi/types";
 
 import {
   assertEveryHabitat,
@@ -15,8 +16,13 @@ import {
   layerFields,
   type Thresholds,
 } from "./biomes";
-import { heightField, moistureField } from "./fields";
-import { valueAt } from "./grid";
+import {
+  moistureField,
+  SEA_BORDER_CELLS,
+  sinkBorder,
+  terrainField,
+} from "./fields";
+import { cellCenter, distanceToEdge, valueAt } from "./grid";
 import { fieldToPolygons } from "./polygons";
 import { distanceField, highestCell, placeCities } from "./sites";
 import type { World } from "./types";
@@ -29,9 +35,11 @@ const CITY_COUNT = 4;
 const CITY_MIN_SPACING = 30;
 
 export function generateWorld(seed: number = WORLD_SEED): World {
-  const height = heightField(deriveSeed(seed, "altura"));
+  // Los umbrales salen del terreno natural; el hundimiento del borde se aplica después.
+  const terrain = terrainField(deriveSeed(seed, "altura"));
   const moisture = moistureField(deriveSeed(seed, "humedad"));
-  const thresholds = computeThresholds(height, moisture);
+  const thresholds = computeThresholds(terrain, moisture);
+  const height = sinkBorder(terrain);
 
   const cities = placeCities(
     plainsCells(height, moisture, thresholds),
@@ -51,6 +59,7 @@ export function generateWorld(seed: number = WORLD_SEED): World {
 
   const cells = classifyCells(fields);
   assertEveryHabitat(cells);
+  assertSeaBorder(cells);
 
   return {
     seed,
@@ -83,6 +92,21 @@ function plainsCells(
     }
   }
   return cells;
+}
+
+/**
+ * Lanza si alguna celda de las últimas SEA_BORDER_CELLS de cada borde no es mar. borderSink lo
+ * garantiza; este chequeo lo comprueba en cada build, para no depender de mirar una captura.
+ */
+function assertSeaBorder(cells: readonly HabitatName[]): void {
+  cells.forEach((habitat, index) => {
+    const [x, y] = cellCenter(index);
+    if (distanceToEdge(x, y) < SEA_BORDER_CELLS && habitat !== "sea") {
+      throw new Error(
+        `La celda (${Math.floor(x)}, ${Math.floor(y)}) es ${habitat} dentro de la franja de mar del borde`,
+      );
+    }
+  });
 }
 
 /** Huella corta del mundo: si coincide entre local y producción, el mundo es el mismo. */
