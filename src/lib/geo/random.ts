@@ -1,5 +1,7 @@
 // Aleatoriedad con semilla: misma semilla, misma secuencia. Es lo que hace que el mundo sea
 // siempre el mismo. Nunca se usa Math.random() para generar el mundo.
+// Sin `import "server-only"`: no genera nada por sí solo y también lo puede usar el cliente
+// (por ejemplo, para repartir señales con semilla en el modo de mapa real).
 
 /**
  * Generador pseudoaleatorio mulberry32: original en C de Tommy Ettinger (2017); versión en JS de
