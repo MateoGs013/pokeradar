@@ -28,6 +28,7 @@ Agregadas por `shadcn init` (ver sección 4):
 | cn                       | ^0.5.2  | Une clases de Tailwind. Desde septiembre de 2026 reemplaza a `clsx` + `tailwind-merge`. Fuente: ui.shadcn.com/docs/changelog/2026-09-cn |
 | class-variance-authority | ^0.7.1  | Variantes de componentes (`cva`).                                                                                                       |
 | lucide-react             | ^1.72.0 | Íconos que usan los componentes de shadcn.                                                                                              |
+| tw-animate-css           | ^1.4.0  | Animaciones de entrada y salida de los componentes de shadcn.                                                                           |
 
 Instaladas para el mundo generado (versiones exactas):
 
@@ -36,7 +37,6 @@ Instaladas para el mundo generado (versiones exactas):
 | simplex-noise     | 4.0.3   | Ruido 2D para la altura y la humedad. Trae tipos propios. `createNoise2D(random)` acepta el random con semilla de `src/lib/geo/random.ts`.                                                         |
 | d3-contour        | 4.0.3   | Convierte el campo de cada bioma en polígonos (marching squares). Cada muestra de la grilla cae en el centro de su celda: el valor de la celda (1, 1) queda centrado en (1,5; 1,5). No trae tipos. |
 | @types/d3-contour | 3.0.6   | Tipos versionados para la API 3.x. Comprobado al instalar: la 4.0.3 expone la misma API (`contours().size().thresholds().smooth()` y `contour(values, threshold)`).                                |
-| tw-animate-css    | ^1.4.0  | Animaciones de entrada y salida de los componentes de shadcn.                                                                                                                                      |
 
 ### Elegidas, sin instalar (se instalan en el paso que las usa)
 
@@ -236,7 +236,7 @@ línea por línea en la charla técnica.
 | Tipografía               | IBM Plex Mono (datos) e IBM Plex Sans, con `next/font`              | Geist es la de create-next-app y se reconoce; Plex tiene el aire técnico de una sala de monitoreo.                                                                                                                                      |
 | Niebla                   | Grilla de celdas en GeoJSON con `feature-state`                     | El porcentaje de cobertura por región sale de contar celdas; transición de opacidad que se apaga con movimiento reducido. Con el tiempo disponible se busca borde suave.                                                                |
 | Señales                  | Botones del DOM solo para las señales detectadas                    | Cumple `<button>` con `aria-label` y "marcadores con sprite animado"; la niebla limita a decenas los visibles. Identificadas muestran sprite e ícono de tipo.                                                                           |
-| Mundo generado           | Se calcula una vez en el build (página estática)                    | simplex-noise + d3-contour con semilla 151, grilla de 200×150 (celdas de 0,08°). El GeoJSON de los 9 biomas pesa menos de 100 KB (93 KB con los lagos).                                                                                 |
+| Mundo generado           | Se calcula una vez en el build (página estática)                    | simplex-noise + d3-contour con semilla 151, grilla de 200×150 (celdas de 0,08°). El GeoJSON de los 9 biomas pesa unos 67 KB.                                                                                                            |
 | Caché del dataset        | `fetch` con `next: { revalidate: false }` (sin vencimiento)         | Las 386 especies y sus hábitats no cambian. Con ISR de un día la ruta dependía de PokéAPI cada 24 h sin ganar nada; así se arma una vez por deploy, igual que el mundo. Un pedido corta a los 10 s (`AbortSignal.timeout`). PR #1.      |
 | MCP                      | `next-devtools-mcp` sí; Playwright MCP y el de shadcn no, por ahora | Errores y rutas en vivo; las capturas ya las cubre `/verificar` y los componentes, el CLI de shadcn.                                                                                                                                    |
 | Skills de terceros       | Ninguna                                                             | `web-design-guidelines` ya está instalada.                                                                                                                                                                                              |
