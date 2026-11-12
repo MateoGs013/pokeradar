@@ -7,8 +7,9 @@ import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 
-import { HABITAT_PLACES } from "@/lib/world/places";
 import type { Spawn } from "@/lib/world/types";
+
+import { HABITAT_PLACES } from "./places";
 
 interface SignalMarkersProps {
   map: MapLibreMap;
