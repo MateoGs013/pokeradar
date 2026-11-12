@@ -12,6 +12,7 @@ import {
 } from "maplibre-gl";
 import { useEffect, useRef } from "react";
 
+import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type { BiomeCollection } from "@/lib/world/types";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
@@ -26,7 +27,7 @@ export interface MapViewProps {
   /** Los 9 biomas, en el orden en que se pintan (de abajo hacia arriba). */
   biomes: BiomeCollection;
   /** Extensión del mundo: [[oeste, sur], [este, norte]]. */
-  bounds: [[number, number], [number, number]];
+  bounds: Bounds;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -36,6 +37,11 @@ function cssToken(name: string): string {
   return getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
+}
+
+/** Límite del mapa: el mundo agrandado a la proporción actual del contenedor. */
+function worldLimit(world: Bounds, container: HTMLElement): Bounds {
+  return expandToAspect(world, container.clientWidth / container.clientHeight);
 }
 
 /** Una capa de relleno por bioma, en el mismo orden que la colección. */
@@ -78,7 +84,9 @@ export function MapView({ biomes, bounds }: MapViewProps) {
         ],
       },
       bounds: initial.bounds,
-      maxBounds: initial.bounds,
+      // Si el límite fuera el mundo tal cual, en una pantalla angosta MapLibre acercaría el mapa
+      // para no mostrar nada afuera, y la isla quedaría cortada a los costados.
+      maxBounds: worldLimit(initial.bounds, container),
       // El canvas de MapLibre ya es una región con nombre (role="region", y tabindex="0" para
       // moverlo con las flechas). `locale` traduce ese nombre, que por defecto es "Map".
       locale: { "Map.Title": "Mapa del mundo" },
@@ -86,9 +94,18 @@ export function MapView({ biomes, bounds }: MapViewProps) {
       dragRotate: false,
       pitchWithRotate: false,
     });
+    // Al rotar el teléfono o cambiar el tamaño de la ventana: límite nuevo y el mundo encuadrado
+    // otra vez. MapLibre se redimensiona con el límite viejo, que puede dejar el mapa acercado
+    // y la isla cortada; el límite nuevo solo impide salir, no aleja.
+    const onResize = () => {
+      map.setMaxBounds(worldLimit(initial.bounds, container));
+      map.fitBounds(initial.bounds, { animate: false });
+    };
+    map.on("resize", onResize);
     mapRef.current = map;
 
     return () => {
+      map.off("resize", onResize);
       map.remove();
       mapRef.current = null;
     };
