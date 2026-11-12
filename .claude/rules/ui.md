@@ -19,3 +19,5 @@ paths:
 - Sin librerías de efectos visuales fuera de las anotadas en `docs/decisiones.md`.
 - Mobile-first: se diseña a 390 px; paneles abajo en mobile y al costado en desktop.
 - Teclado: todo interactivo es alcanzable con Tab, con foco visible, y Esc cierra el panel abierto.
+- Un comentario o un doc que diga que algo cumple un criterio de WCAG cita el criterio y una medición; nunca de memoria
+  ni con una cuenta.
