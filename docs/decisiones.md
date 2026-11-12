@@ -208,6 +208,8 @@ accesibilidad y movimiento reducido, que habría que agregar igual. Decidido: se
 - **`packageManager: pnpm@10.34.1`** en `package.json`: lo leen el CI (`pnpm/action-setup`) y Vercel.
 - **Tipografía:** Geist y Geist Mono (las de create-next-app, con `next/font`) son provisorias. Se reemplazan por IBM
   Plex (sección 8).
+- **`server-only` sin instalar:** Next resuelve `import "server-only"` internamente; instalar el paquete es opcional.
+  Fuente: `node_modules/next/dist/docs/01-app/01-getting-started/05-server-and-client-components.md`.
 - **AGENTS.md** lo escribe y mantiene `next dev` (bloque `nextjs-agent-rules`); se commitea tal cual.
 
 ## 8. Decisiones tomadas y plan de alcance (12/11/2026)
@@ -230,6 +232,7 @@ línea por línea en la charla técnica.
 | Niebla                   | Grilla de celdas en GeoJSON con `feature-state`                     | El porcentaje de cobertura por región sale de contar celdas; transición de opacidad que se apaga con movimiento reducido. Con el tiempo disponible se busca borde suave.                                                                |
 | Señales                  | Botones del DOM solo para las señales detectadas                    | Cumple `<button>` con `aria-label` y "marcadores con sprite animado"; la niebla limita a decenas los visibles. Identificadas muestran sprite e ícono de tipo.                                                                           |
 | Mundo generado           | Se calcula una vez en el build (página estática)                    | simplex-noise + d3-contour con semilla, grilla del orden de 200×200 para que el GeoJSON no pese de más.                                                                                                                                 |
+| Caché del dataset        | `fetch` con `next: { revalidate: false }` (sin vencimiento)         | Las 386 especies y sus hábitats no cambian. Con ISR de un día la ruta dependía de PokéAPI cada 24 h sin ganar nada; así se arma una vez por deploy, igual que el mundo. Un pedido corta a los 10 s (`AbortSignal.timeout`). PR #1.      |
 | MCP                      | `next-devtools-mcp` sí; Playwright MCP y el de shadcn no, por ahora | Errores y rutas en vivo; las capturas ya las cubre `/verificar` y los componentes, el CLI de shadcn.                                                                                                                                    |
 | Skills de terceros       | Ninguna                                                             | `web-design-guidelines` ya está instalada.                                                                                                                                                                                              |
 

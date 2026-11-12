@@ -15,4 +15,5 @@ paths:
   `Math.random()` en la generación.
 - El mundo y el dataset se generan en el servidor: esos módulos llevan `import "server-only"`.
 - Funciones puras y chicas: entrada → salida, sin efectos, fáciles de explicar y probar.
+- Los comentarios que explican un cruce de datos citan el endpoint y el campo que lo justifican.
 - Los datos comprobados de la API están en `docs/hallazgos-pokeapi.md`; si algo los contradice, se actualiza ese archivo.

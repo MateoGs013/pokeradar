@@ -12,6 +12,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | ---- | ---------- | ------ | ---- | -------------------------------------------------------------------------------------------- |
 | E-01 | 2026-11-12 | IA     | docs | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible |
 | E-02 | 2026-11-12 | IA     | docs | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                  |
+| E-03 | 2026-11-12 | IA     | data | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset      |
 
 ## Formato de cada entrada
 
@@ -58,3 +59,15 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Prevención:** se agregó a CLAUDE.md, en "Forma de trabajo": "Los comandos que se le pasan a Mateo para el `!`
   corren en Git Bash: los flags de Windows van con doble barra (`taskkill //PID 123 //F`) o se pasan como comando de
   PowerShell."
+
+### E-03 · 2026-11-12 17:32 · IA · data
+
+- **Síntoma:** en `src/lib/pokeapi/dataset.ts`, el comentario del cruce de tipos decía que las formas alternativas
+  "se ignoran las que no tienen hábitat".
+- **Causa:** Claude explicó el resultado sin mirar el dato. `/type` lista Pokémon (`/pokemon/{id}`), no especies, y
+  un `/pokemon` no tiene hábitat. La forma por defecto comparte el id con su especie; las formas alternativas (ids
+  desde 10001) se descartan porque su id no cruza con ninguna especie con hábitat.
+- **Detección:** /pr-review del PR #1 (review delegada a un subagente de solo lectura).
+- **Arreglo:** comentario reescrito en `indexTypes`, en el commit `refactor(data)` del PR #1.
+- **Prevención:** se agregó a `.claude/rules/data.md`: "Los comentarios que explican un cruce de datos citan el
+  endpoint y el campo que lo justifican."
