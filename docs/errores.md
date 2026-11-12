@@ -11,6 +11,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | Id   | Fecha      | Origen | Área | Resumen                                                                                      |
 | ---- | ---------- | ------ | ---- | -------------------------------------------------------------------------------------------- |
 | E-01 | 2026-11-12 | IA     | docs | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible |
+| E-02 | 2026-11-12 | IA     | docs | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                  |
 
 ## Formato de cada entrada
 
@@ -43,3 +44,17 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Arreglo:** plan de alcance rehecho para unas 48 h de trabajo (`docs/decisiones.md`, sección 8).
 - **Prevención:** se agregó a "Datos del mail" de `docs/consigna.md` la línea "Disponibilidad: al menos 48 h de
   trabajo hasta el cierre del sábado. Las 3–4 h de la consigna son la estimación del MVP, no un límite."
+
+### E-02 · 2026-11-12 16:00 · IA · docs
+
+- **Síntoma:** Mateo no pudo cerrar el servidor viejo del puerto 3000 con el comando que le pasó Claude,
+  `! taskkill /PID 44484 /F`.
+- **Causa:** causa probable, sin confirmar con la salida que vio Mateo: el `!` de Claude Code corre en Git Bash, que
+  convierte los argumentos que empiezan con `/` en rutas de Windows (`/PID` pasa a `C:/Program Files/Git/PID`). La
+  misma conversión ya había roto el argumento `/` de `capturar.mjs`. En Git Bash hay que escribir `//PID` y `//F`.
+- **Detección:** a mano, Mateo avisó que no lograba cerrar el puerto.
+- **Arreglo:** Claude cerró el árbol de procesos con `taskkill //PID 56148 //T //F` (CLI de `next dev`, servidor 44484
+  e hijo 68656) y comprobó que el puerto 3000 quedó libre.
+- **Prevención:** se agregó a CLAUDE.md, en "Forma de trabajo": "Los comandos que se le pasan a Mateo para el `!`
+  corren en Git Bash: los flags de Windows van con doble barra (`taskkill //PID 123 //F`) o se pasan como comando de
+  PowerShell."
