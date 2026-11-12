@@ -30,6 +30,21 @@
   --hud-cian: #4fd8e8;
   --hud-accent: var(--hud-verde);
 
+  /*
+   * Biomas del mundo generado, uno por hábitat de PokéAPI. Tonos oscuros y apagados (mapa de
+   * sala de monitoreo) para que los acentos del HUD resalten encima. Son fijos: no cambian con
+   * data-hud. El mapa los lee con getComputedStyle al montarse.
+   */
+  --bioma-sea: #08161a;
+  --bioma-waters-edge: #11303a;
+  --bioma-grassland: #17301f;
+  --bioma-rough-terrain: #33301d;
+  --bioma-forest: #123a26;
+  --bioma-urban: #34403c;
+  --bioma-mountain: #27453a;
+  --bioma-cave: #3b5a4c;
+  --bioma-rare: #6e3418;
+
   /* Tokens que leen los componentes de shadcn, conectados al HUD. */
   --background: var(--hud-bg);
   --foreground: var(--hud-fg);
@@ -84,6 +99,7 @@
   --color-hud-verde: var(--hud-verde);
   --color-hud-ambar: var(--hud-ambar);
   --color-hud-cian: var(--hud-cian);
+  --color-bioma-sea: var(--bioma-sea);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
