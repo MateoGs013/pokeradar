@@ -20,8 +20,12 @@ import { createRandom, deriveSeed } from "./random";
 /** Cuántas señales tiene el mundo. Cada una es una especie distinta. */
 export const SPAWN_COUNT = 40;
 
-/** Separación mínima entre señales, en celdas de 0,08°: a 390 px de ancho, unos 23 px. */
-const MIN_SPACING = 12;
+/**
+ * Separación mínima entre señales, en celdas de 0,08°. Los botones miden 20 px, y para botones de
+ * menos de 24 px WCAG 2.5.8 pide los centros a 24 px o más. Medido con 14 celdas: 25,2 px a 360 px
+ * de ancho, 26,3 a 375 y 27,3 a 390. Con 12 quedaban a 23,3 px a 390 (docs/errores.md, E-10).
+ */
+const MIN_SPACING = 14;
 
 /** Las señales del mar van a lo sumo a esta cantidad de pasos de celda de la costa. */
 const SEA_REACH = 8;
