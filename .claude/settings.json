@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/lint-file.mjs\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/typecheck.mjs\"",
+            "timeout": 180
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)"
+    ],
+    "ask": [
+      "Bash(git push)",
+      "Bash(git push *)",
+      "Bash(gh repo create *)",
+      "Bash(gh pr create *)",
+      "Bash(gh pr merge *)",
+      "Bash(gh release create *)",
+      "Bash(vercel)",
+      "Bash(vercel *)",
+      "Bash(npx vercel *)",
+      "Bash(pnpm dlx vercel *)",
+      "Bash(netlify *)",
+      "Bash(npx netlify *)",
+      "Bash(pnpm dlx netlify *)",
+      "PowerShell(git push)",
+      "PowerShell(git push *)",
+      "PowerShell(gh repo create *)",
+      "PowerShell(gh pr create *)",
+      "PowerShell(gh pr merge *)",
+      "PowerShell(gh release create *)",
+      "PowerShell(vercel)",
+      "PowerShell(vercel *)",
+      "PowerShell(npx vercel *)",
+      "PowerShell(pnpm dlx vercel *)",
+      "PowerShell(netlify *)",
+      "PowerShell(npx netlify *)",
+      "PowerShell(pnpm dlx netlify *)"
+    ]
+  }
+}

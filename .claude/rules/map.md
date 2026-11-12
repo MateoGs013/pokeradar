@@ -1,0 +1,21 @@
+---
+paths:
+  - "src/components/map/**"
+  - "src/components/radar/**"
+---
+
+# Mapa y radar
+
+- Todo acá es código de cliente (`"use client"`). La carga diferida con `dynamic(..., { ssr: false })` vive en un
+  Client Component que envuelve al mapa, nunca en un Server Component.
+- El mapa se crea una sola vez (en un efecto, guardado en un ref) y se destruye con `map.remove()` al desmontar.
+  Nada de recrearlo cuando cambian props: se actualizan fuentes y capas.
+- Muchos elementos (señales, biomas, cobertura) van como **capas** con fuentes GeoJSON. Marcadores DOM solo para
+  pocos elementos (la señal seleccionada, las antenas).
+- La niebla es una **capa del mapa** (máscara), no elementos HTML encima del canvas.
+- Cámara: `flyTo` con `padding` según el panel abierto (lateral en desktop, abajo en mobile). Con movimiento reducido,
+  `jumpTo` con el mismo destino y padding.
+- Barrido y pulsos: sin animación cuando hay `prefers-reduced-motion`.
+- Importar el CSS de MapLibre: `import "maplibre-gl/dist/maplibre-gl.css"`.
+- Cada señal accesible: `<button>` con `aria-label` descriptivo y foco visible.
+- Listeners de MapLibre (`map.on`) siempre con su `map.off` en la limpieza.

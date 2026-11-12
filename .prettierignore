@@ -1,0 +1,9 @@
+.next
+node_modules
+pnpm-lock.yaml
+next-env.d.ts
+.omc
+.verificar
+# fuentes de verdad copiadas tal cual: no se reformatean
+docs/consigna.md
+docs/concepto.md
