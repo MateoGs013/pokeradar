@@ -8,8 +8,9 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ## Índice
 
-| Id  | Fecha | Origen | Área | Resumen |
-| --- | ----- | ------ | ---- | ------- |
+| Id   | Fecha      | Origen | Área | Resumen                                                                                      |
+| ---- | ---------- | ------ | ---- | -------------------------------------------------------------------------------------------- |
+| E-01 | 2026-11-12 | IA     | docs | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible |
 
 ## Formato de cada entrada
 
@@ -30,4 +31,15 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ## Entradas
 
-Sin entradas todavía.
+### E-01 · 2026-11-12 15:51 · IA · docs
+
+- **Síntoma:** en el reporte del andamiaje y en la recomendación de alcance, Claude midió el concepto contra las
+  "3 a 4 horas" de la consigna ("el alcance es grande para 3 a 4 horas") y propuso cortar el modo híbrido, las
+  geocercas, el informe y los enjambres, con un plan de dos días y medio muy ajustado.
+- **Causa:** tomó la dedicación estimada del MVP (sección 2 de la consigna) como si fuera el tiempo disponible, y no
+  preguntó cuánto tiempo de trabajo había. El dato real (al menos 48 h libres hasta el cierre del sábado) no estaba
+  escrito en ningún archivo.
+- **Detección:** a mano, corrección de Mateo.
+- **Arreglo:** plan de alcance rehecho para unas 48 h de trabajo (`docs/decisiones.md`, sección 8).
+- **Prevención:** se agregó a "Datos del mail" de `docs/consigna.md` la línea "Disponibilidad: al menos 48 h de
+  trabajo hasta el cierre del sábado. Las 3–4 h de la consigna son la estimación del MVP, no un límite."

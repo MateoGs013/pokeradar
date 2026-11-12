@@ -138,3 +138,5 @@ DataInt • Plataforma de Inteligencia de Datos y Visualización Geoespacial · 
 - **Entrega:** domingo 15/11 a las 10:00 (hora Argentina). El cierre de trabajo propio es el sábado 14/11.
 - **Forma:** se responde el mismo mail con el repo público de GitHub (README completo) y la app deployada en Vercel.
 - **IA:** el uso de IA está permitido e incentivado; evalúan cómo se la audita y se la dirige.
+- **Disponibilidad:** al menos 48 h de trabajo hasta el cierre del sábado. Las 3–4 h de la consigna son la
+  estimación del MVP, no un límite.
