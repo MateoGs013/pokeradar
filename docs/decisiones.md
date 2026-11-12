@@ -252,15 +252,33 @@ línea por línea en la charla técnica.
 Tiempo disponible: al menos 48 h de trabajo hasta el cierre del sábado 14/11. Entra el concepto completo; los
 recortes son contingencia, no plan.
 
-| Bloque | Horas | Qué                                                                                                                           |
-| ------ | ----- | ----------------------------------------------------------------------------------------------------------------------------- |
-| 1      | ~7    | Datos (cliente tipado, 18 pedidos de `/type`, hábitats) y mundo generado: biomas, costas, nombres de lugares y glyphs propios |
-| 2      | ~8    | MVP: mapa, señales, ficha con skeleton y error, cámara con padding, animaciones. Deploy y `v0.1.0`                            |
-| 3      | ~8    | Niebla y radar, antenas, HUD, onboarding de 3 pasos y arranque del sistema con Rotom                                          |
-| 4      | ~6    | Tripulación y avisos; eventos: shiny, enjambres, día y noche, clima con Open-Meteo                                            |
-| 5      | ~6    | Bitácora, compartir por URL, informe exportable, fin de turno, geocercas                                                      |
-| 6      | ~5    | Modo híbrido: mapa real con estilo propio, en la ubicación del usuario o en Río Negro                                         |
-| 7      | ~4    | Sonido y atajos de teclado; pasada completa de accesibilidad y movimiento reducido                                            |
-| 8      | ~4    | Pulido visual en mobile y desktop, README, `/pr-review` final y `v1.0.0`                                                      |
+| Bloque | Horas | Qué                                                                                                                                                           |
+| ------ | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1      | ~7    | Datos (cliente tipado, 18 pedidos de `/type`, hábitats) y mundo generado: biomas, costas, lagos, ciudades y volcán                                            |
+| 2      | ~8    | MVP: mapa con el mundo generado, nombres de lugares y glyphs propios, señales, ficha con skeleton y error, cámara con padding, animaciones. Deploy y `v0.1.0` |
+| 3      | ~8    | Niebla y radar, antenas, HUD, onboarding de 3 pasos y arranque del sistema con Rotom                                                                          |
+| 4      | ~6    | Tripulación y avisos; eventos: shiny, enjambres, día y noche, clima con Open-Meteo                                                                            |
+| 5      | ~6    | Bitácora, compartir por URL, informe exportable, fin de turno, geocercas                                                                                      |
+| 6      | ~5    | Modo híbrido: mapa real con estilo propio, en la ubicación del usuario o en Río Negro                                                                         |
+| 7      | ~4    | Sonido y atajos de teclado; pasada completa de accesibilidad y movimiento reducido                                                                            |
+| 8      | ~4    | Pulido visual en mobile y desktop, README, `/pr-review` final y `v1.0.0`                                                                                      |
 
 Si algo se atrasa, cae primero el bloque 6 y después las geocercas.
+
+### Cambios al plan
+
+**12/11: los nombres de lugares y los glyphs pasan del bloque 1 al bloque 2, después de montar el mapa.**
+
+El bloque 1 cerró con el dataset (PR #1) y el mundo generado (PR #2). Antes de los nombres va el mapa, por cuatro razones:
+
+1. **El MVP va primero.** CLAUDE.md lo pide ("El MVP de la consigna va antes que cualquier extra del concepto") y el
+   mapa interactivo es el requisito 1 de la consigna. Del mapa dependen "Fluidez del mapa e interacciones" (25 %) y
+   buena parte de "Sensibilidad visual" (35 %).
+2. **Los glyphs solo se ven en MapLibre.** La vista previa en SVG del PR #2 no los usa: hacerlos antes del mapa sería
+   trabajar sin poder verificar el resultado.
+3. **El riesgo técnico más grande queda al principio.** La primera verificación anotada en esta sección es configurar el
+   worker de MapLibre v6 con Turbopack; si falla, conviene saberlo cuanto antes.
+4. **Los nombres dependen del mapa.** Cuántos nombres entran, en qué niveles de zoom y con qué tamaño se decide mirando
+   el mapa, no la vista previa. La herramienta para generar los PBF de los glyphs sigue a definir.
+
+No cambia el alcance: los nombres y los glyphs siguen en el plan, solo cambian de orden.
