@@ -23,7 +23,7 @@ import {
   terrainField,
 } from "./fields";
 import { cellCenter, distanceToEdge, valueAt } from "./grid";
-import { fieldToPolygons } from "./polygons";
+import { fieldToPolygons, worldRectangle } from "./polygons";
 import { distanceField, highestCell, placeCities } from "./sites";
 import type { World } from "./types";
 import { findLakes } from "./water";
@@ -71,7 +71,11 @@ export function generateWorld(seed: number = WORLD_SEED): World {
         properties: { habitat },
         geometry: {
           type: "MultiPolygon",
-          coordinates: fieldToPolygons(fields[habitat]),
+          // El mar es el fondo: el rectángulo del mundo. Los demás biomas, sus contornos.
+          coordinates:
+            habitat === "sea"
+              ? worldRectangle()
+              : fieldToPolygons(fields[habitat]),
         },
       })),
     },
