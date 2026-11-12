@@ -1,0 +1,69 @@
+// La grilla del mundo y su lugar en el mapa. Todo lo que pase de celdas a [lng, lat]
+// (polígonos de biomas, y más adelante los spawns) usa estas funciones.
+import "server-only";
+
+import type { Position } from "./types";
+
+export const GRID_WIDTH = 200;
+export const GRID_HEIGHT = 150;
+export const CELL_COUNT = GRID_WIDTH * GRID_HEIGHT;
+
+/**
+ * Extensión del mundo en grados. Está sobre el ecuador, donde la proyección de Mercator casi
+ * no deforma, y las celdas son cuadradas: 16° / 200 = 12° / 150 = 0,08° (unos 9 km).
+ */
+export const WORLD_BOUNDS = { west: -8, east: 8, south: -6, north: 6 } as const;
+
+const DEGREES_PER_CELL = (WORLD_BOUNDS.east - WORLD_BOUNDS.west) / GRID_WIDTH;
+
+/** Coordenadas de la grilla → índice en los arreglos planos (fila por fila). */
+export function cellIndex(x: number, y: number): number {
+  return x + y * GRID_WIDTH;
+}
+
+/** Centro de la celda `index`, en coordenadas de la grilla. */
+export function cellCenter(index: number): [x: number, y: number] {
+  return [(index % GRID_WIDTH) + 0.5, Math.floor(index / GRID_WIDTH) + 0.5];
+}
+
+/**
+ * Punto de la grilla (x hacia la derecha, y hacia abajo, en celdas) → [lng, lat] con 4 decimales
+ * (unos 11 m: de sobra para el mapa y achica el GeoJSON). La y se invierte: la latitud crece hacia arriba.
+ */
+export function gridToLngLat(x: number, y: number): Position {
+  return [
+    round4(WORLD_BOUNDS.west + x * DEGREES_PER_CELL),
+    round4(WORLD_BOUNDS.north - y * DEGREES_PER_CELL),
+  ];
+}
+
+function round4(value: number): number {
+  return Math.round(value * 10_000) / 10_000;
+}
+
+/** Distancia en celdas entre los centros de dos celdas. */
+export function cellDistance(a: number, b: number): number {
+  const [ax, ay] = cellCenter(a);
+  const [bx, by] = cellCenter(b);
+  return Math.hypot(ax - bx, ay - by);
+}
+
+/**
+ * Valor de un campo en la celda `index`. Con `noUncheckedIndexedAccess`, leer un arreglo puede
+ * dar `undefined`; acá eso es un error de programación y se lanza en lugar de seguir con basura.
+ */
+export function valueAt(field: readonly number[], index: number): number {
+  const value = field[index];
+  if (value === undefined) {
+    throw new RangeError(`Celda fuera de la grilla: ${index}`);
+  }
+  return value;
+}
+
+/** Arma un campo (un número por celda) a partir de una función de las coordenadas del centro. */
+export function mapGrid(fn: (x: number, y: number) => number): number[] {
+  return Array.from({ length: CELL_COUNT }, (_, index) => {
+    const [x, y] = cellCenter(index);
+    return fn(x, y);
+  });
+}
