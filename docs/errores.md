@@ -19,6 +19,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-07 | 2026-11-12 | librería | map   | Con Turbopack, MapLibre v6 se queda sin la URL de su worker y el worker pide la página                              |
 | E-08 | 2026-11-12 | IA       | map   | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
 | E-09 | 2026-11-12 | IA       | docs  | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
+| E-10 | 2026-11-12 | IA       | map   | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
 
 ## Formato de cada entrada
 
@@ -164,3 +165,19 @@ Para agregar una entrada se puede usar `/registrar-error`.
   `IA` y E-08 reescrito con la prueba.
 - **Prevención:** se agregó a "Formato de cada entrada": "La hora sale de `date` o del transcript, y cada campo se
   contrasta con lo registrado; nunca de memoria."
+
+### E-10 · 2026-11-12 19:53 · IA · map
+
+- **Síntoma:** el comentario de `SignalButton` (`src/components/map/signal-markers.tsx`, todavía sin commitear) decía
+  que los botones de 20 px, con las señales a 23 px o más entre centros a 390 px de ancho, cumplían el espaciado de
+  WCAG 2.5.8.
+- **Causa:** la excepción de espaciado de WCAG 2.5.8 pide que los círculos de 24 px centrados en cada objetivo chico no
+  toquen otro objetivo ni el círculo de otro objetivo chico: entre dos botones de 20 px, 24 px entre centros. Claude
+  escribió el comentario con la separación calculada ("unos 23 px" a 390 px, la cuenta de `spawns.ts` y
+  `docs/decisiones.md`), sin leer el criterio (lo leyó a las 20:02) ni medir.
+- **Detección:** Claude, antes de commitear: midió con DevTools la distancia mínima entre centros (23,3 px a 390 px de
+  ancho) y leyó el texto del W3C.
+- **Arreglo:** el comentario dejó de afirmarlo (37af570) y la separación pasó de 12 a 14 celdas (0d97218).
+  Medido: 25,2 px a 360 px de ancho, 26,3 a 375 y 27,3 a 390.
+- **Prevención:** se agregó a `.claude/rules/ui.md`: "Un comentario o un doc que diga que algo cumple un criterio de
+  WCAG cita el criterio y una medición; nunca de memoria ni con una cuenta."
