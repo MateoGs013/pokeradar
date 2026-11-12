@@ -8,11 +8,12 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ## Índice
 
-| Id   | Fecha      | Origen | Área | Resumen                                                                                      |
-| ---- | ---------- | ------ | ---- | -------------------------------------------------------------------------------------------- |
-| E-01 | 2026-11-12 | IA     | docs | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible |
-| E-02 | 2026-11-12 | IA     | docs | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                  |
-| E-03 | 2026-11-12 | IA     | data | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset      |
+| Id   | Fecha      | Origen | Área  | Resumen                                                                                               |
+| ---- | ---------- | ------ | ----- | ----------------------------------------------------------------------------------------------------- |
+| E-01 | 2026-11-12 | IA     | docs  | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible          |
+| E-02 | 2026-11-12 | IA     | docs  | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                           |
+| E-03 | 2026-11-12 | IA     | data  | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset               |
+| E-04 | 2026-11-12 | IA     | world | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil |
 
 ## Formato de cada entrada
 
@@ -71,3 +72,15 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Arreglo:** comentario reescrito en `indexTypes`, en el commit `refactor(data)` del PR #1.
 - **Prevención:** se agregó a `.claude/rules/data.md`: "Los comentarios que explican un cruce de datos citan el
   endpoint y el campo que lo justifican."
+
+### E-04 · 2026-11-12 18:13 · IA · world
+
+- **Síntoma:** en la vista previa del mundo, el continente tocaba los bordes de arriba y de abajo. Claude subió la caída
+  hacia los bordes (`EDGE_FALLOFF` de 0.9 a 1.4) y la tierra siguió tocando el borde de abajo.
+- **Causa:** los umbrales de altura salen por percentil (`HEIGHT_SHARES`): el 40 % más bajo siempre es mar. Endurecer
+  la caída cambia la forma del continente pero no cuánto mar hay, así que no garantiza que el borde sea agua.
+- **Detección:** a mano, en la captura de `/verificar` a 1440 px.
+- **Arreglo:** un hundimiento propio en las últimas 10 celdas de cada borde (`borderSink` en `fields.ts`), mayor que
+  cualquier valor del ruido. Antes de commitear, en el PR del mundo generado.
+- **Prevención:** el comentario de `HEIGHT_SHARES` en `src/lib/world/biomes.ts` explica que las proporciones son fijas
+  y que el borde de mar se garantiza con `borderSink`, no con la caída.
