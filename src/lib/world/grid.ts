@@ -41,6 +41,30 @@ function round4(value: number): number {
   return Math.round(value * 10_000) / 10_000;
 }
 
+/** Vecinas de una celda por los 4 lados (arriba, abajo, izquierda, derecha), sin salir de la grilla. */
+export function neighbors4(index: number): number[] {
+  const x = index % GRID_WIDTH;
+  const y = Math.floor(index / GRID_WIDTH);
+  const neighbors: number[] = [];
+  if (x > 0) neighbors.push(index - 1);
+  if (x < GRID_WIDTH - 1) neighbors.push(index + 1);
+  if (y > 0) neighbors.push(index - GRID_WIDTH);
+  if (y < GRID_HEIGHT - 1) neighbors.push(index + GRID_WIDTH);
+  return neighbors;
+}
+
+/** Índices de las celdas del borde de la grilla. */
+export function borderCells(): number[] {
+  const cells: number[] = [];
+  for (let x = 0; x < GRID_WIDTH; x++) {
+    cells.push(cellIndex(x, 0), cellIndex(x, GRID_HEIGHT - 1));
+  }
+  for (let y = 1; y < GRID_HEIGHT - 1; y++) {
+    cells.push(cellIndex(0, y), cellIndex(GRID_WIDTH - 1, y));
+  }
+  return cells;
+}
+
 /** Distancia en celdas entre los centros de dos celdas. */
 export function cellDistance(a: number, b: number): number {
   const [ax, ay] = cellCenter(a);
