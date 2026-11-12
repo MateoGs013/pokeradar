@@ -8,14 +8,17 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ## Índice
 
-| Id   | Fecha      | Origen | Área  | Resumen                                                                                               |
-| ---- | ---------- | ------ | ----- | ----------------------------------------------------------------------------------------------------- |
-| E-01 | 2026-11-12 | IA     | docs  | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible          |
-| E-02 | 2026-11-12 | IA     | docs  | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                           |
-| E-03 | 2026-11-12 | IA     | data  | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset               |
-| E-04 | 2026-11-12 | IA     | world | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil |
-| E-05 | 2026-11-12 | IA     | world | Afirmó un borde de mar garantizado en 10 celdas sin medirlo; quedaban 71 celdas de tierra             |
-| E-06 | 2026-11-12 | IA     | docs  | Al agregar una tabla en decisiones.md, mudó la fila de tw-animate-css a la tabla equivocada           |
+| Id   | Fecha      | Origen   | Área  | Resumen                                                                                                             |
+| ---- | ---------- | -------- | ----- | ------------------------------------------------------------------------------------------------------------------- |
+| E-01 | 2026-11-12 | IA       | docs  | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible                        |
+| E-02 | 2026-11-12 | IA       | docs  | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                                         |
+| E-03 | 2026-11-12 | IA       | data  | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset                             |
+| E-04 | 2026-11-12 | IA       | world | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil               |
+| E-05 | 2026-11-12 | IA       | world | Afirmó un borde de mar garantizado en 10 celdas sin medirlo; quedaban 71 celdas de tierra                           |
+| E-06 | 2026-11-12 | IA       | docs  | Al agregar una tabla en decisiones.md, mudó la fila de tw-animate-css a la tabla equivocada                         |
+| E-07 | 2026-11-12 | librería | map   | Con Turbopack, MapLibre v6 se queda sin la URL de su worker y el worker pide la página                              |
+| E-08 | 2026-11-12 | IA       | map   | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
+| E-09 | 2026-11-12 | IA       | docs  | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
 
 ## Formato de cada entrada
 
@@ -33,6 +36,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **área:** uno de los scopes de commits: `data`, `world`, `map`, `radar`, `hud`, `dossier`, `onboarding`, `crew`,
   `sound`, `ui`, `docs`, `ci`, `deps`.
 - Numeración correlativa: E-01, E-02…
+- La hora sale de `date` o del transcript, y cada campo se contrasta con lo registrado; nunca de memoria.
 
 ## Entradas
 
@@ -112,3 +116,51 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Arreglo:** la fila volvió a la tabla de shadcn, en el mismo PR.
 - **Prevención:** ninguna nueva: el chequeo es la review del PR, que lo detectó. Al editar tablas de `docs/`, revisar
   el diff de la tabla completa antes de commitear.
+
+### E-07 · 2026-11-12 19:02 · librería · map
+
+- **Síntoma:** en la consola de las capturas del build de producción: "Failed to load module script: The server
+  responded with a non-JavaScript MIME type of "text/html"", con la URL `http://localhost:3100/` (la página), y
+  "Error: Worker failed to load. Check that the worker URL is correct."
+- **Causa:** MapLibre v6 arma la URL de su worker con `import.meta.url` (`function tl()` en `dist/maplibre-gl.mjs`) y,
+  si no empieza con `http:` o `https:`, la deja vacía. Turbopack reemplaza ese `import.meta.url` por una ruta
+  `file:///ROOT/node_modules/...` (se ve en el chunk compilado), así que MapLibre crea `new Worker("")`, que pide la
+  propia página y recibe HTML.
+- **Detección:** errores de consola en las capturas de `/verificar` (`capturar.mjs`). Claude había leído ese código
+  antes y compiló sin configurar el worker a propósito, para ver si Turbopack lo resolvía solo.
+- **Arreglo:** `setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href)` en
+  `map-view.tsx`: esa expresión sí la reconoce Turbopack, que la reemplaza por la URL del worker copiado a
+  `/_next/static/media/` con hash (en el chunk queda `tL.WORKER_URL=new e.U(e.r(44898)).href`).
+- **Prevención:** nota en `docs/decisiones.md` (maplibre-gl) y comentario en `map-view.tsx`, con el porqué.
+
+### E-08 · 2026-11-12 19:04 · IA · map
+
+- **Síntoma:** con el worker ya cargando y la consola sin errores, las capturas seguían sin mapa: no se dibujaba nada.
+- **Causa:** Claude puso `absolute inset-0` en el mismo div que MapLibre usa de contenedor. MapLibre le agrega la clase
+  `.maplibregl-map`, y `maplibre-gl.css` la define con `position: relative` fuera de las capas de Tailwind; el CSS sin
+  capa le gana a las utilidades, así que el div pierde `absolute inset-0` y queda sin alto. Antes de verlo, Claude
+  sospechó sin medir que el `<main>` tenía altura 0 y cambió `flex-1` por `h-dvh`: la página siguió igual, y recién
+  después leyó el CSS de la librería. El `<main>` no era parte del problema: con `flex-1` y el arreglo, el mapa se ve
+  igual (comprobado en el build, a 390 y 1440 px).
+- **Detección:** a mano, mirando las capturas de `/verificar` (vacías, sin errores de consola).
+- **Arreglo:** el posicionamiento pasó a un div de afuera y el contenedor del mapa usa `h-full w-full`. El `<main>`
+  volvió a `flex-1`.
+- **Prevención:** comentario en `map-view.tsx`, nota en `docs/decisiones.md` (maplibre-gl) y se agregó a
+  `.claude/rules/map.md`: "El div que recibe el mapa no lleva clases de posición: el CSS de MapLibre le gana a
+  Tailwind; van en un div de afuera." Para el diagnóstico, ninguna nueva: el paso que faltó, medir antes de cambiar,
+  es el mismo de E-05.
+
+### E-09 · 2026-11-12 19:07 · IA · docs
+
+- **Síntoma:** el primer borrador de E-07 y E-08 llevaba la hora 19:30 cuando el reloj marcaba 19:07. Además, E-08
+  tenía origen `librería` aunque el error fue de Claude, y decía que cambiar a `h-dvh` "no alcanzó", como si el
+  `<main>` fuera parte de la causa. No lo era (ver E-08).
+- **Causa:** Claude escribió las entradas de memoria, sin contrastarlas con el reloj ni con el transcript; el `date`
+  corrió en el mismo comando que las escribía. Es la segunda hora estimada en este archivo, después del primer
+  borrador de E-04.
+- **Detección:** Claude, al releer el archivo antes de commitear (hora y origen). Que lo del `<main>` no estaba medido
+  lo marcó una segunda revisión de IA antes del reporte; la prueba con `flex-1` lo confirmó.
+- **Arreglo:** horas y hechos rehechos desde el transcript de la sesión (19:02 y 19:04), origen de E-08 corregido a
+  `IA` y E-08 reescrito con la prueba.
+- **Prevención:** se agregó a "Formato de cada entrada": "La hora sale de `date` o del transcript, y cada campo se
+  contrasta con lo registrado; nunca de memoria."

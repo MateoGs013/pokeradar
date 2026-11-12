@@ -17,5 +17,7 @@ paths:
   `jumpTo` con el mismo destino y padding.
 - Barrido y pulsos: sin animación cuando hay `prefers-reduced-motion`.
 - Importar el CSS de MapLibre: `import "maplibre-gl/dist/maplibre-gl.css"`.
+- El div que recibe el mapa no lleva clases de posición: el CSS de MapLibre le gana a Tailwind; van en un div de
+  afuera.
 - Cada señal accesible: `<button>` con `aria-label` descriptivo y foco visible.
 - Listeners de MapLibre (`map.on`) siempre con su `map.off` en la limpieza.
