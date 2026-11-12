@@ -24,6 +24,7 @@ export default async function Home() {
           [west, south],
           [east, north],
         ]}
+        spawns={spawns}
       />
       <p className="pointer-events-none absolute top-3 left-3 font-mono text-xs text-muted-foreground">
         <span className="tracking-widest text-hud uppercase">PokéRadar</span> ·
