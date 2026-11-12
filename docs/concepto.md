@@ -11,8 +11,7 @@ Concepto completo para el desafío técnico de DataInt ("PokéRadar Geoespacial 
 ## 1. Por qué este concepto
 
 - **Habla el idioma de DataInt.** Monitoreo en tiempo real, alertas por prioridad, geocercas,
-  niveles de amenaza e informes descargables son funciones de su producto real. Tomás va a
-  reconocerlo enseguida.
+  niveles de amenaza e informes descargables son funciones de su producto real.
 - **Es una experiencia de descubrimiento literal,** como pide la consigna: el mapa empieza
   oculto y se revela explorando.
 - **Convierte los requisitos en parte del juego:** el skeleton es "Analizando firma…", el
@@ -109,8 +108,8 @@ El mismo radar proyectado sobre el mapa real de tu zona: OpenFreeMap con un esti
 Negro. Los Pokémon se reparten alrededor según el tipo de terreno cercano o por sorteo con
 semilla.
 
-**Para qué está:** demuestra que también sabés trabajar con mapas base reales y
-coordenadas, que es el día a día de DataInt.
+**Para qué está:** muestra el mismo radar sobre un mapa base y coordenadas reales, que es el
+trabajo diario con datos geoespaciales.
 
 ---
 

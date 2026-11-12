@@ -233,10 +233,10 @@ línea por línea en la charla técnica.
 | MCP                      | `next-devtools-mcp` sí; Playwright MCP y el de shadcn no, por ahora | Errores y rutas en vivo; las capturas ya las cubre `/verificar` y los componentes, el CLI de shadcn.                                                                                                                                    |
 | Skills de terceros       | Ninguna                                                             | `web-design-guidelines` ya está instalada.                                                                                                                                                                                              |
 
-### Antes de hacer público el repo
+### Antes de hacer público el repo (hecho el 12/11)
 
-- Quitar de `docs/consigna.md` el mail del mentor.
-- Reformular en `docs/concepto.md` las frases dirigidas al evaluador. Mateo aprueba el texto antes del cambio.
+- Se quitó de `docs/consigna.md` el mail del mentor (con una nota que lo aclara).
+- Se reformularon en `docs/concepto.md` las dos frases dirigidas al evaluador, con el texto aprobado por Mateo.
 - `.claude/` queda público: muestra el flujo de trabajo con IA.
 
 ### Plan de alcance

@@ -2,7 +2,7 @@
 
 Transcripción fiel del PDF `desafio-tecnico-frontend-jr.pdf` (impreso el 10/11/26, 13:20).
 No está resumida ni interpretada. Si algo de este repo choca con este archivo, manda este archivo.
-Al final están los datos del mail, que no figuran en el PDF.
+Al final están los datos del mail, que no figuran en el PDF. En esta copia pública se omitió el mail de contacto.
 
 ---
 
@@ -129,7 +129,7 @@ El `README.md` de tu repositorio es fundamental. Te pedimos que incluyas estas 4
   1. **Enlace al repositorio público en GitHub** (con el `README.md` completo).
   2. **Enlace a la aplicación desplegada y funcional en producción** (en Vercel o Netlify).
 
-DataInt • Plataforma de Inteligencia de Datos y Visualización Geoespacial · Contacto: Tomás Plevak (tplevak@dataint.mx)
+DataInt • Plataforma de Inteligencia de Datos y Visualización Geoespacial · Contacto: Tomás Plevak
 
 ---
 
