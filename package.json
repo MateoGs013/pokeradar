@@ -17,6 +17,7 @@
     "cn": "^0.5.2",
     "d3-contour": "4.0.3",
     "lucide-react": "^1.72.0",
+    "maplibre-gl": "6.18.0",
     "next": "16.4.6",
     "react": "19.3.0",
     "react-dom": "19.3.0",
