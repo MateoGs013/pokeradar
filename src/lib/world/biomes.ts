@@ -54,9 +54,13 @@ export interface Thresholds {
   wet: number;
 }
 
-/** El valor que deja por debajo a la fracción `share` de los valores. */
-function quantile(values: readonly number[], share: number): number {
-  const sorted = [...values].sort((a, b) => a - b);
+/** Copia ordenada de menor a mayor, para leer varios percentiles con un solo ordenamiento. */
+function sortedCopy(values: readonly number[]): number[] {
+  return [...values].sort((a, b) => a - b);
+}
+
+/** En un arreglo ya ordenado, el valor que deja por debajo a la fracción `share` de los valores. */
+function quantile(sorted: readonly number[], share: number): number {
   return valueAt(sorted, Math.floor(share * (sorted.length - 1)));
 }
 
@@ -73,17 +77,20 @@ export function computeThresholds(
   height: readonly number[],
   moisture: readonly number[],
 ): Thresholds {
-  const lowland = quantile(height, HEIGHT_SHARES.lowland);
-  const mountain = quantile(height, HEIGHT_SHARES.mountain);
-  const lowlandMoisture = moisture.filter((_, index) => {
-    const h = valueAt(height, index);
-    return h >= lowland && h < mountain;
-  });
+  const sortedHeight = sortedCopy(height);
+  const lowland = quantile(sortedHeight, HEIGHT_SHARES.lowland);
+  const mountain = quantile(sortedHeight, HEIGHT_SHARES.mountain);
+  const lowlandMoisture = sortedCopy(
+    moisture.filter((_, index) => {
+      const h = valueAt(height, index);
+      return h >= lowland && h < mountain;
+    }),
+  );
   return {
-    coast: quantile(height, HEIGHT_SHARES.coast),
+    coast: quantile(sortedHeight, HEIGHT_SHARES.coast),
     lowland,
     mountain,
-    peak: quantile(height, HEIGHT_SHARES.peak),
+    peak: quantile(sortedHeight, HEIGHT_SHARES.peak),
     dry: quantile(lowlandMoisture, MOISTURE_SHARES.dry),
     wet: quantile(lowlandMoisture, MOISTURE_SHARES.wet),
   };
