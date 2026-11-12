@@ -3,9 +3,10 @@ import "server-only";
 
 const BASE_URL = "https://pokeapi.co/api/v2";
 
-// Los datos de PokéAPI casi no cambian: se cachean un día.
-// En Next 16 `fetch` no cachea por defecto (node_modules/next/dist/docs/.../fetch.md).
-const UN_DIA_EN_SEGUNDOS = 60 * 60 * 24;
+// Las especies de las generaciones 1 a 3 no cambian: se cachean sin vencimiento
+// (`revalidate: false`), así la página se arma una vez por deploy y no vuelve a depender de
+// PokéAPI. En Next 16 `fetch` no cachea por defecto (node_modules/next/dist/docs/.../fetch.md).
+const SIN_VENCIMIENTO = false;
 
 // Un pedido colgado se corta acá, con la URL en el error, en lugar de esperar el límite de 60 s
 // del build. El `signal` no afecta la caché de datos: solo desactiva la memoización por render.
@@ -43,7 +44,7 @@ export async function getJson<T>(
   let response: Response;
   try {
     response = await fetch(url, {
-      next: { revalidate: UN_DIA_EN_SEGUNDOS },
+      next: { revalidate: SIN_VENCIMIENTO },
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (error) {
