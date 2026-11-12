@@ -38,12 +38,29 @@ Instaladas para el mundo generado (versiones exactas):
 | d3-contour        | 4.0.3   | Convierte el campo de cada bioma en polígonos (marching squares). Cada muestra de la grilla cae en el centro de su celda: el valor de la celda (1, 1) queda centrado en (1,5; 1,5). No trae tipos. |
 | @types/d3-contour | 3.0.6   | Tipos versionados para la API 3.x. Comprobado al instalar: la 4.0.3 expone la misma API (`contours().size().thresholds().smooth()` y `contour(values, threshold)`).                                |
 
+Instalada para el mapa (versión exacta):
+
+| Paquete     | Versión | Para qué                                                                                                                      |
+| ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| maplibre-gl | 6.18.0  | El mapa (WebGL). Publicada el 11/11/2026. v6 no tiene import por defecto: se usan imports con nombre (`Map`, `setWorkerUrl`). |
+
+Dos ajustes que pide maplibre-gl con Next 16 y Turbopack:
+
+- **Worker:** v6 arma la URL de su worker con `import.meta.url` y, si no empieza con `http(s):`, la deja vacía.
+  Turbopack reemplaza ese valor por una ruta `file:///ROOT/...`, así que el worker termina pidiendo la página, que
+  responde HTML ("Worker failed to load"). Se resuelve con
+  `setWorkerUrl(new URL("maplibre-gl/dist/maplibre-gl-worker.mjs", import.meta.url).href)`: Turbopack reconoce esa
+  expresión, copia el worker a `/_next/static/media/` con hash y devuelve su URL, siempre de la misma versión que la
+  librería. Ver E-07 en `docs/errores.md`.
+- **Contenedor:** `maplibre-gl.css` define `.maplibregl-map { position: relative }` fuera de las capas de Tailwind, y
+  el CSS sin capa le gana a las utilidades. El div que recibe el mapa no lleva clases de posición: van en un div de
+  afuera. Ver E-08.
+
 ### Elegidas, sin instalar (se instalan en el paso que las usa)
 
-| Paquete     | Versión | Notas                                                                                                                                                                                                                                                                         | Fuente                                                  |
-| ----------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| maplibre-gl | 6.18.0  | Publicada el 11/11/2026 (muy reciente). v6 no tiene import por defecto: `import * as maplibregl from "maplibre-gl"` o imports con nombre. Hay que configurar el worker con bundlers.                                                                                          | `npm view`; visgl.github.io/react-map-gl/docs/whats-new |
-| motion      | 14.13.0 | Publicada el 12/11/2026 (el mismo día del andamiaje). Es la librería que la consigna llama "Framer Motion". Se instala `motion` y se importa desde `"motion/react"`. `framer-motion` se sigue publicando con la misma versión, pero la guía oficial indica migrar a `motion`. | motion.dev/docs/react-upgrade-guide                     |
+| Paquete | Versión | Notas                                                                                                                                                                                                                                                                         | Fuente                              |
+| ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| motion  | 14.13.0 | Publicada el 12/11/2026 (el mismo día del andamiaje). Es la librería que la consigna llama "Framer Motion". Se instala `motion` y se importa desde `"motion/react"`. `framer-motion` se sigue publicando con la misma versión, pero la guía oficial indica migrar a `motion`. | motion.dev/docs/react-upgrade-guide |
 
 ## 2. Opciones evaluadas
 
