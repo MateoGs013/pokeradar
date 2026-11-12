@@ -32,17 +32,8 @@ export function isTypeResponse(value: unknown): value is TypeResponse {
     value.pokemon.every(
       (entry) =>
         isRecord(entry) &&
-        typeof entry.slot === "number" &&
+        (entry.slot === 1 || entry.slot === 2) &&
         isNamedApiResource(entry.pokemon),
     )
   );
-}
-
-/** Saca el id numérico del final de una URL de PokéAPI (`.../pokemon-species/25/` → 25). */
-export function idFromUrl(url: string): number {
-  const match = /\/(\d+)\/?$/.exec(url);
-  if (!match?.[1]) {
-    throw new Error(`La URL de PokéAPI no termina en un id: ${url}`);
-  }
-  return Number(match[1]);
 }

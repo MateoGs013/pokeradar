@@ -55,7 +55,7 @@ export interface HabitatResponse {
 /** Respuesta de `/type/{nombre}`. `slot` es 1 para el tipo primario y 2 para el secundario. */
 export interface TypeResponse {
   name: string;
-  pokemon: { slot: number; pokemon: NamedApiResource }[];
+  pokemon: { slot: 1 | 2; pokemon: NamedApiResource }[];
 }
 
 /** Una especie del dataset: lo mínimo para ubicarla en el mundo y mostrarla como señal. */
