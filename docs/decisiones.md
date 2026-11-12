@@ -30,19 +30,19 @@ Agregadas por `shadcn init` (ver sección 4):
 | lucide-react             | ^1.72.0 | Íconos que usan los componentes de shadcn.                                                                                              |
 | tw-animate-css           | ^1.4.0  | Animaciones de entrada y salida de los componentes de shadcn.                                                                           |
 
-### Anotadas, sin instalar (dependen de decisiones pendientes)
+### Elegidas, sin instalar (se instalan en el paso que las usa)
 
 | Paquete           | Versión | Notas                                                                                                                                                                                                                                                                         | Fuente                                                  |
 | ----------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | maplibre-gl       | 6.18.0  | Publicada el 11/11/2026 (muy reciente). v6 no tiene import por defecto: `import * as maplibregl from "maplibre-gl"` o imports con nombre. Hay que configurar el worker con bundlers.                                                                                          | `npm view`; visgl.github.io/react-map-gl/docs/whats-new |
-| react-map-gl      | 8.1.3   | Entrada `react-map-gl/maplibre`, que reexporta `@vis.gl/react-maplibre`. Soporte de MapLibre v6 desde 8.1.2 (#2598).                                                                                                                                                          | github.com/visgl/react-map-gl/releases/tag/v8.1.2       |
 | motion            | 14.13.0 | Publicada el 12/11/2026 (el mismo día del andamiaje). Es la librería que la consigna llama "Framer Motion". Se instala `motion` y se importa desde `"motion/react"`. `framer-motion` se sigue publicando con la misma versión, pero la guía oficial indica migrar a `motion`. | motion.dev/docs/react-upgrade-guide                     |
 | simplex-noise     | 4.0.3   | Ruido 2D para la altura. Trae tipos propios. Acepta una función random, así que admite semilla.                                                                                                                                                                               | `npm view simplex-noise types`                          |
 | d3-contour        | 4.0.3   | Convierte la grilla de alturas en polígonos (marching squares). No trae tipos.                                                                                                                                                                                                | `npm view d3-contour`; github.com/d3/d3-contour         |
 | @types/d3-contour | 3.0.6   | Los tipos están versionados para la API 3.x; confirmar al instalar que cubren la 4.0.3.                                                                                                                                                                                       | DefinitelyTyped `types/d3-contour/package.json`         |
-| zustand           | 5.1.0   | Solo si se elige en la decisión B.                                                                                                                                                                                                                                            | `npm view zustand`                                      |
 
-## 2. Decisiones abiertas (las toma Mateo)
+## 2. Opciones evaluadas
+
+Decididas por Mateo el 12/11/2026: ver la sección 8. Se dejan los pros y contras como registro de por qué.
 
 ### A. Cómo se monta el mapa
 
@@ -113,7 +113,7 @@ El mapa de componentes previsto menciona **Drawer (Vaul)** y **Sonner**. Con la 
 - **Drawer** ya no usa Vaul: usa el Drawer de Base UI (ui.shadcn.com/docs/components/base/drawer). Solo la base Radix sigue con `vaul`.
 - **Sonner**: la página de Base UI redirige a un **Toast** propio de Base UI (`add toast`, API `toast.add(...)`). El ítem `sonner` sigue existiendo en el registro `base-nova` (depende de `sonner` y `next-themes`).
 - **Command** sigue usando `cmdk`. Sheet, Dialog, Tooltip, Switch, RadioGroup y Slider usan primitivas de Base UI. Kbd es un elemento con estilo, sin primitiva.
-- Queda a decidir: Drawer de Base UI o Vaul, y Toast de Base UI o Sonner para la tripulación.
+- Decidido: Drawer de Base UI y Toast de Base UI (sección 8).
 
 ### E. Sonidos y efecto de texto: librería o propio
 
@@ -179,16 +179,22 @@ No se implementó todavía.
 Fuentes: LICENSE.md y `src/ts-tailwind/TextAnimations/DecryptedText/DecryptedText.tsx` en DavidHDev/react-bits;
 `components/core/text-scramble.tsx` y LICENCE.md en ibelick/motion-primitives.
 Lectura: DecryptedText es demasiado grande para defenderlo línea por línea; TextScramble es chico pero le faltan
-accesibilidad y movimiento reducido, que habría que agregar igual. Escribirlo a mano es una opción razonable. Decide Mateo.
+accesibilidad y movimiento reducido, que habría que agregar igual. Decidido: se escribe a mano (sección 8).
 
 ## 6. Descartadas
 
-| Librería                     | Motivo                                                                                                                     |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Magic UI, Aceternity         | Efectos de landing que cualquier evaluador de frontend reconoce al instante: restan originalidad, que vale 35% de la nota. |
-| 8bitcn                       | Estética pixel art: choca con la sala de monitoreo sobria del concepto.                                                    |
-| MUI, Mantine, HeroUI, Chakra | Traen su propio sistema de estilos que pelea con Tailwind, pesan más y empujan una estética propia reconocible.            |
-| Bloques visuales de Bencho   | Usan su propio CSS (no Tailwind) y `framer-motion`. Solo interesan los sonidos.                                            |
+| Librería                                                 | Motivo                                                                                                                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Magic UI, Aceternity                                     | Efectos de landing que cualquier evaluador de frontend reconoce al instante: restan originalidad, que vale 35% de la nota.                             |
+| 8bitcn                                                   | Estética pixel art: choca con la sala de monitoreo sobria del concepto.                                                                                |
+| MUI, Mantine, HeroUI, Chakra                             | Traen su propio sistema de estilos que pelea con Tailwind, pesan más y empujan una estética propia reconocible.                                        |
+| Bloques visuales de Bencho                               | Usan su propio CSS (no Tailwind) y `framer-motion`. Solo interesan los sonidos.                                                                        |
+| react-map-gl                                             | Bugs abiertos de `Marker` con React 19 y Next 16 (#2584, #2588) y una capa más entre la niebla o el radar y MapLibre.                                  |
+| mapcn                                                    | `map.tsx` tiene 2763 líneas, la mayoría para rutas, arcos y clusters que no se usan, y carga el worker desde unpkg. Se puede leer como referencia.     |
+| zustand                                                  | Store por pedido y `persist` con hidratación manual: más de lo que este estado necesita.                                                               |
+| Vaul y Sonner                                            | Con la base Base UI, shadcn trae Drawer y Toast propios; Sonner además suma `next-themes`.                                                             |
+| React Bits DecryptedText, Motion Primitives TextScramble | El primero tiene ~641 líneas y licencia que prohíbe redistribuirlo; el segundo no maneja lector de pantalla ni movimiento reducido. Se escribe propio. |
+| Sonidos de Bencho                                        | Hacen falta 2 o 3 sonidos; el ping del radar con Web Audio son ~20 líneas propias. Se puede reconsiderar si hace falta más variedad.                   |
 
 ## 7. Otras decisiones del andamiaje
 
@@ -200,6 +206,53 @@ accesibilidad y movimiento reducido, que habría que agregar igual. Escribirlo a
 - **pnpm 10** no corre scripts de instalación de dependencias por defecto. create-next-app dejó `sharp` y `unrs-resolver`
   en `ignoredBuiltDependencies` (`pnpm-workspace.yaml`); `sharp` usa binarios precompilados y Vercel optimiza imágenes por su cuenta.
 - **`packageManager: pnpm@10.34.1`** en `package.json`: lo leen el CI (`pnpm/action-setup`) y Vercel.
-- **Tipografía:** Geist y Geist Mono (las de create-next-app, con `next/font`). Es provisoria: la elección final de la
-  monoespaciada del HUD queda pendiente.
+- **Tipografía:** Geist y Geist Mono (las de create-next-app, con `next/font`) son provisorias. Se reemplazan por IBM
+  Plex (sección 8).
 - **AGENTS.md** lo escribe y mantiene `next dev` (bloque `nextjs-agent-rules`); se commitea tal cual.
+
+## 8. Decisiones tomadas y plan de alcance (12/11/2026)
+
+Decididas por Mateo sobre las opciones de la sección 2. El criterio común: cada pieza tiene que poder explicarse
+línea por línea en la charla técnica.
+
+### Decisiones
+
+| Tema                     | Decisión                                                            | Por qué                                                                                                                                                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Montaje del mapa         | `maplibre-gl` directo, en un Client Component propio                | Niebla, barrido, capas y cámara se escriben igual contra la API de MapLibre; sin bugs de `Marker` de react-map-gl ni las 2763 líneas de mapcn. Primer riesgo a verificar: configurar el worker de MapLibre v6 con Turbopack.            |
+| Estado                   | URL + localStorage + un contexto chico                              | `?modo=mundo&p=25` en la URL (la lee el servidor); ajustes del onboarding en localStorage con un hook propio sobre `useSyncExternalStore` (sin errores de hidratación); bitácora y avisos con `useReducer` en un contexto. Sin zustand. |
+| Texto en el mundo        | Glyphs propios de IBM Plex Mono, alojados en `public/`              | Los nombres del mapa con la misma voz que el HUD. Herramienta para generar los PBF: a definir y anotar en el bloque 1. Respaldo: Noto Sans de OpenFreeMap.                                                                              |
+| Panel de la ficha        | Sheet en desktop y Drawer de Base UI en mobile                      | Coherentes con la base elegida, sin Vaul.                                                                                                                                                                                               |
+| Avisos de la tripulación | Toast de Base UI                                                    | Apilado, acciones (tocar y volar al lugar) y tipos de estado para las prioridades. Sin Sonner.                                                                                                                                          |
+| Sonidos                  | Propios, con Web Audio                                              | El ping del radar es parte de la identidad y son ~20 líneas.                                                                                                                                                                            |
+| "Analizando firma…"      | Efecto propio (~35 líneas)                                          | Texto real en `sr-only`, revuelto con `aria-hidden` y sin animación con movimiento reducido.                                                                                                                                            |
+| Tipografía               | IBM Plex Mono (datos) e IBM Plex Sans, con `next/font`              | Geist es la de create-next-app y se reconoce; Plex tiene el aire técnico de una sala de monitoreo.                                                                                                                                      |
+| Niebla                   | Grilla de celdas en GeoJSON con `feature-state`                     | El porcentaje de cobertura por región sale de contar celdas; transición de opacidad que se apaga con movimiento reducido. Con el tiempo disponible se busca borde suave.                                                                |
+| Señales                  | Botones del DOM solo para las señales detectadas                    | Cumple `<button>` con `aria-label` y "marcadores con sprite animado"; la niebla limita a decenas los visibles. Identificadas muestran sprite e ícono de tipo.                                                                           |
+| Mundo generado           | Se calcula una vez en el build (página estática)                    | simplex-noise + d3-contour con semilla, grilla del orden de 200×200 para que el GeoJSON no pese de más.                                                                                                                                 |
+| MCP                      | `next-devtools-mcp` sí; Playwright MCP y el de shadcn no, por ahora | Errores y rutas en vivo; las capturas ya las cubre `/verificar` y los componentes, el CLI de shadcn.                                                                                                                                    |
+| Skills de terceros       | Ninguna                                                             | `web-design-guidelines` ya está instalada.                                                                                                                                                                                              |
+
+### Antes de hacer público el repo
+
+- Quitar de `docs/consigna.md` el mail del mentor.
+- Reformular en `docs/concepto.md` las frases dirigidas al evaluador. Mateo aprueba el texto antes del cambio.
+- `.claude/` queda público: muestra el flujo de trabajo con IA.
+
+### Plan de alcance
+
+Tiempo disponible: al menos 48 h de trabajo hasta el cierre del sábado 14/11. Entra el concepto completo; los
+recortes son contingencia, no plan.
+
+| Bloque | Horas | Qué                                                                                                                           |
+| ------ | ----- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 1      | ~7    | Datos (cliente tipado, 18 pedidos de `/type`, hábitats) y mundo generado: biomas, costas, nombres de lugares y glyphs propios |
+| 2      | ~8    | MVP: mapa, señales, ficha con skeleton y error, cámara con padding, animaciones. Deploy y `v0.1.0`                            |
+| 3      | ~8    | Niebla y radar, antenas, HUD, onboarding de 3 pasos y arranque del sistema con Rotom                                          |
+| 4      | ~6    | Tripulación y avisos; eventos: shiny, enjambres, día y noche, clima con Open-Meteo                                            |
+| 5      | ~6    | Bitácora, compartir por URL, informe exportable, fin de turno, geocercas                                                      |
+| 6      | ~5    | Modo híbrido: mapa real con estilo propio, en la ubicación del usuario o en Río Negro                                         |
+| 7      | ~4    | Sonido y atajos de teclado; pasada completa de accesibilidad y movimiento reducido                                            |
+| 8      | ~4    | Pulido visual en mobile y desktop, README, `/pr-review` final y `v1.0.0`                                                      |
+
+Si algo se atrasa, cae primero el bloque 6 y después las geocercas.
