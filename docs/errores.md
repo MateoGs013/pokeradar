@@ -20,6 +20,8 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-08 | 2026-11-12 | IA       | map   | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
 | E-09 | 2026-11-12 | IA       | docs  | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
 | E-10 | 2026-11-12 | IA       | map   | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
+| E-11 | 2026-11-12 | IA       | map   | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
+| E-12 | 2026-11-12 | IA       | docs  | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
 
 ## Formato de cada entrada
 
@@ -181,3 +183,30 @@ Para agregar una entrada se puede usar `/registrar-error`.
   Medido: 25,2 px a 360 px de ancho, 26,3 a 375 y 27,3 a 390.
 - **Prevención:** se agregó a `.claude/rules/ui.md`: "Un comentario o un doc que diga que algo cumple un criterio de
   WCAG cita el criterio y una medición; nunca de memoria ni con una cuenta."
+
+### E-11 · 2026-11-12 20:42 · IA · map
+
+- **Síntoma:** la descripción del PR #3 decía "Sin WebGL el mapa no se dibuja y no hay un mensaje propio". Sin WebGL2
+  se caía la página entera: MapLibre 6.18 lanza `GPUInitializationError` en el constructor del mapa, y Next mostraba
+  "This page couldn’t load", en inglés y sin el rótulo.
+- **Causa:** Claude escribió la frase sin probar el caso. MapLibre 6 pide solo WebGL2, y el error sale de un efecto sin
+  un error boundary propio, así que llega al de Next, que reemplaza la página.
+- **Detección:** `/pr-review` del PR #3 (subagente) y reproducción con Chrome `--disable-webgl2` sobre el build del PR.
+- **Arreglo:** un error boundary con `catchError` de `next/error` muestra un mensaje propio en el lugar del mapa y deja
+  el resto de la página (771bfde). Cubre también un worker o un código del mapa que no bajan. Probado con Chrome
+  `--disable-webgl2`, con el archivo del worker escondido del build y con el chunk del mapa bloqueado. La frase de la
+  descripción del PR se corrigió.
+- **Prevención:** un ítem nuevo en el checklist de `.github/PULL_REQUEST_TEMPLATE.md`: lo que la descripción afirma del
+  comportamiento tiene que estar probado, y lo que no, decir "sin probar". Es la tercera afirmación sin probar (E-05,
+  E-10 y E-11), y dos fueron en la descripción de un PR.
+
+### E-12 · 2026-11-12 21:28 · IA · docs
+
+- **Síntoma:** para la prevención de E-11, Claude le propuso a Mateo "ninguna" porque "la regla de medir antes de
+  afirmar ya está en E-05 y E-10". No hay una regla general: E-05 dejó `assertSeaBorder` en el build, y E-10, una línea
+  de `.claude/rules/ui.md` solo para WCAG. Mateo eligió esa opción con ese motivo.
+- **Causa:** Claude escribió el motivo de memoria, sin releer las prevenciones de E-05 y E-10.
+- **Detección:** Claude, al escribir E-11: el formato de este archivo pide contrastar cada campo con lo registrado.
+- **Arreglo:** se le avisó a Mateo antes de escribir E-11, y eligió otra prevención (el ítem de la plantilla del PR).
+- **Prevención:** ninguna: lo frenó la regla que ya tiene este archivo ("cada campo se contrasta con lo registrado;
+  nunca de memoria").
