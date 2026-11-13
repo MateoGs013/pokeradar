@@ -293,6 +293,8 @@ Si algo se atrasa, cae primero el bloque 6 y después las geocercas.
 
 ### Cambios al plan
 
+Cada cambio edita también la tabla de arriba y las filas de "Decisiones" que nombran el bloque (E-19).
+
 **12/11: los nombres de lugares y los glyphs pasan del bloque 1 al bloque 2, después de montar el mapa.**
 
 El bloque 1 cerró con el dataset (PR #1) y el mundo generado (PR #2). Antes de los nombres va el mapa, por cuatro razones:

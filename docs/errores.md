@@ -28,6 +28,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-16 | 2026-11-12 | IA       | map     | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
 | E-17 | 2026-11-13 | librería | map     | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
 | E-18 | 2026-11-13 | IA       | dossier | Los comentarios decían que la ficha entraba deslizándose; aparecía de golpe, y el PR daba 600 ms en vez de 300      |
+| E-19 | 2026-11-13 | IA       | docs    | El README resumía errores.md sin releerlo, y la entrada del plan contradecía la tabla que cambiaba                  |
 
 ## Formato de cada entrada
 
@@ -312,3 +313,19 @@ Para agregar una entrada se puede usar `/registrar-error`.
   descripción del PR se corrigió.
 - **Prevención:** se agregó al paso "Revisar" de `.claude/skills/verificar/SKILL.md`: si el cambio agrega o toca una
   animación, medir también la entrada, cuadro por cuadro, y la duración real contra la que dicen los comentarios y el PR.
+
+### E-19 · 2026-11-13 13:45 · IA · docs
+
+- **Síntoma:** el README del PR #5 decía "Cada vez sumé una prevención", y E-15 no sumó ninguna. Contaba E-16 como un
+  arreglo que rompió otra cosa, y salió de un `feat`; citaba entre comillas una frase que no era la de E-11, y daba
+  como confirmada la causa probable de E-02. En `docs/decisiones.md`, la entrada nueva de "Cambios al plan" sacaba
+  los nombres de lugares del bloque 2, pero la tabla del plan seguía poniéndolos ahí.
+- **Causa:** el README resumió `docs/errores.md` desde un borrador y de memoria, sin releer cada entrada que citaba.
+  La entrada del plan se escribió sin mirar la tabla que cambiaba; el cambio anterior al plan (51c6118) sí la había
+  editado.
+- **Detección:** `/pr-review` del PR #5 (subagente).
+- **Arreglo:** la tabla del plan y la fila de los glyphs pasan al bloque 3 (ae2e615); el README, corregido entrada por
+  entrada (4631e20).
+- **Prevención:** se agregó a `CLAUDE.md`, en "Errores": cada afirmación del README sobre una entrada se contrasta con
+  su síntoma, causa, detección y prevención antes de commitear. Y al principio de "Cambios al plan" de
+  `docs/decisiones.md`: cada cambio edita también la tabla y las filas que nombran el bloque.
