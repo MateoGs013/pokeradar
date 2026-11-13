@@ -40,6 +40,10 @@ export function gridToLngLat(x: number, y: number): Position {
 /**
  * [lng, lat] → índice de la celda que contiene ese punto: la vuelta de gridToLngLat. La usa el
  * chequeo de las señales para ver, desde la posición que viaja al mapa, en qué celda cayó cada una.
+ *
+ * Es para puntos interiores, como esos centros de celda. Cada celda incluye su borde oeste y su
+ * borde norte, pero no el este ni el sur: un punto sobre el borde este (lng 8) o el sur (lat −6)
+ * del mundo lanza. Y sobre una línea de la grilla, el redondeo puede dejarlo en la celda anterior.
  */
 export function lngLatToCell([lng, lat]: Position): number {
   const x = Math.floor((lng - WORLD_BOUNDS.west) / DEGREES_PER_CELL);

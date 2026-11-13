@@ -31,7 +31,7 @@ const MIN_SPACING = 14;
 /** Las señales del mar van a lo sumo a esta cantidad de pasos de celda de la costa. */
 const SEA_REACH = 8;
 
-/** Intentos por señal antes de rendirse, como en placeCities. */
+/** Celdas al azar que se prueban para cada señal antes de rendirse. */
 const MAX_ATTEMPTS = 1000;
 
 /**
