@@ -146,10 +146,11 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
 
   // MapLibre le pone `position: relative` al contenedor (.maplibregl-map), y su CSS le gana a
   // las clases de Tailwind: por eso el posicionamiento va en un div de afuera. Hasta `load`, el
-  // cartel de carga tapa el mapa todavía vacío.
+  // cartel de carga tapa el mapa todavía vacío. MapLibre le pone tabindex al canvas al crearlo, y
+  // sin `inert` el Tab dejaba el foco ahí, escondido debajo del cartel.
   return (
     <div className="absolute inset-0">
-      <div ref={containerRef} className="h-full w-full" />
+      <div ref={containerRef} inert={!loadedMap} className="h-full w-full" />
       {loadedMap ? (
         <SignalMarkers
           map={loadedMap}
