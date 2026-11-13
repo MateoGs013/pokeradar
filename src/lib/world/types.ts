@@ -29,10 +29,23 @@ export interface Spawn {
   position: Position;
 }
 
+/** Qué es un lugar con nombre del mundo. */
+export type PlaceKind = "city" | "volcano" | "lake";
+
+/** Un lugar con nombre inventado ("Villa Bruma"), para el texto del mapa. */
+export interface Place {
+  name: string;
+  kind: PlaceKind;
+  /** Dónde va el nombre: la ciudad, el volcán o una celda del lago cerca de su centro. */
+  position: Position;
+}
+
 export interface World {
   seed: number;
   /** Polígonos de los 9 biomas, en el orden en que se pintan (de abajo hacia arriba). */
   biomes: BiomeCollection;
   /** Hábitat de cada celda de la grilla, fila por fila. Es la fuente de verdad para ubicar spawns. */
   cells: HabitatName[];
+  /** Las ciudades, el volcán y los lagos, con su nombre. */
+  places: Place[];
 }
