@@ -84,8 +84,8 @@ Un mundo propio generado por código a partir de una semilla, siempre el mismo:
   bosque y montaña, convertidas en polígonos con líneas de nivel, como un mapa topográfico.
 - Se genera una vez en el servidor o al compilar; el navegador recibe el GeoJSON listo.
 - Coordenadas inventadas cerca del ecuador, para que la proyección no deforme el mundo.
-- Nombres de lugares inventados en el mapa (MapLibre necesita un servidor de tipografías
-  público para mostrar texto).
+- Nombres de lugares inventados en el mapa, con la tipografía de la página (MapLibre la usa
+  si el estilo no trae `glyphs`; docs/decisiones.md, "Texto en el mundo").
 
 **Cada bioma es un hábitat de PokéAPI** (las 386 especies de las generaciones 1 a 3):
 

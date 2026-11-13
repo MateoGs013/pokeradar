@@ -121,7 +121,7 @@ de arriba y acá queda lo que no entró.
 
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
-- **Nombres de lugares** sobre el mapa, con glyphs propios de IBM Plex Mono: lo primero después del tag.
+- **Nombres de lugares** sobre el mapa, con Martian Mono, la fuente del HUD: lo primero después del tag.
 - **Niebla, radar y antenas:** el mapa empieza cubierto y un barrido lo despeja; solo las señales detectadas son botones.
 - **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema.
 - **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
