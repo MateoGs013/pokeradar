@@ -29,6 +29,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-17 | 2026-11-13 | librería | map     | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
 | E-18 | 2026-11-13 | IA       | dossier | Los comentarios decían que la ficha entraba deslizándose; aparecía de golpe, y el PR daba 600 ms en vez de 300      |
 | E-19 | 2026-11-13 | IA       | docs    | El README resumía errores.md sin releerlo, y la entrada del plan contradecía la tabla que cambiaba                  |
+| E-20 | 2026-11-13 | IA       | docs    | 16 hashes de E-11 a E-19 eran los de las ramas; el merge con --rebase los reescribe y no están en main              |
 
 ## Formato de cada entrada
 
@@ -38,7 +39,8 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Síntoma:** qué se vio.
 - **Causa:** por qué pasó.
 - **Detección:** hook, typecheck, CI, /pr-review, vista previa o a mano.
-- **Arreglo:** qué se cambió, con el commit (hash corto) o el PR (#n).
+- **Arreglo:** qué se cambió, con el PR (#n) y el asunto del commit. El hash corto, solo si el commit ya está en `main`:
+  el merge con `--rebase` lo cambia (E-20).
 - **Prevención:** la regla, el hook, el chequeo o la línea de CLAUDE.md que se agregó; o "ninguna" y por qué.
 ```
 
@@ -329,3 +331,16 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Prevención:** se agregó a `CLAUDE.md`, en "Errores": cada afirmación del README sobre una entrada se contrasta con
   su síntoma, causa, detección y prevención antes de commitear. Y al principio de "Cambios al plan" de
   `docs/decisiones.md`: cada cambio edita también la tabla y las filas que nombran el bloque.
+
+### E-20 · 2026-11-13 13:58 · IA · docs
+
+- **Síntoma:** 16 hashes citados en las entradas E-11 a E-19 (22 lugares) no estaban en `main`. Un clon del repo no
+  los encuentra.
+- **Causa:** Claude anotó los hashes de los commits de cada rama antes del merge. `gh pr merge --rebase` reescribe
+  los commits al pasarlos a `main`, con el mismo asunto y otro hash.
+- **Detección:** Claude, después del merge del PR #5: los dos hashes de E-19 ya no coincidían con los de `main`, y un
+  script que prueba cada hash del archivo con `git merge-base --is-ancestor` marcó los 16.
+- **Arreglo:** PR #6, commit "docs(docs): citar en errores.md los hashes de los commits en main": cada hash, por el del
+  commit de `main` con el mismo asunto, que en los 16 casos era uno solo.
+- **Prevención:** en "Formato de cada entrada", el arreglo cita el PR y el asunto del commit; el hash, solo si el
+  commit ya está en `main`. Lo mismo en el paso 2 de `/registrar-error`.

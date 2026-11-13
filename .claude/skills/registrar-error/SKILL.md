@@ -21,6 +21,8 @@ Leer `docs/errores.md`: el formato de entrada, los valores válidos de origen y 
 
 - **Fecha y hora:** `date "+%Y-%m-%d %H:%M"`.
 - **Commit y archivos:** `git log -1 --format="%h %s"`, `git status --short` y, si aplica, `git diff --stat`.
+  En la entrada va el PR y el asunto del commit; el hash, solo si el commit ya está en `main` (el merge con
+  `--rebase` lo cambia, E-20).
 - **Síntoma, causa, detección y arreglo:** solo si están en la conversación o en un resultado concreto (salida del
   hook, del typecheck, del CI, de `/pr-review`, de la vista previa). Citar la salida tal cual cuando ayude.
 - **Origen:** `IA`, `mío`, `librería`, `API externa` o `entorno`. Si el error lo cometió Claude, el origen es `IA`

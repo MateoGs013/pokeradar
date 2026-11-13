@@ -94,7 +94,7 @@ entrada (E-18).
   "sin probar".
 
 **Dónde se equivocó y cómo lo corregí.** Todo está en [docs/errores.md](docs/errores.md), con síntoma, causa, cómo se
-detectó, arreglo y prevención. De las 19 entradas, 17 son errores de la IA. Los que más me enseñaron:
+detectó, arreglo y prevención. De las 20 entradas, 18 son errores de la IA. Los que más me enseñaron:
 
 - **Afirmar sin medir, o de memoria,** fue el error más repetido (E-03, E-05, E-08, E-09, E-10, E-11, E-12, E-13, E-15,
   E-18 y E-19). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10);
@@ -110,8 +110,8 @@ detectó, arreglo y prevención. De las 19 entradas, 17 son errores de la IA. Lo
 - **Librerías:** MapLibre v6 con Turbopack se quedaba sin su worker (E-07), y su cámara recorta el destino con el padding
   anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
-Quién detectó las 19: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
-encontró 9; yo, 2; las otras 8 salieron antes del commit, midiendo, mirando capturas o releyendo.
+Quién detectó las 20: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
+encontró 9; yo, 2; las otras 9 salieron antes del commit, midiendo, mirando capturas o releyendo.
 
 ## Próximos Pasos
 
