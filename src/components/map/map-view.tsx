@@ -76,7 +76,7 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   // su contenido) y se borra al terminar: ahí el hook corta un pedido que siga en curso.
   const [selection, setSelection] = useState<SignalSelection | null>(null);
   const [dossierOpen, setDossierOpen] = useState(false);
-  const { identification, retry } = usePokemonDetail(
+  const { identification, identified, retry } = usePokemonDetail(
     selection?.spawn.speciesId ?? null,
   );
   // Dónde está la cámara mientras la ficha está abierta. Lo lee el redimensionado, que encuadra el
@@ -173,6 +173,7 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
           bounds={bounds}
           spawns={spawns}
           selectedId={dossierOpen ? (selection?.spawn.speciesId ?? null) : null}
+          identified={identified}
           onSelect={(next) => {
             setSelection(next);
             setDossierOpen(true);
