@@ -15,6 +15,14 @@ interface PokemonSpriteProps {
   className?: string;
 }
 
+/**
+ * Si la especie tiene alguno de los dos sprites. Sin ninguno, PokemonSprite no dibuja nada, y quien
+ * lo usa muestra otra cosa en su lugar. Con las 386 especies del mundo no pasa (todas tienen los dos).
+ */
+export function hasSprite(sprites: PokemonDetail["sprites"]): boolean {
+  return sprites.animated !== null || sprites.still !== null;
+}
+
 export function PokemonSprite({
   sprites,
   size,
