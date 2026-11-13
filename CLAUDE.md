@@ -102,4 +102,5 @@ Las carpetas se crean cuando tienen su primer archivo real. Reglas por carpeta e
 - `docs/errores.md` guarda solo hechos reales. Cuando Mateo te corrija, o detectes un error (tuyo, suyo, de una
   librería, de una API o del entorno), avisale y agregá la entrada con el formato del archivo (o usá `/registrar-error`).
 - Nunca inventes ni adornes entradas. Cada una termina con una prevención concreta, o con "ninguna" y el porqué.
-- La sección "Uso de IA" del README sale de las entradas con origen IA.
+- La sección "Uso de IA" del README sale de las entradas con origen IA, y cada afirmación sobre una entrada se
+  contrasta con su síntoma, causa, detección y prevención antes de commitear (E-19).
