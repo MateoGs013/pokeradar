@@ -134,6 +134,16 @@ function describePlace(spawn: Spawn, places: readonly Place[]): string {
 }
 
 /**
+ * Las señales de norte a sur, y de oeste a este en la misma latitud: el orden del Tab entre los
+ * botones y el de los números de los lugares repetidos.
+ */
+export function northToSouth(spawns: readonly Spawn[]): Spawn[] {
+  return [...spawns].sort(
+    (a, b) => b.position[1] - a.position[1] || a.position[0] - b.position[0],
+  );
+}
+
+/**
  * El lugar de cada señal, en el orden en que vienen, y su etiqueta para el botón. Si varias
  * comparten lugar, la etiqueta las numera en ese orden ("el bosque, al noreste de Monte Brasa (2 de
  * 2)"): con lector de pantalla, dos botones con el mismo nombre no se distinguen. La ficha muestra

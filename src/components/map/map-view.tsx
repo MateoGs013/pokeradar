@@ -153,8 +153,6 @@ export function MapView({
   // su contenido) y se borra al terminar: ahí el hook corta un pedido que siga en curso.
   const [selection, setSelection] = useState<SignalSelection | null>(null);
   const [dossierOpen, setDossierOpen] = useState(false);
-  // Las señales de la última detección, para anunciarlas al lector de pantalla.
-  const [lastDetected, setLastDetected] = useState<readonly number[]>([]);
   const { identification, identified, retry } = usePokemonDetail(
     selection?.spawn.speciesId ?? null,
   );
@@ -288,17 +286,13 @@ export function MapView({
             grid={grid}
             base={radarBase}
             spawns={spawns}
-            onDetect={(ids) => {
-              onDetect(ids);
-              setLastDetected(ids);
-            }}
+            onDetect={onDetect}
           />
           <SignalMarkers
             map={loadedMap}
             places={places}
             spawns={spawns}
             detected={detected}
-            lastDetected={lastDetected}
             selectedId={
               dossierOpen ? (selection?.spawn.speciesId ?? null) : null
             }
