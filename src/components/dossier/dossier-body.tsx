@@ -18,7 +18,7 @@ import { hasSprite, PokemonSprite } from "./pokemon-sprite";
 import { ScrambleText } from "./scramble-text";
 import { THREAT_LEVELS, threatLevel } from "./threat";
 
-/** La estadística base más alta de las 386 especies: 255, los PS de Blissey (docs/hallazgos-pokeapi.md). */
+/** La estadística base más alta de las 386 especies: 255 (docs/hallazgos-pokeapi.md). */
 const MAX_STAT = 255;
 
 interface DossierBodyProps {
