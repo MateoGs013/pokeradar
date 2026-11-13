@@ -32,6 +32,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-20 | 2026-11-13 | IA       | docs    | 16 hashes de E-11 a E-19 eran los de las ramas; el merge con --rebase los reescribe y no están en main              |
 | E-21 | 2026-11-13 | IA       | ui      | Commits del PR #7 con mediciones de otro estado de la rama, y saltos de la ficha medidos sin el texto más largo     |
 | E-22 | 2026-11-13 | IA       | docs    | Ejemplos de etiquetas de señales escritos de memoria en el README, comentarios y un commit; ninguna señal los tenía |
+| E-23 | 2026-11-13 | IA       | map     | Un comentario describía la regla vieja de `labelAnchor`, y el contraste de los nombres se afirmaba con una cuenta   |
 
 ## Formato de cada entrada
 
@@ -379,3 +380,21 @@ Para agregar una entrada se puede usar `/registrar-error`.
   "docs(docs): anotar los nombres de lugares en decisiones.md y el README": ejemplos tomados de la lista.
 - **Prevención:** ninguna nueva: la línea de `CLAUDE.md` que pide probar lo que se afirma ya lo cubría (E-21), y al
   aplicarla antes del push apareció.
+
+### E-23 · 2026-11-13 16:58 · IA · map
+
+- **Síntoma:** en el PR #8, el comentario de `placeLayers` en `map-view.tsx` decía que cada nombre va "del lado
+  opuesto a la señal más cercana", pero `labelAnchor` elige el lado con menos señales cerca: con Villa Escarcha y
+  Laguna Sal el lado elegido no es el opuesto a la más cercana. Ese comentario, la descripción del PR y un commit
+  sostenían WCAG 1.4.3 con una cuenta sobre los colores de globals.css, y la descripción la ponía bajo "Medido en
+  Chrome headless".
+- **Causa:** Claude cambió `labelAnchor` de "el lado opuesto a la más cercana" a un puntaje por lado, actualizó el
+  comentario de la función y no el de `placeLayers`, que la resumía. El contraste lo calculó con la fórmula de WCAG y no
+  lo midió en el render, aunque `.claude/rules/ui.md` pide una medición y no una cuenta.
+- **Detección:** `/pr-review` del PR #8 (subagente). El lado de los dos lugares se confirmó recalculando los puntajes
+  con las posiciones del build.
+- **Arreglo:** PR #8, "fix(map): tomar de los tokens la letra de los nombres y medir su contraste": el comentario dice
+  "del lado con menos señales cerca", y el contraste se midió en capturas a 1440 px con y sin los nombres (13,35:1 o
+  más contra el halo; 5,24:1 o más contra el bioma, sin el halo).
+- **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de probar lo que se afirma y la de `ui.md` sobre WCAG ya lo
+  cubrían; no se aplicaron.

@@ -102,13 +102,13 @@ entrada (E-18).
   "sin probar".
 
 **Dónde se equivocó y cómo lo corregí.** Todo está en [docs/errores.md](docs/errores.md), con síntoma, causa, cómo se
-detectó, arreglo y prevención. De las 22 entradas, 20 son errores de la IA. Los que más me enseñaron:
+detectó, arreglo y prevención. De las 23 entradas, 21 son errores de la IA. Los que más me enseñaron:
 
 - **Afirmar sin medir, o de memoria,** fue el error más repetido (E-03, E-05, E-08, E-09, E-10, E-11, E-12, E-13, E-15,
-  E-18, E-19, E-21 y E-22). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px
+  E-18, E-19, E-21, E-22 y E-23). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px
   entre centros (E-10); que sin WebGL "el mapa no se dibuja y no hay un mensaje propio", cuando se caía la página
-  entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe (E-18). En diez de esos trece sumé una
-  prevención; E-12, E-15 y E-22 ya los cubría una anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a
+  entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe (E-18). En diez de esos catorce sumé una
+  prevención; E-12, E-15, E-22 y E-23 ya los cubría una anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a
   probar o a escribir "sin probar".
 - **Dimensionar mal:** planificó con las "3 a 4 horas" de la consigna en lugar del tiempo real que yo tenía; lo
   corregí (E-01).
@@ -119,8 +119,8 @@ detectó, arreglo y prevención. De las 22 entradas, 20 son errores de la IA. Lo
 - **Librerías:** MapLibre v6 con Turbopack se quedaba sin su worker (E-07), y su cámara recorta el destino con el padding
   anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
-Quién detectó las 22: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
-encontró 10; yo, 2; y la propia IA, otras 10: midiendo, mirando capturas o releyendo.
+Quién detectó las 23: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
+encontró 11; yo, 2; y la propia IA, otras 10: midiendo, mirando capturas o releyendo.
 
 ## Próximos Pasos
 
@@ -141,3 +141,8 @@ Con una semana más, además del plan:
 
 - **Calidad:** pruebas con lector de pantalla y en Safari, Firefox y teléfonos reales, que hoy faltan; pruebas
   automatizadas de las interacciones del mapa.
+- **Nombres de lugares para el lector de pantalla:** se dibujan en el mapa, que el lector no lee, y los lagos no
+  aparecen en ninguna etiqueta. Falta una lista oculta de los lugares, o sumar el sector del mundo a la etiqueta de
+  cada señal.
+- **Menos cálculo en el navegador:** el lado de cada nombre y el lugar de cada señal dependen solo del build; se pueden
+  calcular en el servidor.
