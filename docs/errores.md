@@ -186,7 +186,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
   `docs/decisiones.md`), sin leer el criterio (lo leyó a las 20:02) ni medir.
 - **Detección:** Claude, antes de commitear: midió con DevTools la distancia mínima entre centros (23,3 px a 390 px de
   ancho) y leyó el texto del W3C.
-- **Arreglo:** el comentario dejó de afirmarlo (37af570) y la separación pasó de 12 a 14 celdas (0d97218).
+- **Arreglo:** el comentario dejó de afirmarlo (bf2b6bc) y la separación pasó de 12 a 14 celdas (d9ce263).
   Medido: 25,2 px a 360 px de ancho, 26,3 a 375 y 27,3 a 390.
 - **Prevención:** se agregó a `.claude/rules/ui.md`: "Un comentario o un doc que diga que algo cumple un criterio de
   WCAG cita el criterio y una medición; nunca de memoria ni con una cuenta."
@@ -200,7 +200,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
   un error boundary propio, así que llega al de Next, que reemplaza la página.
 - **Detección:** `/pr-review` del PR #3 (subagente) y reproducción con Chrome `--disable-webgl2` sobre el build del PR.
 - **Arreglo:** un error boundary con `catchError` de `next/error` muestra un mensaje propio en el lugar del mapa y deja
-  el resto de la página (771bfde). Cubre también un worker o un código del mapa que no bajan. Probado con Chrome
+  el resto de la página (bc6f1b5). Cubre también un worker o un código del mapa que no bajan. Probado con Chrome
   `--disable-webgl2`, con el archivo del worker escondido del build y con el chunk del mapa bloqueado. La frase de la
   descripción del PR se corrigió.
 - **Prevención:** un ítem nuevo en el checklist de `.github/PULL_REQUEST_TEMPLATE.md`: lo que la descripción afirma del
@@ -222,19 +222,19 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 - **Síntoma:** el comentario de `expandToAspect` (`src/lib/geo/bounds.ts`) decía que con una pantalla unas 11 veces
   más alta que ancha, o 30 veces más ancha que alta, "MapLibre acerca el mapa y el mundo queda recortado"; el mensaje
-  de d86fef6, que en esas pantallas "el mundo queda recortado, pero el mapa carga". Medido en el build: a lo alto, el
+  de 9446899, que en esas pantallas "el mundo queda recortado, pero el mapa carga". Medido en el build: a lo alto, el
   mundo entraba entero hasta 100×2200 px (unas 22 veces); a lo ancho, desde 3000×100 (30:1) el mapa no cargaba: "No
   se pudo cargar el mapa." y, en la consola, un `TypeError` en `calcMatrices` de MapLibre.
 - **Causa:** Claude escribió el comportamiento sin medirlo, y puso el tope de ±180° de longitud que sugería la review
   del PR #3 sin probar pantallas anchas. MapLibre lleva los bordes del límite a una sola vuelta del mundo (`wrap`, en
   `defaultConstrain`): −180° y 180° caen en el mismo lugar, y el límite le queda de ancho cero. A 30:1 justo ya fallaba
-  antes de d86fef6, y el tope lo extendió a toda proporción mayor (antes, a 3600×100 y 4000×100 el mapa cargaba pero
+  antes de 9446899, y el tope lo extendió a toda proporción mayor (antes, a 3600×100 y 4000×100 el mapa cargaba pero
   mostraba otro lugar). A lo alto, Mercator estira la latitud: de −85° a 85° mide unas 22 veces el ancho del mundo.
-- **Detección:** Claude, antes del push: la captura de 100×1200 px de la prueba de d86fef6 mostraba la isla entera, al
-  revés de lo que decía el comentario. Midió en varias proporciones, también con el código de antes de d86fef6.
-- **Arreglo:** tope de longitud en ±179° y el comentario con lo medido (717f9b6). Cargan todas las proporciones
-  probadas, de 100×3000 a 6000×100. El mensaje de d86fef6 queda como está, porque con el PR abierto cada arreglo es un
-  commit nuevo (`docs/flujo.md`); lo corrige el de 717f9b6.
+- **Detección:** Claude, antes del push: la captura de 100×1200 px de la prueba de 9446899 mostraba la isla entera, al
+  revés de lo que decía el comentario. Midió en varias proporciones, también con el código de antes de 9446899.
+- **Arreglo:** tope de longitud en ±179° y el comentario con lo medido (f1ad8e2). Cargan todas las proporciones
+  probadas, de 100×3000 a 6000×100. El mensaje de 9446899 queda como está, porque con el PR abierto cada arreglo es un
+  commit nuevo (`docs/flujo.md`); lo corrige el de f1ad8e2.
 - **Prevención:** se agregó a "Forma de trabajo" de `CLAUDE.md` una línea: lo que un comentario, un mensaje de commit
   o la descripción de un PR afirma del comportamiento se prueba antes de escribirlo, y si no, dice "sin probar". Sigue
   a E-03, E-05, E-09, E-10 y E-11, que también afirmaban un comportamiento sin probarlo; la regla de E-10 cubría solo WCAG, y el
@@ -242,12 +242,12 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ### E-14 · 2026-11-12 22:09 · IA · map
 
-- **Síntoma:** con el arreglo de "Cargando mapa…" (11f8b56), el canvas queda enfocable con Tab debajo del cartel hasta
+- **Síntoma:** con el arreglo de "Cargando mapa…" (b317d57), el canvas queda enfocable con Tab debajo del cartel hasta
   `load`: el foco cae en algo que no se ve, y las flechas mueven el mapa tapado.
 - **Causa:** el cartel tapa el canvas, pero MapLibre le pone `tabindex="0"` al crearlo, antes de `load`. El arreglo se
   probó mirando cuándo se va el cartel, sin probar el teclado durante la carga.
 - **Detección:** `/pr-review` del PR #3, segunda vuelta (subagente).
-- **Arreglo:** `inert` en el contenedor del mapa hasta `load` (172286a). Con red lenta, Tab con el cartel en pantalla
+- **Arreglo:** `inert` en el contenedor del mapa hasta `load` (e5b6918). Con red lenta, Tab con el cartel en pantalla
   ya no llega al canvas; después de `load`, sí.
 - **Prevención:** en `.github/PULL_REQUEST_TEMPLATE.md`, el ítem de teclado pasó a "Usable con teclado y con foco
   visible, también mientras carga".
@@ -263,20 +263,20 @@ Para agregar una entrada se puede usar `/registrar-error`.
   que el div es el mismo, no cuántas veces corre el inicializador. La cuenta de E-11 dejó afuera dos entradas del mismo
   archivo.
 - **Detección:** `/pr-review` del PR #3, segunda vuelta (subagente).
-- **Arreglo:** los dos comentarios dicen solo lo medido (70350e5); E-11 y E-13 se corrigieron junto con esta entrada, y
+- **Arreglo:** los dos comentarios dicen solo lo medido (9d7ffcf); E-11 y E-13 se corrigieron junto con esta entrada, y
   la descripción del PR #3 se reescribió sin esa frase.
 - **Prevención:** ninguna nueva. Es la clase que cubre la línea de `CLAUDE.md` de E-13, y los dos comentarios son
-  anteriores a ella (11f8b56 y db320cc).
+  anteriores a ella (b317d57 y 8d168c7).
 
 ### E-16 · 2026-11-12 19:27 · IA · map
 
-- **Síntoma:** desde b7e81ac, el rótulo de la esquina es texto de 12 px sin fondo sobre el mapa. Con `--hud-fg-muted`
+- **Síntoma:** desde 2a5334c, el rótulo de la esquina es texto de 12 px sin fondo sobre el mapa. Con `--hud-fg-muted`
   da menos de 4,5:1 sobre cueva, volcán, montaña y ciudad (cuentas sobre los tokens). En el mismo commit, el `<h1>` de
   la página pasó a ser un `<span>`, y la página quedó sin encabezado.
 - **Causa:** los contrastes medidos de `globals.css` son contra las superficies del HUD (`--hud-bg`,
   `--hud-surface-2`), y el rótulo va directo sobre el mapa. El encabezado se perdió al rehacer la página para el mapa.
 - **Detección:** `/pr-review` del PR #3, segunda vuelta (subagente). La primera vuelta no lo marcó.
-- **Arreglo:** un `<h1>` visible en el rótulo (2d08cd8) y un fondo detrás (edd64f1). Medido con el mapa recorrido con
+- **Arreglo:** un `<h1>` visible en el rótulo (9c18a42) y un fondo detrás (f5130a0). Medido con el mapa recorrido con
   las flechas, a 390 y 1440: 6,29:1 como mínimo, en 7 de los 9 biomas.
 - **Prevención:** se agregó a `.claude/rules/ui.md`: "El texto que va sobre el mapa lleva fondo, o su contraste se
   mide contra cada bioma (E-16)."
@@ -293,7 +293,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Detección:** a mano, midiendo con CDP las señales de los cuatro extremos en 390, 768 y 1440, antes del commit.
 - **Arreglo:** `setPaddingInPlace` en `src/components/map/camera.ts` pone el padding sin mover la vista (`setPadding` y
   después `setCenter` con el punto que ya estaba en el medio de la parte libre) y recién ahí vuela. Los 12 casos quedan
-  con la señal entera en la parte libre (b733c4a).
+  con la señal entera en la parte libre (8827ada).
 - **Prevención:** ninguna regla nueva. El porqué quedó en el comentario de `setPaddingInPlace`, y lo detectó la regla
   que ya existe: medir antes de afirmar (`CLAUDE.md`).
 
@@ -308,7 +308,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
   `useTransitionStatus`). Los comentarios se escribieron sin medir la entrada: las pruebas medían la salida, el foco
   y la cámara. Los 600 ms eran el momento de la medición, no la duración.
 - **Detección:** `/pr-review` del PR #4 (subagente).
-- **Arreglo:** `DossierPanel` montado siempre, con el contenido solo cuando hay una señal (35d4f47). Medido: a 1440 el
+- **Arreglo:** `DossierPanel` montado siempre, con el contenido solo cuando hay una señal (5bf587d). Medido: a 1440 el
   panel entra desde x = 1440 y llega a 1080 a los 348 ms; a 390 sube desde y = 844 y llega a 338 a los 445 ms. La
   descripción del PR se corrigió.
 - **Prevención:** se agregó al paso "Revisar" de `.claude/skills/verificar/SKILL.md`: si el cambio agrega o toca una
@@ -324,8 +324,8 @@ Para agregar una entrada se puede usar `/registrar-error`.
   La entrada del plan se escribió sin mirar la tabla que cambiaba; el cambio anterior al plan (51c6118) sí la había
   editado.
 - **Detección:** `/pr-review` del PR #5 (subagente).
-- **Arreglo:** la tabla del plan y la fila de los glyphs pasan al bloque 3 (ae2e615); el README, corregido entrada por
-  entrada (4631e20).
+- **Arreglo:** la tabla del plan y la fila de los glyphs pasan al bloque 3 (8e91b7a); el README, corregido entrada por
+  entrada (c3598cb).
 - **Prevención:** se agregó a `CLAUDE.md`, en "Errores": cada afirmación del README sobre una entrada se contrasta con
   su síntoma, causa, detección y prevención antes de commitear. Y al principio de "Cambios al plan" de
   `docs/decisiones.md`: cada cambio edita también la tabla y las filas que nombran el bloque.
