@@ -6,7 +6,6 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
   type FillLayerSpecification,
-  type GeoJSONSource,
   Map as MapLibreMap,
   setWorkerUrl,
 } from "maplibre-gl";
@@ -61,11 +60,10 @@ function biomeLayers(biomes: BiomeCollection): FillLayerSpecification[] {
 
 export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<MapLibreMap | null>(null);
-  // Props con las que se crea el mapa. Después no se recrea: se actualizan sus fuentes.
+  // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
+  // una sola vez, con ellas.
   const initialRef = useRef({ biomes, bounds });
-  // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales. El ref sirve para
-  // usarlo desde efectos; este estado le avisa a React que puede renderizarlas.
+  // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
@@ -112,22 +110,14 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
     map.on("resize", onResize);
     const onLoad = () => setLoadedMap(map);
     map.on("load", onLoad);
-    mapRef.current = map;
 
     return () => {
       map.off("resize", onResize);
       map.off("load", onLoad);
       map.remove();
-      mapRef.current = null;
       setLoadedMap(null);
     };
   }, []);
-
-  // Si cambian los biomas, se actualiza la fuente sin recrear el mapa.
-  useEffect(() => {
-    const source = mapRef.current?.getSource<GeoJSONSource>(BIOMES_SOURCE);
-    source?.setData(biomes);
-  }, [biomes]);
 
   // MapLibre le pone `position: relative` al contenedor (.maplibregl-map), y su CSS le gana a
   // las clases de Tailwind: por eso el posicionamiento va en un div de afuera.
