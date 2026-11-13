@@ -45,6 +45,14 @@
   --bioma-cave: #3b5a4c;
   --bioma-rare: #6e3418;
 
+  /*
+   * Nombres de lugares en el mapa. MapLibre no entiende CSS: el mapa los lee con getComputedStyle
+   * y los pasa como números, en sus unidades: tamaño y halo en px, espaciado en em.
+   */
+  --map-label-size: 12;
+  --map-label-tracking: 0.1;
+  --map-label-halo: 1.5;
+
   /* Tokens que leen los componentes de shadcn, conectados al HUD. */
   --background: var(--hud-bg);
   --foreground: var(--hud-fg);
