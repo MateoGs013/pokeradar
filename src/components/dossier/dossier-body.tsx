@@ -68,7 +68,9 @@ function Placeholder({ className }: { className: string }) {
 function Identity({ detail }: { detail: PokemonDetail | null }) {
   return (
     <div className="flex gap-4">
-      <div className="flex size-24 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+      {/* El marco mide lo de adentro (96 px en los dos estados) más el borde. Con un tamaño fijo,
+          el borde le dejaba al sprite 94 px de ancho en vez de 96 (medido). */}
+      <div className="shrink-0 rounded-md border border-border bg-background">
         {detail ? (
           <PokemonSprite
             sprites={detail.sprites}
@@ -78,7 +80,7 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
         ) : (
           <span
             aria-hidden
-            className="font-mono text-3xl text-muted-foreground motion-safe:animate-pulse"
+            className="flex size-24 items-center justify-center font-mono text-3xl text-muted-foreground motion-safe:animate-pulse"
           >
             ?
           </span>
