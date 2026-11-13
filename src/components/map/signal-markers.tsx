@@ -7,7 +7,7 @@ import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { PokemonSprite } from "@/components/dossier/pokemon-sprite";
+import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { Bounds } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type { Position, Spawn } from "@/lib/world/types";
@@ -178,8 +178,9 @@ function SignalButton({
       onFocus={onFocus}
       className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-expanded:ring-2 aria-expanded:ring-foreground"
     >
-      {detail ? (
-        // La señal se transforma en el sprite (docs/concepto.md, "Señales e identificación"). Mide
+      {detail && hasSprite(detail.sprites) ? (
+        // La señal se transforma en el sprite (docs/concepto.md, "Señales e identificación"); sin
+        // sprite, sigue siendo el punto, con el nombre en el aria-label. Mide
         // 40 px, el doble que el botón, y no recibe eventos de puntero: el área para tocar sigue
         // siendo el botón de 20 px, el que cuenta para WCAG 2.5.8. max-w-none: el estilo base de
         // Tailwind (max-width: 100%) la dejaba en 20 px, el ancho del botón (medido).

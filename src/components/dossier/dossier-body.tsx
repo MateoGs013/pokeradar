@@ -14,7 +14,7 @@ import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
-import { PokemonSprite } from "./pokemon-sprite";
+import { hasSprite, PokemonSprite } from "./pokemon-sprite";
 import { ScrambleText } from "./scramble-text";
 import { THREAT_LEVELS, threatLevel } from "./threat";
 
@@ -69,9 +69,10 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
   return (
     <div className="flex gap-4">
       {/* El marco mide lo de adentro (96 px en los dos estados) más el borde. Con un tamaño fijo,
-          el borde le dejaba al sprite 94 px de ancho en vez de 96 (medido). */}
+          el borde le dejaba al sprite 94 px de ancho en vez de 96 (medido). Una especie sin
+          sprite muestra el "?" quieto, para que el marco no quede vacío. */}
       <div className="shrink-0 rounded-md border border-border bg-background">
-        {detail ? (
+        {detail && hasSprite(detail.sprites) ? (
           <PokemonSprite
             sprites={detail.sprites}
             size={96}
@@ -80,7 +81,10 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
         ) : (
           <span
             aria-hidden
-            className="flex size-24 items-center justify-center font-mono text-3xl text-muted-foreground motion-safe:animate-pulse"
+            className={cn(
+              "flex size-24 items-center justify-center font-mono text-3xl text-muted-foreground",
+              !detail && "motion-safe:animate-pulse",
+            )}
           >
             ?
           </span>
