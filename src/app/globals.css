@@ -101,9 +101,12 @@
   --color-hud-cian: var(--hud-cian);
   --color-bioma-sea: var(--bioma-sea);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-mono);
+  --font-sans: var(--font-atkinson);
+  --font-mono: var(--font-martian-mono);
+  --font-heading: var(--font-martian-mono);
+  --font-display: var(--font-doto);
+  /* El eje ROND de Doto en 100: puntos redondos, como en la muestra de tipografías elegida. */
+  --font-display--font-variation-settings: "ROND" 100;
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
