@@ -34,6 +34,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-22 | 2026-11-13 | IA       | docs    | Ejemplos de etiquetas de señales escritos de memoria en el README, comentarios y un commit; ninguna señal los tenía |
 | E-23 | 2026-11-13 | IA       | map     | Un comentario describía la regla vieja de `labelAnchor`, y el contraste de los nombres se afirmaba con una cuenta   |
 | E-24 | 2026-11-13 | IA       | radar   | Un commit daba parejo el borde de la niebla, medido en puntos sueltos; quedaba una línea sin niebla                 |
+| E-25 | 2026-11-13 | IA       | map     | Un commit sostenía WCAG 1.4.3 con una cuenta, y el fondo del cartel se midió en un clon, no en el real              |
 
 ## Formato de cada entrada
 
@@ -414,3 +415,17 @@ Para agregar una entrada se puede usar `/registrar-error`.
   que nunca se despeja, y el borde queda a 1 o 2 niveles del fondo.
 - **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de medir el caso peor (E-21) ya lo cubría, y la de registrar
   los errores propios también; no se aplicaron.
+
+### E-25 · 2026-11-13 20:02 · IA · map
+
+- **Síntoma:** en la rama del PR #9, antes del push, el commit "fix(map): pintar el cartel del mapa con el mar bajo la
+  niebla" sostenía WCAG 1.4.3 con 7,04:1: una cuenta con la fórmula de WCAG sobre el color del texto que da
+  `getComputedStyle` y un fondo medido. Ese fondo, y el "mismo píxel" que el mapa con niebla, se habían medido en un
+  clon del cartel armado por el arnés, no en el cartel que se ve al cargar.
+- **Causa:** Claude repitió lo de E-23: calculó el contraste en lugar de medirlo en el render, aunque `ui.md` pide una
+  medición y no una cuenta, y midió un clon porque el cartel real dura poco en pantalla.
+- **Detección:** Claude, en una revisión antes del push.
+- **Arreglo:** PR #9, el mismo commit con el mensaje reescrito antes del push: medido en el cartel real (el HTML del
+  servidor con los scripts apagados) a 1440 y 320 px, los 194 píxeles de letra quedan a 6,18:1 o más del mismo píxel
+  sin texto, y el fondo da 7 14 13.
+- **Prevención:** ninguna nueva: la regla de `ui.md` sobre WCAG ya lo cubría; no se aplicó.
