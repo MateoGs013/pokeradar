@@ -5,11 +5,7 @@
 // no hay más nada que barrer. La niebla es una capa del mapa (fog.ts). El haz es un elemento del
 // DOM pegado al mapa con un Marker, que gira con requestAnimationFrame: rotarlo no le pide nada al
 // mapa, que se redibuja en cada cuadro de esa vuelta solo porque la niebla cambia.
-import {
-  type CanvasSource,
-  type Map as MapLibreMap,
-  Marker,
-} from "maplibre-gl";
+import { CanvasSource, type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useEffectEvent } from "react";
 
 import { cssNumber, cssToken } from "@/components/map/css-token";
@@ -110,7 +106,11 @@ export function Radar({
       },
       PLACE_NAMES_LAYER,
     );
-    const source = map.getSource<CanvasSource>(FOG_SOURCE);
+    // getSource<T> no valida el tipo, solo lo afirma: instanceof sí lo comprueba.
+    const source = map.getSource(FOG_SOURCE);
+    if (!(source instanceof CanvasSource)) {
+      throw new Error("La niebla no quedó como fuente canvas del mapa");
+    }
     // El primer cuadro que el mapa dibuja después de sumar la capa ya tiene la niebla.
     const onRender = () => {
       map.off("render", onRender);
@@ -156,7 +156,7 @@ export function Radar({
       if (to === FULL_TURN || reduce.matches) {
         clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
         detectSector(0, FULL_TURN);
-        source?.pause();
+        source.pause();
         beam.style.opacity = "0";
         frame = 0;
         return;
