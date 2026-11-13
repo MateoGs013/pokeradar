@@ -258,7 +258,7 @@ export function MapView({ biomes, bounds, spawns, places }: MapViewProps) {
       {loadedMap ? (
         <SignalMarkers
           map={loadedMap}
-          bounds={bounds}
+          places={places}
           spawns={spawns}
           selectedId={dossierOpen ? (selection?.spawn.speciesId ?? null) : null}
           identified={identified}

@@ -32,9 +32,9 @@ distinta, ubicada en su hábitat.
 | Datos reales y panel de detalle                        | Dos pedidos a PokéAPI (`/pokemon` y `/pokemon-species`), validados; ficha al costado en desktop y abajo en mobile; skeleton del tamaño final y error con reintento                                                           |
 | Animaciones con propósito                              | Pulso de las señales, "Analizando firma…" que se descifra, entrada de la ficha, barras de estadísticas que crecen, entrada del sprite; todo apagado con `prefers-reduced-motion` (la cámara usa `jumpTo`)                    |
 
-Accesibilidad: cada señal es un `<button>` con `aria-label` ("Señal sin identificar en el volcán del centro", y después
-"Shuppet en la ciudad del este"), foco visible, Tab entre señales de norte a sur, Esc cierra la ficha y el foco vuelve a la
-señal.
+Accesibilidad: cada señal es un `<button>` con `aria-label` ("Señal sin identificar en el volcán de Monte Brasa", y
+después "Shuppet en la ciudad de Cruz del Viento"), foco visible, Tab entre señales de norte a sur, Esc cierra la ficha
+y el foco vuelve a la señal.
 
 ## Arquitectura y Stack
 
