@@ -143,6 +143,17 @@
   }
 }
 
+/*
+ * Foco del mapa: el canvas de MapLibre se enfoca con Tab, para moverlo con las flechas. Sin esto
+ * queda el contorno del navegador: 1 px, con el color del foco al 50 %. Va hacia adentro porque
+ * el contenedor del mapa recorta lo que sale del canvas (overflow: hidden).
+ */
+@layer components {
+  .maplibregl-canvas:focus-visible {
+    @apply outline-2 -outline-offset-2 outline-ring;
+  }
+}
+
 /* Movimiento reducido: apaga transiciones y animaciones CSS en toda la app. */
 @media (prefers-reduced-motion: reduce) {
   *,
