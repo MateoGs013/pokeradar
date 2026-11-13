@@ -27,10 +27,13 @@ export default async function Home() {
       className="relative flex-1 overflow-hidden"
       style={{ "--panel-width": `${PANEL_WIDTH}px` }}
     >
-      <div className="pointer-events-none absolute top-3 left-3 z-10 bg-background/80 px-1.5 py-0.5 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+      <div className="pointer-events-none absolute top-3 left-3 z-10 bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+        {/* Cada dato en un span sin cortes: si no entra en una línea, corta en un " · " y
+            no entre un nombre y su valor. */}
         <h1 className="inline tracking-widest text-hud uppercase">PokéRadar</h1>{" "}
-        · semilla {world.seed} · huella {worldHash(world)} · {spawns.length}{" "}
-        señales
+        · <span className="whitespace-nowrap">semilla {world.seed}</span> ·{" "}
+        <span className="whitespace-nowrap">huella {worldHash(world)}</span> ·{" "}
+        <span className="whitespace-nowrap">{spawns.length} señales</span>
       </div>
       <MapLoader
         biomes={world.biomes}
