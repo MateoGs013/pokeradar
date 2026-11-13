@@ -56,11 +56,16 @@ Dos ajustes que pide maplibre-gl con Next 16 y Turbopack:
   el CSS sin capa le gana a las utilidades. El div que recibe el mapa no lleva clases de posición: van en un div de
   afuera. Ver E-08.
 
-### Elegidas, sin instalar (se instalan en el paso que las usa)
+Instalada para la ficha (versión exacta):
 
 | Paquete | Versión | Notas                                                                                                                                                                                                                                                                         | Fuente                              |
 | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | motion  | 14.13.0 | Publicada el 12/11/2026 (el mismo día del andamiaje). Es la librería que la consigna llama "Framer Motion". Se instala `motion` y se importa desde `"motion/react"`. `framer-motion` se sigue publicando con la misma versión, pero la guía oficial indica migrar a `motion`. | motion.dev/docs/react-upgrade-guide |
+
+`pnpm add -E motion@14.13.0` sumó 4 paquetes: `motion`, `framer-motion` y `motion-dom` (14.13.0) y `motion-utils`
+(14.7.0). Con `MotionConfig reducedMotion="user"`, motion apaga las animaciones de `transform` cuando el sistema pide
+menos movimiento: así lo documenta el tipo `reducedMotion` en `framer-motion/dist/index.d.ts` ("switching transform
+animations off").
 
 ## 2. Opciones evaluadas
 
