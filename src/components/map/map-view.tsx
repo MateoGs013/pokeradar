@@ -101,9 +101,16 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
       // moverlo con las flechas). `locale` traduce ese nombre, que por defecto es "Map".
       locale: { "Map.Title": "Mapa del mundo" },
       attributionControl: false,
+      // Ni rotar ni inclinar: el mundo se ve desde arriba y con el norte arriba, que es el orden
+      // del Tab entre las señales, y no hay un control para volver al norte. dragRotate apaga el
+      // mouse (rotar e inclinar); touchPitch, inclinar con dos dedos.
       dragRotate: false,
-      pitchWithRotate: false,
+      touchPitch: false,
     });
+    // Sin opción en el constructor: girar con dos dedos, y Shift + flechas (que así tampoco
+    // inclinan).
+    map.touchZoomRotate.disableRotation();
+    map.keyboard.disableRotation();
     // Al rotar el teléfono o cambiar el tamaño de la ventana: límite nuevo y el mundo encuadrado
     // otra vez. MapLibre se redimensiona con el límite viejo, que puede dejar el mapa acercado
     // y la isla cortada; el límite nuevo solo impide salir, no aleja.
