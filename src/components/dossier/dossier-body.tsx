@@ -244,7 +244,7 @@ function Facts({
       <dt className="tracking-widest text-muted-foreground uppercase">Peso</dt>
       <dd>{detail ? `${formatNumber(detail.weightKilos)} kg` : "—"}</dd>
       <dt className="tracking-widest text-muted-foreground uppercase">
-        Hábitat
+        Ubicación
       </dt>
       <dd>{place.charAt(0).toUpperCase() + place.slice(1)}</dd>
     </dl>
