@@ -184,21 +184,21 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
       ) : (
         <MapLoading />
       )}
-      {selection && identification && (
-        <DossierPanel
-          open={dossierOpen}
-          identification={identification}
-          place={selection.place}
-          onRetry={retry}
-          onClose={() => {
-            setDossierOpen(false);
-            focusRef.current = null;
-            if (loadedMap) releaseFocus(loadedMap);
-          }}
-          onClosed={() => setSelection(null)}
-          returnFocus={() => selection.button}
-        />
-      )}
+      {/* Montado siempre, aunque no haya señal: Base UI anima la entrada solo cuando el panel ya
+          existía cerrado y pasa a abierto (useTransitionStatus, animateInitialOpen). */}
+      <DossierPanel
+        open={dossierOpen}
+        identification={identification}
+        place={selection?.place ?? null}
+        onRetry={retry}
+        onClose={() => {
+          setDossierOpen(false);
+          focusRef.current = null;
+          if (loadedMap) releaseFocus(loadedMap);
+        }}
+        onClosed={() => setSelection(null)}
+        returnFocus={() => selection?.button ?? null}
+      />
     </div>
   );
 }

@@ -31,16 +31,17 @@ import {
 
 interface DossierPanelProps {
   open: boolean;
-  identification: Identification;
+  /** null cuando no hay señal elegida: el panel está cerrado y sin contenido. */
+  identification: Identification | null;
   /** Dónde se detectó la señal: "el bosque del norte". */
-  place: string;
+  place: string | null;
   onRetry: () => void;
   /** Se pidió cerrar: Esc, la cruz, tocar afuera o, en el celular, deslizar hacia abajo. */
   onClose: () => void;
   /** Terminó la animación de salida: recién ahí se puede desmontar el contenido. */
   onClosed: () => void;
   /** Adónde vuelve el foco al cerrar: el botón de la señal. */
-  returnFocus: () => HTMLElement;
+  returnFocus: () => HTMLElement | null;
 }
 
 const TITLE_CLASS =
@@ -65,7 +66,7 @@ export function DossierPanel({
       if (!next) onClosed();
     },
   };
-  const body = (
+  const body = identification && place !== null && (
     <DossierBody
       identification={identification}
       place={place}
