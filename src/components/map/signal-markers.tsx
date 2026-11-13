@@ -2,7 +2,8 @@
 
 // Las señales sobre el mapa. Cada una es un Marker de MapLibre, que la mueve con la cámara, con un
 // <button> de React adentro, montado con un portal. Son decenas, no cientos: como botones del DOM
-// tienen foco, teclado y aria-label sin trabajo extra (docs/decisiones.md, "Señales").
+// tienen foco, teclado y aria-label sin trabajo extra (docs/decisiones.md, "Señales"). El botón
+// existe recién cuando el radar detectó la señal: antes no se ve ni se alcanza con Tab.
 import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -69,6 +70,10 @@ interface SignalMarkersProps {
   selectedId: number | null;
   /** Las especies ya identificadas, por id: esas señales muestran su sprite. */
   identified: ReadonlyMap<number, PokemonDetail>;
+  /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
+  detected: ReadonlySet<number>;
+  /** Las de la última detección, para el aviso al lector de pantalla. */
+  lastDetected: readonly number[];
   onSelect: (selection: SignalSelection) => void;
 }
 
@@ -78,6 +83,8 @@ export function SignalMarkers({
   spawns,
   selectedId,
   identified,
+  detected,
+  lastDetected,
   onSelect,
 }: SignalMarkersProps) {
   // Un div por señal, que MapLibre posiciona, y el lugar que la nombra. El div lo comparten el
@@ -118,20 +125,44 @@ export function SignalMarkers({
     };
   }, [map, anchors]);
 
-  return anchors.map(({ spawn, place, label, element }) =>
-    createPortal(
-      <SignalButton
-        spawn={spawn}
-        place={place}
-        label={label}
-        selected={spawn.speciesId === selectedId}
-        detail={identified.get(spawn.speciesId)}
-        onSelect={onSelect}
-        onFocus={() => revealSignal(map, spawn.position)}
-      />,
-      element,
-      String(spawn.speciesId),
-    ),
+  // Un aviso por detección: con una sola señal, dónde está; con varias, cuántas.
+  const announced = anchors.filter(({ spawn }) =>
+    lastDetected.includes(spawn.speciesId),
+  );
+  const [first, ...others] = announced;
+  const announcement = !first
+    ? ""
+    : others.length === 0
+      ? `Señal detectada en ${first.label}`
+      : `${announced.length} señales detectadas`;
+
+  // Los Marker de todas las señales existen desde el principio, en el orden de norte a sur: un
+  // botón que aparece después queda en su lugar del Tab.
+  const buttons = anchors.map(
+    ({ spawn, place, label, element }) =>
+      detected.has(spawn.speciesId) &&
+      createPortal(
+        <SignalButton
+          spawn={spawn}
+          place={place}
+          label={label}
+          selected={spawn.speciesId === selectedId}
+          detail={identified.get(spawn.speciesId)}
+          onSelect={onSelect}
+          onFocus={() => revealSignal(map, spawn.position)}
+        />,
+        element,
+        String(spawn.speciesId),
+      ),
+  );
+
+  return (
+    <>
+      {buttons}
+      <p role="status" className="sr-only">
+        {announcement}
+      </p>
+    </>
   );
 }
 
@@ -182,6 +213,13 @@ function SignalButton({
       onFocus={onFocus}
       className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-expanded:ring-2 aria-expanded:ring-foreground"
     >
+      {/* El ping de la detección: el botón aparece cuando el haz pasa por la señal, y este anillo
+          crece una sola vez desde ahí. Va primero para que no se vuelva a montar, y animarse,
+          cuando la señal se identifica. Termina invisible y no recibe toques. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-full border-2 border-hud opacity-0 motion-safe:animate-deteccion"
+      />
       {detail && hasSprite(detail.sprites) ? (
         // La señal se transforma en el sprite (docs/concepto.md, "Señales e identificación"); sin
         // sprite, sigue siendo el punto, con el nombre en el aria-label. Mide
