@@ -8,7 +8,7 @@ paths:
 
 - Todo acá es código de cliente (`"use client"`). La carga diferida con `dynamic(..., { ssr: false })` vive en un
   Client Component que envuelve al mapa, nunca en un Server Component.
-- El mapa se crea una sola vez (en un efecto, guardado en un ref) y se destruye con `map.remove()` al desmontar.
+- El mapa se crea una sola vez (en un efecto) y se destruye con `map.remove()` al desmontar.
   Nada de recrearlo cuando cambian props: se actualizan fuentes y capas.
 - Lo que son muchos elementos (biomas, cobertura de la niebla) va como **capas** con fuentes GeoJSON. Marcadores DOM
   solo para decenas como mucho: las señales (un `<button>` dentro de un `Marker`; docs/decisiones.md, "Señales") y
