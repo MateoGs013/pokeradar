@@ -92,8 +92,7 @@ export function inSector(
 
 /**
  * Despeja las celdas del sector del círculo entre `from` y `to` (ver inSector). Cuenta una celda
- * si su centro cae adentro. Devuelve cuántas celdas despejó: si es 0, no hace falta volver a
- * dibujar.
+ * si su centro cae adentro. Si no despejó ninguna, no vuelve a copiar la imagen al canvas.
  */
 export function clearSector(
   fog: Fog,
@@ -101,7 +100,7 @@ export function clearSector(
   radius: number,
   from: number,
   to: number,
-): number {
+): void {
   const {
     width,
     height,
@@ -142,7 +141,6 @@ export function clearSector(
     }
   }
   if (count > 0) fog.context.putImageData(fog.image, 0, 0);
-  return count;
 }
 
 /**
