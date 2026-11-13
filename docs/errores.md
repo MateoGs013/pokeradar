@@ -33,6 +33,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-21 | 2026-11-13 | IA       | ui      | Commits del PR #7 con mediciones de otro estado de la rama, y saltos de la ficha medidos sin el texto más largo     |
 | E-22 | 2026-11-13 | IA       | docs    | Ejemplos de etiquetas de señales escritos de memoria en el README, comentarios y un commit; ninguna señal los tenía |
 | E-23 | 2026-11-13 | IA       | map     | Un comentario describía la regla vieja de `labelAnchor`, y el contraste de los nombres se afirmaba con una cuenta   |
+| E-24 | 2026-11-13 | IA       | radar   | Un commit daba parejo el borde de la niebla, medido en puntos sueltos; quedaba una línea sin niebla                 |
 
 ## Formato de cada entrada
 
@@ -398,3 +399,18 @@ Para agregar una entrada se puede usar `/registrar-error`.
   más contra el halo; 5,24:1 o más contra el bioma, sin el halo).
 - **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de probar lo que se afirma y la de `ui.md` sobre WCAG ya lo
   cubrían; no se aplicaron.
+
+### E-24 · 2026-11-13 19:10 · IA · radar
+
+- **Síntoma:** en el PR #9, el commit "feat(radar): cubrir el mundo con niebla y despejarla con el radar base" decía,
+  medido a 1440 y 390 px, que el mar con niebla y el fondo de afuera daban el mismo color (7 14 13). En ese commit
+  quedaba una línea de un píxel de mar sin niebla en el borde del mundo (8 20 23 a 320 px). Y el checklist del PR decía
+  "ninguno nuevo" en errores.
+- **Causa:** Claude midió el color en puntos sueltos, lejos del borde, y no en el caso peor: la línea entre el mundo y
+  lo de afuera, al ancho más chico. Al encontrar la línea, la arregló sin registrarla.
+- **Detección:** Claude, en la captura de 320 px, antes del push. Que faltaba el registro lo marcó `/pr-review` del
+  PR #9 (subagente).
+- **Arreglo:** PR #9, "feat(radar): mostrar solo las señales que el radar detecta": la niebla suma un píxel de margen
+  que nunca se despeja, y el borde queda a 1 o 2 niveles del fondo.
+- **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de medir el caso peor (E-21) ya lo cubría, y la de registrar
+  los errores propios también; no se aplicaron.
