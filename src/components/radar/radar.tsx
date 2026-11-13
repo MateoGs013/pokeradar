@@ -38,6 +38,8 @@ interface RadarProps {
   spawns: readonly Spawn[];
   /** Avisa qué señales acaba de detectar (por speciesId). */
   onDetect: (ids: number[]) => void;
+  /** Avisa que el mapa ya dibujó un cuadro con la niebla: recién ahí se puede sacar el cartel. */
+  onFogDrawn: () => void;
 }
 
 /**
@@ -52,9 +54,11 @@ export function Radar({
   base,
   spawns,
   onDetect,
+  onFogDrawn,
 }: RadarProps) {
   // El aviso usa siempre el onDetect más reciente sin que el efecto, y el barrido, vuelvan a empezar.
   const detect = useEffectEvent(onDetect);
+  const fogDrawn = useEffectEvent(onFogDrawn);
 
   useEffect(() => {
     // Las señales a su alcance que el haz todavía no tocó.
@@ -107,6 +111,12 @@ export function Radar({
       PLACE_NAMES_LAYER,
     );
     const source = map.getSource<CanvasSource>(FOG_SOURCE);
+    // El primer cuadro que el mapa dibuja después de sumar la capa ya tiene la niebla.
+    const onRender = () => {
+      map.off("render", onRender);
+      fogDrawn();
+    };
+    map.on("render", onRender);
 
     // El alcance es un aro fijo del tamaño del círculo; el haz, un degradé cónico adentro, que da
     // la vuelta y se desvanece. Con movimiento reducido el haz no se ve. El Marker centra el aro
@@ -157,6 +167,7 @@ export function Radar({
 
     return () => {
       cancelAnimationFrame(frame);
+      map.off("render", onRender);
       map.off("zoom", resize);
       map.off("resize", resize);
       marker.remove();
