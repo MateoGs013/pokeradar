@@ -22,8 +22,9 @@ export const SPAWN_COUNT = 40;
 
 /**
  * Separación mínima entre señales, en celdas de 0,08°. Los botones miden 20 px, y para botones de
- * menos de 24 px WCAG 2.5.8 pide los centros a 24 px o más. Medido con 14 celdas: 25,2 px a 360 px
- * de ancho, 26,3 a 375 y 27,3 a 390. Con 12 quedaban a 23,3 px a 390 (docs/errores.md, E-10).
+ * menos de 24 px WCAG 2.5.8 pide los centros a 24 px o más. Medido con 14 celdas en pantallas
+ * verticales: 24,2 px a 344 px de ancho, 25,2 a 360, 26,3 a 375 y 27,3 a 390; a 320 quedan a 22,2
+ * y no cumple. Con 12 quedaban a 23,3 px a 390 (docs/errores.md, E-10).
  */
 const MIN_SPACING = 14;
 

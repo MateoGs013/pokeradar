@@ -131,9 +131,10 @@ interface SignalButtonProps {
 
 /**
  * Una señal sin identificar: un punto de 20 px con el pulso del radar. Con ese tamaño, WCAG 2.5.8
- * pide los centros a 24 px o más: lo cumple la separación (MIN_SPACING en src/lib/geo/spawns.ts,
- * con la medición). El foco se ve como un contorno verde separado del botón; la señal marcada,
- * como un anillo claro pegado a él, para que no se confundan cuando están en señales distintas.
+ * pide los centros a 24 px o más. Medido en pantallas verticales, la separación lo cumple desde
+ * 344 px de ancho; a 320 px quedan a 22,2 px (MIN_SPACING en src/lib/geo/spawns.ts, con las
+ * mediciones). El foco se ve como un contorno verde separado del botón; la señal marcada, como un
+ * anillo claro pegado a él, para que no se confundan cuando están en señales distintas.
  */
 function SignalButton({
   spawn,
