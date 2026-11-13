@@ -15,8 +15,9 @@ import { useEffect, useRef, useState } from "react";
 import { DossierPanel } from "@/components/dossier/dossier-panel";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
-import type { BiomeCollection, Spawn } from "@/lib/world/types";
+import type { BiomeCollection, Position, Spawn } from "@/lib/world/types";
 
+import { focusSignal, releaseFocus } from "./camera";
 import { MapLoading } from "./map-status";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
@@ -78,6 +79,9 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   const { identification, retry } = usePokemonDetail(
     selection?.spawn.speciesId ?? null,
   );
+  // Dónde está la cámara mientras la ficha está abierta. Lo lee el redimensionado, que encuadra el
+  // mundo otra vez y después vuelve a la señal.
+  const focusRef = useRef<Position | null>(null);
 
   // Crea el mapa una sola vez y lo destruye al desmontar.
   useEffect(() => {
@@ -121,10 +125,14 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
     map.keyboard.disableRotation();
     // Al rotar el teléfono o cambiar el tamaño de la ventana: límite nuevo y el mundo encuadrado
     // otra vez. MapLibre se redimensiona con el límite viejo, que puede dejar el mapa acercado
-    // y la isla cortada; el límite nuevo solo impide salir, no aleja.
+    // y la isla cortada; el límite nuevo solo impide salir, no aleja. absolutePadding encuadra
+    // en toda la pantalla y deja el padding en 0, aunque la ficha esté abierta: en ese caso la
+    // cámara vuelve a la señal sin animación, con el padding del panel nuevo.
     const onResize = () => {
       map.setMaxBounds(worldLimit(initial.bounds, container));
-      map.fitBounds(initial.bounds, { animate: false });
+      map.fitBounds(initial.bounds, { animate: false, absolutePadding: true });
+      const focus = focusRef.current;
+      if (focus) focusSignal(map, initial.bounds, focus, { animate: false });
     };
     map.on("resize", onResize);
     // Antes de `load`, un error deja el mapa sin dibujar: por ejemplo, si no baja el worker (como
@@ -168,6 +176,8 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
           onSelect={(next) => {
             setSelection(next);
             setDossierOpen(true);
+            focusRef.current = next.spawn.position;
+            focusSignal(loadedMap, bounds, next.spawn.position);
           }}
         />
       ) : (
@@ -179,7 +189,11 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
           identification={identification}
           place={selection.place}
           onRetry={retry}
-          onClose={() => setDossierOpen(false)}
+          onClose={() => {
+            setDossierOpen(false);
+            focusRef.current = null;
+            if (loadedMap) releaseFocus(loadedMap);
+          }}
           onClosed={() => setSelection(null)}
           returnFocus={() => selection.button}
         />
