@@ -5,8 +5,7 @@
 // lugares vacíos del mismo alto: al llegar los datos, nada se corre. Solo cambia el alto de la
 // descripción, que va al final y no tiene nada abajo.
 import { cn } from "cn";
-import { MotionConfig, motion, useReducedMotion } from "motion/react";
-import Image from "next/image";
+import { MotionConfig, motion } from "motion/react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
+import { PokemonSprite } from "./pokemon-sprite";
 import { ScrambleText } from "./scramble-text";
 import { THREAT_LEVELS, threatLevel } from "./threat";
 
@@ -70,7 +70,11 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
     <div className="flex gap-4">
       <div className="flex size-24 shrink-0 items-center justify-center rounded-md border border-border bg-background">
         {detail ? (
-          <Sprite sprites={detail.sprites} />
+          <PokemonSprite
+            sprites={detail.sprites}
+            size={96}
+            className="size-24"
+          />
         ) : (
           <span
             aria-hidden
@@ -127,29 +131,6 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
         )}
       </div>
     </div>
-  );
-}
-
-/** El GIF animado; con movimiento reducido, el sprite quieto. */
-function Sprite({ sprites }: { sprites: PokemonDetail["sprites"] }) {
-  const reducedMotion = useReducedMotion();
-  const src = reducedMotion
-    ? (sprites.still ?? sprites.animated)
-    : (sprites.animated ?? sprites.still);
-  if (!src) return null;
-  // `unoptimized`: la imagen llega tal cual de PokéAPI. Un GIF animado no gana nada con el
-  // optimizador de Next (docs de Next, 02-components/image.md, `unoptimized`), y así no hace falta
-  // habilitar el dominio en next.config. El nombre está al lado: la imagen no necesita texto
-  // alternativo.
-  return (
-    <Image
-      src={src}
-      alt=""
-      width={96}
-      height={96}
-      unoptimized
-      className="size-24 object-contain [image-rendering:pixelated]"
-    />
   );
 }
 

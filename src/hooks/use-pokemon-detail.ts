@@ -12,7 +12,8 @@ export type Identification =
 /**
  * Identifica la especie `speciesId`, o nada si es `null` (la ficha está cerrada). Solo se guardan
  * las fichas que llegaron bien: una falla no queda guardada, y abrir de nuevo la señal o tocar
- * Reintentar vuelve a pedir.
+ * Reintentar vuelve a pedir. `identified` trae todas las guardadas: el mapa muestra el sprite en
+ * esas señales.
  */
 export function usePokemonDetail(speciesId: number | null) {
   const [identified, setIdentified] = useState<
@@ -56,5 +57,5 @@ export function usePokemonDetail(speciesId: number | null) {
           ? { status: "error" }
           : { status: "loading" };
 
-  return { identification, retry: () => setFailed(false) };
+  return { identification, identified, retry: () => setFailed(false) };
 }
