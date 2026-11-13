@@ -12,11 +12,13 @@ import {
 } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
+import { DossierPanel } from "@/components/dossier/dossier-panel";
+import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type { BiomeCollection, Spawn } from "@/lib/world/types";
 
 import { MapLoading } from "./map-status";
-import { SignalMarkers } from "./signal-markers";
+import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
 // vacía. Turbopack reemplaza ese valor por una ruta `file:///ROOT/...`, así que el worker terminaba
@@ -69,7 +71,13 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Un error del mapa antes de `load`, que lo deja sin dibujar.
   const [failure, setFailure] = useState<Error | null>(null);
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  // La señal de la ficha. Sigue puesta mientras la ficha se cierra (la animación de salida muestra
+  // su contenido) y se borra al terminar: ahí el hook corta un pedido que siga en curso.
+  const [selection, setSelection] = useState<SignalSelection | null>(null);
+  const [dossierOpen, setDossierOpen] = useState(false);
+  const { identification, retry } = usePokemonDetail(
+    selection?.spawn.speciesId ?? null,
+  );
 
   // Crea el mapa una sola vez y lo destruye al desmontar.
   useEffect(() => {
@@ -156,14 +164,25 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
           map={loadedMap}
           bounds={bounds}
           spawns={spawns}
-          selectedId={selectedId}
-          // Tocar la señal marcada la desmarca (por eso el botón usa aria-pressed).
-          onSelect={(id) =>
-            setSelectedId((current) => (current === id ? null : id))
-          }
+          selectedId={dossierOpen ? (selection?.spawn.speciesId ?? null) : null}
+          onSelect={(next) => {
+            setSelection(next);
+            setDossierOpen(true);
+          }}
         />
       ) : (
         <MapLoading />
+      )}
+      {selection && identification && (
+        <DossierPanel
+          open={dossierOpen}
+          identification={identification}
+          place={selection.place}
+          onRetry={retry}
+          onClose={() => setDossierOpen(false)}
+          onClosed={() => setSelection(null)}
+          returnFocus={() => selection.button}
+        />
       )}
     </div>
   );
