@@ -43,6 +43,10 @@ y el foco vuelve a la señal.
 - **Nombres de lugares:** las cuatro ciudades, el volcán y los dos lagos tienen nombres inventados, elegidos con la
   semilla, que el mapa dibuja con Martian Mono. Cada señal se nombra desde la ciudad o el volcán más cercano ("la
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
+- **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz gira
+  y en su primera vuelta despeja un círculo, el 17 % de la isla. Solo las señales que detecta existen como botones:
+  aparecen con un ping, se anuncian al lector de pantalla y el rótulo las cuenta ("5 de 40 señales"). Con movimiento
+  reducido, el círculo se despeja de una vez.
 
 ## Arquitectura y Stack
 
@@ -130,7 +134,7 @@ de arriba y acá queda lo que no entró.
 
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
-- **Niebla, radar y antenas:** el mapa empieza cubierto y un barrido lo despeja; solo las señales detectadas son botones.
+- **Antenas:** el operador instala de 3 a 5 puestos de radar para despejar más terreno y detectar más señales.
 - **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema.
 - **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`), informe exportable, fin de turno y geocercas.
