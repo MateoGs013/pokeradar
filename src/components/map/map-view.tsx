@@ -153,6 +153,8 @@ export function MapView({
   const initialRef = useRef({ biomes, bounds, places, spawns });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
+  // Si el mapa ya dibujó la niebla: hasta entonces sigue el cartel de carga.
+  const [fogDrawn, setFogDrawn] = useState(false);
   // Un error del mapa antes de `load`, que lo deja sin dibujar.
   const [failure, setFailure] = useState<Error | null>(null);
   // La señal de la ficha. Sigue puesta mientras la ficha se cierra (la animación de salida muestra
@@ -269,6 +271,7 @@ export function MapView({
       map.off("load", onLoad);
       map.remove();
       setLoadedMap(null);
+      setFogDrawn(false);
     };
   }, []);
 
@@ -278,13 +281,14 @@ export function MapView({
   if (failure) throw failure;
 
   // MapLibre le pone `position: relative` al contenedor (.maplibregl-map), y su CSS le gana a
-  // las clases de Tailwind: por eso el posicionamiento va en un div de afuera. Hasta `load`, el
-  // cartel de carga tapa el mapa todavía vacío. MapLibre le pone tabindex al canvas al crearlo, y
-  // sin `inert` el Tab dejaba el foco ahí, escondido debajo del cartel.
+  // las clases de Tailwind: por eso el posicionamiento va en un div de afuera. El cartel de carga
+  // tapa el mapa hasta que dibuja la niebla, no solo hasta `load`: entre los dos, sin el cartel, se
+  // pintaba un cuadro con la isla descubierta (medido). MapLibre le pone tabindex al canvas al
+  // crearlo, y sin `inert` el Tab dejaba el foco ahí, escondido debajo del cartel.
   return (
     <div className="absolute inset-0">
-      <div ref={containerRef} inert={!loadedMap} className="h-full w-full" />
-      {loadedMap ? (
+      <div ref={containerRef} inert={!fogDrawn} className="h-full w-full" />
+      {loadedMap && (
         <>
           {/* Antes que las señales: su Marker se agrega primero y el haz queda debajo de ellas. */}
           <Radar
@@ -294,6 +298,7 @@ export function MapView({
             base={radarBase}
             spawns={spawns}
             onDetect={onDetect}
+            onFogDrawn={() => setFogDrawn(true)}
           />
           <SignalMarkers
             map={loadedMap}
@@ -312,9 +317,8 @@ export function MapView({
             }}
           />
         </>
-      ) : (
-        <MapLoading />
       )}
+      {!fogDrawn && <MapLoading />}
       {/* Montado siempre, aunque no haya señal: Base UI anima la entrada solo cuando el panel ya
           existía cerrado y pasa a abierto (useTransitionStatus, animateInitialOpen). */}
       <DossierPanel

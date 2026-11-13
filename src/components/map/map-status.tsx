@@ -17,8 +17,9 @@ export function MapStatus({ children }: MapStatusProps) {
 
 /**
  * El cartel de carga. Va mientras baja el código del mapa (map-loader.tsx) y sigue hasta que el
- * mapa termina de cargar (map-view.tsx): después del código todavía tiene que bajar el worker de
- * MapLibre, y el mapa, dibujarse completo por primera vez (el evento `load`).
+ * mapa dibuja la niebla (map-view.tsx): después del código todavía tiene que bajar el worker de
+ * MapLibre, el mapa dibujarse completo por primera vez (el evento `load`), y el radar sumarle la
+ * niebla.
  */
 export function MapLoading() {
   return (
