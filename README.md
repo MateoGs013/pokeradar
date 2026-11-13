@@ -94,13 +94,13 @@ entrada (E-18).
   "sin probar".
 
 **Dónde se equivocó y cómo lo corregí.** Todo está en [docs/errores.md](docs/errores.md), con síntoma, causa, cómo se
-detectó, arreglo y prevención. De las 20 entradas, 18 son errores de la IA. Los que más me enseñaron:
+detectó, arreglo y prevención. De las 21 entradas, 19 son errores de la IA. Los que más me enseñaron:
 
 - **Afirmar sin medir, o de memoria,** fue el error más repetido (E-03, E-05, E-08, E-09, E-10, E-11, E-12, E-13, E-15,
-  E-18 y E-19). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10);
-  que sin WebGL "el mapa no se dibuja y no hay un mensaje propio", cuando se caía la página entera (E-11); y que la
-  ficha entraba deslizándose, cuando aparecía de golpe (E-18). En nueve de esos once sumé una prevención; E-12 y E-15
-  ya los cubría una anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
+  E-18, E-19 y E-21). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px entre
+  centros (E-10); que sin WebGL "el mapa no se dibuja y no hay un mensaje propio", cuando se caía la página entera
+  (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe (E-18). En diez de esos doce sumé una
+  prevención; E-12 y E-15 ya los cubría una anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
 - **Dimensionar mal:** planificó con las "3 a 4 horas" de la consigna en lugar del tiempo real que yo tenía; lo
   corregí (E-01).
 - **Comandos de Windows:** me pasó un `taskkill` con flags que, probablemente, Git Bash convirtió en rutas (E-02).
@@ -110,8 +110,8 @@ detectó, arreglo y prevención. De las 20 entradas, 18 son errores de la IA. Lo
 - **Librerías:** MapLibre v6 con Turbopack se quedaba sin su worker (E-07), y su cámara recorta el destino con el padding
   anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
-Quién detectó las 20: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
-encontró 9; yo, 2; y la propia IA, otras 9: midiendo, mirando capturas o releyendo.
+Quién detectó las 21: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
+encontró 10; yo, 2; y la propia IA, otras 9: midiendo, mirando capturas o releyendo.
 
 ## Próximos Pasos
 
