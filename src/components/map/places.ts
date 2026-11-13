@@ -146,8 +146,9 @@ export function northToSouth(spawns: readonly Spawn[]): Spawn[] {
 /**
  * El lugar de cada señal, en el orden en que vienen, y su etiqueta para el botón. Si varias
  * comparten lugar, la etiqueta las numera en ese orden ("el bosque, al noreste de Monte Brasa (2 de
- * 2)"): con lector de pantalla, dos botones con el mismo nombre no se distinguen. La ficha muestra
- * el lugar sin el número.
+ * 2)"): con lector de pantalla, dos botones con el mismo nombre no se distinguen. El número cuenta
+ * todas las señales del lugar, también las que el radar todavía no detectó: así la etiqueta de una
+ * señal no cambia cuando aparece otra. La ficha muestra el lugar sin el número.
  */
 export function signalPlaces(
   spawns: readonly Spawn[],
