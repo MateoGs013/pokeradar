@@ -24,4 +24,5 @@ Closes #
 - [ ] Usable con teclado y con foco visible.
 - [ ] Respeta `prefers-reduced-motion`.
 - [ ] Estados de carga y error cubiertos.
+- [ ] Lo que la descripción afirma del comportamiento se probó; lo que no, dice "sin probar".
 - [ ] Errores reales registrados en `docs/errores.md`.
