@@ -75,8 +75,29 @@ Responde **sin API key**. Pedido:
 → HTTP 200 con `current.temperature_2m`, `current.weather_code` (código WMO), `current.is_day`, `precipitation` y
 `snowfall`. `timezone=auto` devolvió `America/Argentina/Salta` (GMT-3) para esas coordenadas.
 
+## Confirmado al armar la ficha (13/11, pedidos reales)
+
+Las 386 especies, pedidas con `fetchPokemonDetail` (`src/lib/pokeapi/detail.ts`: `/pokemon/{id}` y
+`/pokemon-species/{id}`, 772 pedidos en 16 s), pasan los guards y traen:
+
+- **Sprite animado B/W** (`versions["generation-v"]["black-white"].animated.front_default`): las 386. El respaldo
+  de Showdown no hace falta en ninguna.
+- **`front_default`** (quieto): las 386.
+- **Descripción en español** (`flavor_text_entries` con `language.name === "es"`): las 386. Traen `\n` en medio de las
+  oraciones. La más larga, ya unida con espacios, tiene 230 caracteres.
+- **Clase en español** (`genera`, ej. "Pokémon Ratón"): las 386. La más larga: "Pokémon Serpiente Tierra".
+- **Estadísticas base:** de 1 a 255; la suma, de 180 a 680. Con los cortes del nivel de amenaza (docs/concepto.md):
+  66 Bajo, 159 Medio, 135 Alto y 26 Crítico.
+- `/pokemon/386` se llama `deoxys-normal`: el nombre para mostrar sale de `/pokemon-species` → `names` ("Deoxys").
+- Compresión: `/pokemon/25` pesa 309 KB en JSON y viaja en 8 KB comprimido; `/pokemon-species/25`, 51 KB y 10 KB.
+  Las dos responden con `Access-Control-Allow-Origin: *` y `Cache-Control: public, max-age=86400`.
+
+Nombres oficiales en español, de `names` con `language.name === "es"`:
+
+- Tipos (`/type/{nombre}`): Normal, Lucha, Volador, Veneno, Tierra, Roca, Bicho, Fantasma, Acero, Fuego, Agua,
+  Planta, Eléctrico, Psíquico, Hielo, Dragón, Siniestro y Hada.
+- Estadísticas (`/stat/{nombre}`): PS, Ataque, Defensa, Ataque Especial, Defensa Especial y Velocidad.
+
 ## Pendiente de confirmar
 
-- Sprite animado en el resto de las 386 especies (se cubre con el fallback; se puede verificar en el dataset del servidor).
 - Formas especiales: `/pokemon/386` es Deoxys forma normal; revisar cómo se muestran Unown (201) y Castform (351).
-- Descripción en español en `/pokemon-species/{id}` (`flavor_text_entries` con `language.name === "es"`): no se probó.

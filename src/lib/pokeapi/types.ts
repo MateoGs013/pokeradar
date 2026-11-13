@@ -40,6 +40,18 @@ export const TYPES = [
 
 export type TypeName = (typeof TYPES)[number];
 
+/** Las 6 estadísticas base, en el orden en que las lista `/pokemon/{id}` → `stats`. */
+export const STATS = [
+  "hp",
+  "attack",
+  "defense",
+  "special-attack",
+  "special-defense",
+  "speed",
+] as const;
+
+export type StatName = (typeof STATS)[number];
+
 /** Referencia a otro recurso de PokéAPI: nombre y URL. */
 export interface NamedApiResource {
   name: string;
@@ -56,6 +68,33 @@ export interface HabitatResponse {
 export interface TypeResponse {
   name: string;
   pokemon: { slot: 1 | 2; pokemon: NamedApiResource }[];
+}
+
+/**
+ * Respuesta de `/pokemon/{id}`: altura en decímetros y peso en hectogramos. `sprites` solo se
+ * valida como objeto: cada ruta adentro puede faltar o venir en `null`, y detail.ts la lee con
+ * cuidado.
+ */
+export interface PokemonResponse {
+  id: number;
+  height: number;
+  weight: number;
+  types: { slot: number; type: { name: TypeName } }[];
+  stats: { base_stat: number; stat: { name: StatName } }[];
+  sprites: Record<string, unknown>;
+}
+
+/** Un texto de PokéAPI en un idioma (`language.name`: "es", "en", …). */
+export interface LocalizedEntry {
+  language: NamedApiResource;
+}
+
+/** Respuesta de `/pokemon-species/{id}`: nombre, clase ("Pokémon Ratón") y descripciones. */
+export interface PokemonSpeciesResponse {
+  name: string;
+  names: (LocalizedEntry & { name: string })[];
+  genera: (LocalizedEntry & { genus: string })[];
+  flavor_text_entries: (LocalizedEntry & { flavor_text: string })[];
 }
 
 /** Una especie del dataset: lo mínimo para ubicarla en el mundo y mostrarla como señal. */
