@@ -33,7 +33,7 @@ interface DossierPanelProps {
   open: boolean;
   /** null cuando no hay señal elegida: el panel está cerrado y sin contenido. */
   identification: Identification | null;
-  /** Dónde se detectó la señal: "el bosque del norte". */
+  /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
   place: string | null;
   onRetry: () => void;
   /** Se pidió cerrar: Esc, la cruz, tocar afuera o, en el celular, deslizar hacia abajo. */

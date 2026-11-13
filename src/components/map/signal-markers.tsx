@@ -8,9 +8,8 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
-import type { Bounds } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
-import type { Position, Spawn } from "@/lib/world/types";
+import type { Place, Position, Spawn } from "@/lib/world/types";
 
 import { signalPlaces } from "./places";
 
@@ -63,8 +62,8 @@ export interface SignalSelection {
 
 interface SignalMarkersProps {
   map: MapLibreMap;
-  /** Extensión del mundo, para nombrar la parte donde está cada señal. */
-  bounds: Bounds;
+  /** Los lugares con nombre, para decir dónde está cada señal. */
+  places: readonly Place[];
   spawns: readonly Spawn[];
   /** La señal con la ficha abierta, si hay una. */
   selectedId: number | null;
@@ -75,7 +74,7 @@ interface SignalMarkersProps {
 
 export function SignalMarkers({
   map,
-  bounds,
+  places,
   spawns,
   selectedId,
   identified,
@@ -92,7 +91,7 @@ export function SignalMarkers({
         (a, b) =>
           b.position[1] - a.position[1] || a.position[0] - b.position[0],
       ),
-      bounds,
+      places,
     ).map(({ spawn, place }) => ({
       spawn,
       place,
@@ -136,7 +135,7 @@ export function SignalMarkers({
 
 interface SignalButtonProps {
   spawn: Spawn;
-  /** Dónde está, para el aria-label: "el bosque del norte". */
+  /** Dónde está, para el aria-label: "el bosque, al noreste de Monte Brasa". */
   place: string;
   selected: boolean;
   /** La ficha de la especie, si ya se identificó. */

@@ -23,7 +23,7 @@ const MAX_STAT = 255;
 
 interface DossierBodyProps {
   identification: Identification;
-  /** Dónde se detectó la señal: "el bosque del norte". */
+  /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
   place: string;
   onRetry: () => void;
 }
