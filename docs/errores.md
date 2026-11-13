@@ -31,6 +31,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-19 | 2026-11-13 | IA       | docs    | El README resumía errores.md sin releerlo, y la entrada del plan contradecía la tabla que cambiaba                  |
 | E-20 | 2026-11-13 | IA       | docs    | 16 hashes de E-11 a E-19 eran los de las ramas; el merge con --rebase los reescribe y no están en main              |
 | E-21 | 2026-11-13 | IA       | ui      | Commits del PR #7 con mediciones de otro estado de la rama, y saltos de la ficha medidos sin el texto más largo     |
+| E-22 | 2026-11-13 | IA       | docs    | Ejemplos de etiquetas de señales escritos de memoria en el README, comentarios y un commit; ninguna señal los tenía |
 
 ## Formato de cada entrada
 
@@ -364,3 +365,17 @@ Para agregar una entrada se puede usar `/registrar-error`.
   la amenaza con el eje de ancho, trunca el género y le da a Atkinson `fallback: ["system-ui", "arial"]`.
 - **Prevención:** en `CLAUDE.md`, la regla de probar lo que se afirma suma que la medición es del estado del commit que
   la afirma, y con el caso peor: el texto más largo y el ancho más chico (320 px).
+
+### E-22 · 2026-11-13 16:17 · IA · docs
+
+- **Síntoma:** en la rama `feat/nombres-lugares`, el README, tres comentarios y el mensaje de un commit daban como
+  ejemplos de etiquetas "la llanura, al noroeste de Campo Garza", "el bosque, al norte de Campo Garza" y otras que
+  ninguna de las 40 señales tiene.
+- **Causa:** Claude escribió los ejemplos del formato de memoria, antes de listar las 40 etiquetas del build, y no los
+  contrastó con la lista cuando la tuvo.
+- **Detección:** Claude, antes del push: buscó el ejemplo del README en la lista de las 40 etiquetas medidas y no
+  estaba.
+- **Arreglo:** PR #8, commits "feat(map): nombrar cada señal desde el lugar con nombre más cercano" (antes del push) y
+  "docs(docs): anotar los nombres de lugares en decisiones.md y el README": ejemplos tomados de la lista.
+- **Prevención:** ninguna nueva: la línea de `CLAUDE.md` que pide probar lo que se afirma ya lo cubría (E-21), y al
+  aplicarla antes del push apareció.
