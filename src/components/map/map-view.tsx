@@ -60,12 +60,14 @@ const LAKE_NAMES_MIN_ZOOM = 7;
 
 /**
  * Los nombres de los lugares, con Martian Mono: sin URL de `glyphs`, MapLibre dibuja el texto con
- * la fuente que la página ya cargó (docs/decisiones.md, "Texto en el mundo"). No puede pedirla
- * comprimida ni con otro peso, así que va regular, en mayúsculas y con aire entre las letras.
- * Cada nombre va del lado opuesto a la señal más cercana (`labelAnchor`), para que el botón no lo tape.
- * Contraste (WCAG 1.4.3, AA pide 4,5:1), con la fórmula de WCAG sobre los colores de globals.css y
- * sin contar el halo: --hud-fg da de 5,94:1 sobre las cuevas, el bioma más claro, a 14,34:1 sobre el
- * mar (E-16).
+ * la fuente que la página ya cargó (docs/decisiones.md, "Texto en el mundo"). Con fuentes locales
+ * (sin `font-faces` en el estilo) no puede pedirla comprimida ni con otro peso, así que va regular,
+ * en mayúsculas y con aire entre las letras. Cada nombre va del lado con menos señales cerca
+ * (`labelAnchor`), para que los botones no lo tapen.
+ * Contraste (WCAG 1.4.3, AA pide 4,5:1), medido en el render: a 1440 px, capturas con y sin los
+ * nombres, del mundo entero y con zoom 7,5 sobre cada lugar. Los píxeles del texto dan 13,35:1 o
+ * más contra el halo, y 5,24:1 o más contra el bioma de atrás aun sin contar el halo (el peor,
+ * sobre las cuevas).
  */
 function placeLayers(): SymbolLayerSpecification[] {
   const base = {
@@ -73,17 +75,17 @@ function placeLayers(): SymbolLayerSpecification[] {
     source: PLACES_SOURCE,
     layout: {
       "text-field": ["get", "name"],
-      "text-font": ["Martian Mono"],
-      "text-size": 12,
+      "text-font": cssFontFamilies("--font-martian-mono"),
+      "text-size": cssNumber("--map-label-size"),
       "text-transform": "uppercase",
-      "text-letter-spacing": 0.1,
+      "text-letter-spacing": cssNumber("--map-label-tracking"),
       "text-anchor": ["get", "anchor"],
       "text-radial-offset": 1.2,
     },
     paint: {
       "text-color": cssToken("--hud-fg"),
       "text-halo-color": cssToken("--hud-bg"),
-      "text-halo-width": 1.5,
+      "text-halo-width": cssNumber("--map-label-halo"),
     },
   } satisfies Omit<SymbolLayerSpecification, "id">;
   return [
@@ -102,11 +104,32 @@ function placeLayers(): SymbolLayerSpecification[] {
   ];
 }
 
-/** Lee un token de color de globals.css (los colores viven en un solo lugar). */
+/** Lee un token de globals.css (los colores y las medidas viven en un solo lugar). */
 function cssToken(name: string): string {
   return getComputedStyle(document.documentElement)
     .getPropertyValue(name)
     .trim();
+}
+
+/** Un token numérico. Si falta o no es un número, falla acá y no con un valor raro en el mapa. */
+function cssNumber(name: string): number {
+  const value = Number.parseFloat(cssToken(name));
+  if (Number.isNaN(value)) throw new Error(`El token ${name} no es un número`);
+  return value;
+}
+
+/**
+ * Las familias de una variable de fuente de next/font (`"Martian Mono", "Martian Mono Fallback"`),
+ * sin comillas: MapLibre arma su propia lista de CSS con los nombres. Así el nombre sale del mismo
+ * token que usa la página, no de una copia escrita a mano.
+ */
+function cssFontFamilies(name: string): string[] {
+  const families = cssToken(name)
+    .split(",")
+    .map((family) => family.trim().replace(/^["']|["']$/g, ""))
+    .filter((family) => family !== "");
+  if (families.length === 0) throw new Error(`El token ${name} está vacío`);
+  return families;
 }
 
 /** Límite del mapa: el mundo agrandado a la proporción actual del contenedor. */
