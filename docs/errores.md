@@ -23,6 +23,9 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-11 | 2026-11-12 | IA       | map   | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
 | E-12 | 2026-11-12 | IA       | docs  | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
 | E-13 | 2026-11-12 | IA       | map   | Afirmó sin medir que en pantallas extremas el mapa carga; con el tope de ±180°, desde 30:1 de ancho no cargaba      |
+| E-14 | 2026-11-12 | IA       | map   | El arreglo del cartel de carga dejó el canvas enfocable con Tab debajo del cartel; se probó sin teclado             |
+| E-15 | 2026-11-12 | IA       | map   | Dos comentarios del PR #3 afirmaban comportamientos sin medirlos, y la cuenta de E-11 dejaba afuera a E-03 y E-09   |
+| E-16 | 2026-11-12 | IA       | map   | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
 
 ## Formato de cada entrada
 
@@ -198,8 +201,8 @@ Para agregar una entrada se puede usar `/registrar-error`.
   `--disable-webgl2`, con el archivo del worker escondido del build y con el chunk del mapa bloqueado. La frase de la
   descripción del PR se corrigió.
 - **Prevención:** un ítem nuevo en el checklist de `.github/PULL_REQUEST_TEMPLATE.md`: lo que la descripción afirma del
-  comportamiento tiene que estar probado, y lo que no, decir "sin probar". Es la tercera afirmación sin probar (E-05,
-  E-10 y E-11), y dos fueron en la descripción de un PR.
+  comportamiento tiene que estar probado, y lo que no, decir "sin probar". Es al menos la quinta afirmación sin probar
+  (E-03, E-05, E-09, E-10 y E-11), y dos fueron en la descripción de un PR.
 
 ### E-12 · 2026-11-12 21:28 · IA · docs
 
@@ -231,5 +234,46 @@ Para agregar una entrada se puede usar `/registrar-error`.
   commit nuevo (`docs/flujo.md`); lo corrige el de 717f9b6.
 - **Prevención:** se agregó a "Forma de trabajo" de `CLAUDE.md` una línea: lo que un comentario, un mensaje de commit
   o la descripción de un PR afirma del comportamiento se prueba antes de escribirlo, y si no, dice "sin probar". Sigue
-  a E-05, E-10 y E-11, que también afirmaban un comportamiento sin probarlo; la regla de E-10 cubría solo WCAG, y el
+  a E-03, E-05, E-09, E-10 y E-11, que también afirmaban un comportamiento sin probarlo; la regla de E-10 cubría solo WCAG, y el
   ítem de la plantilla de E-11, solo la descripción del PR.
+
+### E-14 · 2026-11-12 22:09 · IA · map
+
+- **Síntoma:** con el arreglo de "Cargando mapa…" (11f8b56), el canvas queda enfocable con Tab debajo del cartel hasta
+  `load`: el foco cae en algo que no se ve, y las flechas mueven el mapa tapado.
+- **Causa:** el cartel tapa el canvas, pero MapLibre le pone `tabindex="0"` al crearlo, antes de `load`. El arreglo se
+  probó mirando cuándo se va el cartel, sin probar el teclado durante la carga.
+- **Detección:** `/pr-review` del PR #3, segunda vuelta (subagente).
+- **Arreglo:** `inert` en el contenedor del mapa hasta `load` (172286a). Con red lenta, Tab con el cartel en pantalla
+  ya no llega al canvas; después de `load`, sí.
+- **Prevención:** en `.github/PULL_REQUEST_TEMPLATE.md`, el ítem de teclado pasó a "Usable con teclado y con foco
+  visible, también mientras carga".
+
+### E-15 · 2026-11-12 22:09 · IA · map
+
+- **Síntoma:** dos comentarios del PR #3 afirmaban comportamientos sin medirlos. `map-status.tsx` decía que "el worker
+  y el estilo tardan más que el código", pero el estilo va en línea y no se midió ninguna duración. `signal-markers.tsx`
+  decía que `useState` crea el div "una sola vez", y con Strict Mode, en desarrollo, el inicializador corre dos veces.
+  La descripción del PR repetía lo segundo. Además, E-11 contaba "la tercera afirmación sin probar" y dejaba afuera a
+  E-03 y E-09.
+- **Causa:** se escribieron sin medirlos. El orden de carga justificaba el cartel, no la duración; `useState` garantiza
+  que el div es el mismo, no cuántas veces corre el inicializador. La cuenta de E-11 dejó afuera dos entradas del mismo
+  archivo.
+- **Detección:** `/pr-review` del PR #3, segunda vuelta (subagente).
+- **Arreglo:** los dos comentarios dicen solo lo medido (70350e5); E-11 y E-13 se corrigieron junto con esta entrada, y
+  la descripción del PR #3 se reescribió sin esa frase.
+- **Prevención:** ninguna nueva. Es la clase que cubre la línea de `CLAUDE.md` de E-13, y los dos comentarios son
+  anteriores a ella (11f8b56 y db320cc).
+
+### E-16 · 2026-11-12 19:27 · IA · map
+
+- **Síntoma:** desde b7e81ac, el rótulo de la esquina es texto de 12 px sin fondo sobre el mapa. Con `--hud-fg-muted`
+  da menos de 4,5:1 sobre cueva, volcán, montaña y ciudad (cuentas sobre los tokens). En el mismo commit, el `<h1>` de
+  la página pasó a ser un `<span>`, y la página quedó sin encabezado.
+- **Causa:** los contrastes medidos de `globals.css` son contra las superficies del HUD (`--hud-bg`,
+  `--hud-surface-2`), y el rótulo va directo sobre el mapa. El encabezado se perdió al rehacer la página para el mapa.
+- **Detección:** `/pr-review` del PR #3, segunda vuelta (subagente). La primera vuelta no lo marcó.
+- **Arreglo:** un `<h1>` visible en el rótulo (2d08cd8) y un fondo detrás (edd64f1). Medido con el mapa recorrido con
+  las flechas, a 390 y 1440: 6,29:1 como mínimo, en 7 de los 9 biomas.
+- **Prevención:** se agregó a `.claude/rules/ui.md`: "El texto que va sobre el mapa lleva fondo, o su contraste se
+  mide contra cada bioma (E-16)."
