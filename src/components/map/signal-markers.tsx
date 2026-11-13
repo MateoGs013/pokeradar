@@ -7,9 +7,10 @@ import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+import type { Bounds } from "@/lib/geo/bounds";
 import type { Position, Spawn } from "@/lib/world/types";
 
-import { HABITAT_PLACES } from "./places";
+import { signalPlaces } from "./places";
 
 /**
  * Gestos que MapLibre escucha en el contenedor de los marcadores y que no tienen que llegarle
@@ -53,6 +54,8 @@ function revealSignal(map: MapLibreMap, position: Position) {
 
 interface SignalMarkersProps {
   map: MapLibreMap;
+  /** Extensión del mundo, para nombrar la parte donde está cada señal. */
+  bounds: Bounds;
   spawns: readonly Spawn[];
   selectedId: number | null;
   onSelect: (speciesId: number) => void;
@@ -60,21 +63,28 @@ interface SignalMarkersProps {
 
 export function SignalMarkers({
   map,
+  bounds,
   spawns,
   selectedId,
   onSelect,
 }: SignalMarkersProps) {
-  // Un div por señal, que MapLibre posiciona. Lo comparten el Marker y el portal, así que tiene
-  // que ser el mismo mientras el componente viva: useState lo crea una sola vez, al montar
-  // (useMemo es una caché, y React puede descartarla). Las señales se ubican al compilar y no
-  // cambian. Van de norte a sur: ese es el orden del Tab.
+  // Un div por señal, que MapLibre posiciona, y el lugar que la nombra. El div lo comparten el
+  // Marker y el portal, así que tiene que ser el mismo mientras el componente viva: useState lo
+  // crea una sola vez, al montar (useMemo es una caché, y React puede descartarla). Las señales
+  // se ubican al compilar y no cambian. Van de norte a sur: ese es el orden del Tab, y el de los
+  // números de los lugares repetidos.
   const [anchors] = useState(() =>
-    [...spawns]
-      .sort(
+    signalPlaces(
+      [...spawns].sort(
         (a, b) =>
           b.position[1] - a.position[1] || a.position[0] - b.position[0],
-      )
-      .map((spawn) => ({ spawn, element: document.createElement("div") })),
+      ),
+      bounds,
+    ).map(({ spawn, place }) => ({
+      spawn,
+      place,
+      element: document.createElement("div"),
+    })),
   );
 
   useEffect(() => {
@@ -95,10 +105,11 @@ export function SignalMarkers({
     };
   }, [map, anchors]);
 
-  return anchors.map(({ spawn, element }) =>
+  return anchors.map(({ spawn, place, element }) =>
     createPortal(
       <SignalButton
         spawn={spawn}
+        place={place}
         selected={spawn.speciesId === selectedId}
         onSelect={onSelect}
         onFocus={() => revealSignal(map, spawn.position)}
@@ -111,6 +122,8 @@ export function SignalMarkers({
 
 interface SignalButtonProps {
   spawn: Spawn;
+  /** Dónde está, para el aria-label: "el bosque del norte". */
+  place: string;
   selected: boolean;
   onSelect: (speciesId: number) => void;
   onFocus: () => void;
@@ -124,6 +137,7 @@ interface SignalButtonProps {
  */
 function SignalButton({
   spawn,
+  place,
   selected,
   onSelect,
   onFocus,
@@ -131,7 +145,7 @@ function SignalButton({
   return (
     <button
       type="button"
-      aria-label={`Señal sin identificar en ${HABITAT_PLACES[spawn.habitat]}`}
+      aria-label={`Señal sin identificar en ${place}`}
       aria-pressed={selected}
       onClick={() => onSelect(spawn.speciesId)}
       onFocus={onFocus}
