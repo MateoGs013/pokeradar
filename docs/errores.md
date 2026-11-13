@@ -22,6 +22,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-10 | 2026-11-12 | IA       | map   | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
 | E-11 | 2026-11-12 | IA       | map   | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
 | E-12 | 2026-11-12 | IA       | docs  | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
+| E-13 | 2026-11-12 | IA       | map   | Afirmó sin medir que en pantallas extremas el mapa carga; con el tope de ±180°, desde 30:1 de ancho no cargaba      |
 
 ## Formato de cada entrada
 
@@ -210,3 +211,25 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Arreglo:** se le avisó a Mateo antes de escribir E-11, y eligió otra prevención (el ítem de la plantilla del PR).
 - **Prevención:** ninguna: lo frenó la regla que ya tiene este archivo ("cada campo se contrasta con lo registrado;
   nunca de memoria").
+
+### E-13 · 2026-11-12 22:16 · IA · map
+
+- **Síntoma:** el comentario de `expandToAspect` (`src/lib/geo/bounds.ts`) decía que con una pantalla unas 11 veces
+  más alta que ancha, o 30 veces más ancha que alta, "MapLibre acerca el mapa y el mundo queda recortado"; el mensaje
+  de d86fef6, que en esas pantallas "el mundo queda recortado, pero el mapa carga". Medido en el build: a lo alto, el
+  mundo entraba entero hasta 100×2200 px (unas 22 veces); a lo ancho, desde 3000×100 (30:1) el mapa no cargaba: "No
+  se pudo cargar el mapa." y, en la consola, un `TypeError` en `calcMatrices` de MapLibre.
+- **Causa:** Claude escribió el comportamiento sin medirlo, y puso el tope de ±180° de longitud que sugería la review
+  del PR #3 sin probar pantallas anchas. MapLibre lleva los bordes del límite a una sola vuelta del mundo (`wrap`, en
+  `defaultConstrain`): −180° y 180° caen en el mismo lugar, y el límite le queda de ancho cero. A 30:1 justo ya fallaba
+  antes de d86fef6, y el tope lo extendió a toda proporción mayor (antes, a 3600×100 y 4000×100 el mapa cargaba pero
+  mostraba otro lugar). A lo alto, Mercator estira la latitud: de −85° a 85° mide unas 22 veces el ancho del mundo.
+- **Detección:** Claude, antes del push: la captura de 100×1200 px de la prueba de d86fef6 mostraba la isla entera, al
+  revés de lo que decía el comentario. Midió en varias proporciones, también con el código de antes de d86fef6.
+- **Arreglo:** tope de longitud en ±179° y el comentario con lo medido (717f9b6). Cargan todas las proporciones
+  probadas, de 100×3000 a 6000×100. El mensaje de d86fef6 queda como está, porque con el PR abierto cada arreglo es un
+  commit nuevo (`docs/flujo.md`); lo corrige el de 717f9b6.
+- **Prevención:** se agregó a "Forma de trabajo" de `CLAUDE.md` una línea: lo que un comentario, un mensaje de commit
+  o la descripción de un PR afirma del comportamiento se prueba antes de escribirlo, y si no, dice "sin probar". Sigue
+  a E-05, E-10 y E-11, que también afirmaban un comportamiento sin probarlo; la regla de E-10 cubría solo WCAG, y el
+  ítem de la plantilla de E-11, solo la descripción del PR.
