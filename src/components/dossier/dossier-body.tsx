@@ -276,7 +276,8 @@ function DossierError({ onRetry }: { onRetry: () => void }) {
         Señal perdida
       </p>
       <p className="text-sm text-muted-foreground">
-        No llegó la respuesta de PokéAPI. Puede ser la conexión.
+        No se pudo identificar la señal: falló la conexión o PokéAPI respondió
+        algo inesperado.
       </p>
       <Button onClick={onRetry}>Reintentar</Button>
     </div>
