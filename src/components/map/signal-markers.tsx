@@ -11,6 +11,23 @@ import type { Spawn } from "@/lib/world/types";
 
 import { HABITAT_PLACES } from "./places";
 
+/**
+ * Gestos que MapLibre escucha en el contenedor de los marcadores y que no tienen que llegarle
+ * desde una señal: sin esto, un doble clic o un doble toque sobre una señal acercaba el mapa. A
+ * cambio, un arrastre con el dedo que empieza sobre una señal no mueve el mapa (con el mouse sí).
+ */
+const MAP_GESTURES = [
+  "dblclick",
+  "touchstart",
+  "touchmove",
+  "touchend",
+  "touchcancel",
+] as const;
+
+function stopPropagation(event: Event) {
+  event.stopPropagation();
+}
+
 interface SignalMarkersProps {
   map: MapLibreMap;
   spawns: readonly Spawn[];
@@ -38,11 +55,20 @@ export function SignalMarkers({
   );
 
   useEffect(() => {
-    const markers = anchors.map(({ spawn, element }) =>
-      new Marker({ element }).setLngLat(spawn.position).addTo(map),
-    );
+    const markers = anchors.map(({ spawn, element }) => {
+      // passive: no cancelan el gesto, así que el navegador no tiene que esperarlos.
+      for (const type of MAP_GESTURES) {
+        element.addEventListener(type, stopPropagation, { passive: true });
+      }
+      return new Marker({ element }).setLngLat(spawn.position).addTo(map);
+    });
     return () => {
       for (const marker of markers) marker.remove();
+      for (const { element } of anchors) {
+        for (const type of MAP_GESTURES) {
+          element.removeEventListener(type, stopPropagation);
+        }
+      }
     };
   }, [map, anchors]);
 
