@@ -129,10 +129,17 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
     // en toda la pantalla y deja el padding en 0, aunque la ficha esté abierta: en ese caso la
     // cámara vuelve a la señal sin animación, con el padding del panel nuevo.
     const onResize = () => {
+      // El zoom de antes, para que volver a la señal no lo baje al del mundo entero.
+      const zoom = map.getZoom();
       map.setMaxBounds(worldLimit(initial.bounds, container));
       map.fitBounds(initial.bounds, { animate: false, absolutePadding: true });
       const focus = focusRef.current;
-      if (focus) focusSignal(map, initial.bounds, focus, { animate: false });
+      if (focus) {
+        focusSignal(map, initial.bounds, focus, {
+          animate: false,
+          keepZoom: zoom,
+        });
+      }
     };
     map.on("resize", onResize);
     // Antes de `load`, un error deja el mapa sin dibujar: por ejemplo, si no baja el worker (como
