@@ -157,10 +157,13 @@ function assertPlaces(
   }
 }
 
-/** Huella corta del mundo: si coincide entre local y producción, el mundo es el mismo. */
+/**
+ * Huella corta del mundo, de los biomas y los lugares: si coincide entre local y producción, el
+ * mapa y sus nombres son los mismos.
+ */
 export function worldHash(world: World): string {
   return createHash("sha256")
-    .update(JSON.stringify(world.biomes))
+    .update(JSON.stringify({ biomes: world.biomes, places: world.places }))
     .digest("hex")
     .slice(0, 12);
 }
