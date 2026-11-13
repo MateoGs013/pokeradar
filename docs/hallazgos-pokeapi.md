@@ -31,7 +31,10 @@ Probado con 1 (bulbasaur), 25 (pikachu), 150 (mewtwo) y 384 (rayquaza): los cuat
 
   Todos pueden ser `null` en el tipo de PokéAPI: el cliente tipado tiene que tratarlos como `string | null`.
 
-- Solo se probaron 4 especies. No se confirmó que las 386 tengan sprite animado; el fallback cubre el caso.
+- La ficha (`src/lib/pokeapi/detail.ts`) lo separa en dos: el **animado** prueba 1 y después 2; el **quieto** (para
+  movimiento reducido) prueba 4 y después 3. El artwork oficial no es pixel art y se ve mal con
+  `image-rendering: pixelated`, por eso va último.
+- Al principio se probaron 4 especies; el 13/11 se confirmaron las 386 ("Confirmado al armar la ficha", abajo).
 
 ### Shiny
 
