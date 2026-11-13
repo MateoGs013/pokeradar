@@ -21,7 +21,7 @@ Closes #
 ## Checklist
 
 - [ ] Sin `any` (ni casts `as` para tapar errores).
-- [ ] Usable con teclado y con foco visible.
+- [ ] Usable con teclado y con foco visible, también mientras carga.
 - [ ] Respeta `prefers-reduced-motion`.
 - [ ] Estados de carga y error cubiertos.
 - [ ] Lo que la descripción afirma del comportamiento se probó; lo que no, dice "sin probar".

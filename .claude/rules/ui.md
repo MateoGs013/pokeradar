@@ -14,6 +14,7 @@ paths:
 - Siempre los tres estados: carga (skeleton "Analizando firma…"), vacío y error ("Señal perdida. Reintentar").
 - Sin saltos de layout: los skeletons tienen el tamaño del contenido final; las imágenes llevan dimensiones.
 - Contraste AA en los tres colores del HUD, también sobre las superficies.
+- El texto que va sobre el mapa lleva fondo, o su contraste se mide contra cada bioma (E-16).
 - Los componentes de shadcn nunca quedan con su aspecto por defecto: se reestilan con los tokens del HUD.
 - Se suman con `pnpm dlx shadcn@latest add <componente>` cuando se usan, y se leen antes de commitearlos.
 - Sin librerías de efectos visuales fuera de las anotadas en `docs/decisiones.md`.
