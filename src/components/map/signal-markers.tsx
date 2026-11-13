@@ -52,13 +52,21 @@ function revealSignal(map: MapLibreMap, position: Position) {
   if (!visible) map.panTo(position);
 }
 
+/** La señal que se tocó: dónde está, cómo se nombra y su botón, para devolverle el foco. */
+export interface SignalSelection {
+  spawn: Spawn;
+  place: string;
+  button: HTMLButtonElement;
+}
+
 interface SignalMarkersProps {
   map: MapLibreMap;
   /** Extensión del mundo, para nombrar la parte donde está cada señal. */
   bounds: Bounds;
   spawns: readonly Spawn[];
+  /** La señal con la ficha abierta, si hay una. */
   selectedId: number | null;
-  onSelect: (speciesId: number) => void;
+  onSelect: (selection: SignalSelection) => void;
 }
 
 export function SignalMarkers({
@@ -125,7 +133,7 @@ interface SignalButtonProps {
   /** Dónde está, para el aria-label: "el bosque del norte". */
   place: string;
   selected: boolean;
-  onSelect: (speciesId: number) => void;
+  onSelect: (selection: SignalSelection) => void;
   onFocus: () => void;
 }
 
@@ -133,8 +141,10 @@ interface SignalButtonProps {
  * Una señal sin identificar: un punto de 20 px con el pulso del radar. Con ese tamaño, WCAG 2.5.8
  * pide los centros a 24 px o más. Medido en pantallas verticales, la separación lo cumple desde
  * 344 px de ancho; a 320 px quedan a 22,2 px (MIN_SPACING en src/lib/geo/spawns.ts, con las
- * mediciones). El foco se ve como un contorno verde separado del botón; la señal marcada, como un
- * anillo claro pegado a él, para que no se confundan cuando están en señales distintas.
+ * mediciones). El foco se ve como un contorno verde separado del botón; la señal con la ficha
+ * abierta, como un anillo claro pegado a él, para que no se confundan cuando están en señales
+ * distintas. Abre la ficha, que es un diálogo: aria-haspopup y aria-expanded, como el Trigger de
+ * Base UI (dialog/trigger/DialogTrigger.js).
  */
 function SignalButton({
   spawn,
@@ -147,10 +157,13 @@ function SignalButton({
     <button
       type="button"
       aria-label={`Señal sin identificar en ${place}`}
-      aria-pressed={selected}
-      onClick={() => onSelect(spawn.speciesId)}
+      aria-haspopup="dialog"
+      aria-expanded={selected}
+      onClick={(event) =>
+        onSelect({ spawn, place, button: event.currentTarget })
+      }
       onFocus={onFocus}
-      className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:ring-2 aria-pressed:ring-foreground"
+      className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-expanded:ring-2 aria-expanded:ring-foreground"
     >
       {/* Cada señal arranca el pulso en otro momento del ciclo, para que no laten todas juntas.
           Sin eventos de puntero: el anillo crece hasta 52 px, y si los recibiera, un toque cerca de
