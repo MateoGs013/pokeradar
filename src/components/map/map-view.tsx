@@ -153,6 +153,7 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
       {loadedMap ? (
         <SignalMarkers
           map={loadedMap}
+          bounds={bounds}
           spawns={spawns}
           selectedId={selectedId}
           // Tocar la señal marcada la desmarca (por eso el botón usa aria-pressed).
