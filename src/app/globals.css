@@ -131,6 +131,19 @@
  */
 @theme {
   --animate-pulso-radar: pulso-radar 2.4s ease-out infinite;
+  /* Una sola vez, al detectar la señal; forwards la deja en el último cuadro, invisible. */
+  --animate-deteccion: deteccion 1s ease-out forwards;
+
+  @keyframes deteccion {
+    from {
+      transform: scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: scale(5);
+      opacity: 0;
+    }
+  }
 
   @keyframes pulso-radar {
     from {

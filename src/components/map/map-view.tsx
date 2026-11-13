@@ -52,6 +52,10 @@ export interface MapViewProps {
   grid: { width: number; height: number };
   /** Dónde está el radar base. */
   radarBase: Position;
+  /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
+  detected: ReadonlySet<number>;
+  /** El radar detectó estas señales. */
+  onDetect: (ids: number[]) => void;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -134,6 +138,8 @@ export function MapView({
   places,
   grid,
   radarBase,
+  detected,
+  onDetect,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -147,6 +153,8 @@ export function MapView({
   // su contenido) y se borra al terminar: ahí el hook corta un pedido que siga en curso.
   const [selection, setSelection] = useState<SignalSelection | null>(null);
   const [dossierOpen, setDossierOpen] = useState(false);
+  // Las señales de la última detección, para anunciarlas al lector de pantalla.
+  const [lastDetected, setLastDetected] = useState<readonly number[]>([]);
   const { identification, identified, retry } = usePokemonDetail(
     selection?.spawn.speciesId ?? null,
   );
@@ -274,11 +282,23 @@ export function MapView({
       {loadedMap ? (
         <>
           {/* Antes que las señales: su Marker se agrega primero y el haz queda debajo de ellas. */}
-          <Radar map={loadedMap} bounds={bounds} grid={grid} base={radarBase} />
+          <Radar
+            map={loadedMap}
+            bounds={bounds}
+            grid={grid}
+            base={radarBase}
+            spawns={spawns}
+            onDetect={(ids) => {
+              onDetect(ids);
+              setLastDetected(ids);
+            }}
+          />
           <SignalMarkers
             map={loadedMap}
             places={places}
             spawns={spawns}
+            detected={detected}
+            lastDetected={lastDetected}
             selectedId={
               dossierOpen ? (selection?.spawn.speciesId ?? null) : null
             }

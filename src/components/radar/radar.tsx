@@ -9,13 +9,13 @@ import {
   type Map as MapLibreMap,
   Marker,
 } from "maplibre-gl";
-import { useEffect } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 import { cssNumber, cssToken } from "@/components/map/css-token";
 import type { Bounds } from "@/lib/geo/bounds";
-import type { Position } from "@/lib/world/types";
+import type { Position, Spawn } from "@/lib/world/types";
 
-import { clearSector, createFog, fogCorners } from "./fog";
+import { clearSector, createFog, fogCorners, FULL_TURN, inSector } from "./fog";
 
 const FOG_SOURCE = "niebla";
 /** La niebla se dibuja debajo de los nombres: los lugares se ven aunque el terreno no. */
@@ -27,7 +27,6 @@ const FOG_BELOW = "nombres";
 const RADAR_RADIUS = 2.4;
 /** Lo que tarda el haz en dar una vuelta. */
 const TURN_MS = 4000;
-const FULL_TURN = 2 * Math.PI;
 
 interface RadarProps {
   map: MapLibreMap;
@@ -37,14 +36,42 @@ interface RadarProps {
   grid: { width: number; height: number };
   /** Dónde está el radar base. */
   base: Position;
+  /** Las señales del mundo: el radar detecta las que están a su alcance cuando el haz pasa. */
+  spawns: readonly Spawn[];
+  /** Avisa qué señales acaba de detectar (por speciesId). */
+  onDetect: (ids: number[]) => void;
 }
 
 /**
- * Las props vienen del servidor y no cambian mientras el mapa vive, así que el efecto corre una
- * vez (dos en desarrollo, por el modo estricto: la limpieza deja el mapa como estaba).
+ * El mundo, la base y las señales vienen del servidor y no cambian mientras el mapa vive, así que
+ * el efecto corre una vez (dos en desarrollo, por el modo estricto: la limpieza deja el mapa como
+ * estaba).
  */
-export function Radar({ map, bounds, grid, base }: RadarProps) {
+export function Radar({
+  map,
+  bounds,
+  grid,
+  base,
+  spawns,
+  onDetect,
+}: RadarProps) {
+  // El aviso usa siempre el onDetect más reciente sin que el efecto, y el barrido, vuelvan a empezar.
+  const detect = useEffectEvent(onDetect);
+
   useEffect(() => {
+    // Las señales a su alcance que el haz todavía no tocó.
+    let pending = spawns.filter(({ position }) =>
+      inSector(base, RADAR_RADIUS, 0, FULL_TURN, position),
+    );
+    const detectSector = (from: number, to: number) => {
+      const found = pending.filter(({ position }) =>
+        inSector(base, RADAR_RADIUS, from, to, position),
+      );
+      if (found.length === 0) return;
+      pending = pending.filter((spawn) => !found.includes(spawn));
+      detect(found.map(({ speciesId }) => speciesId));
+    };
+
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     const fog = createFog(
       grid.width,
@@ -54,7 +81,10 @@ export function Radar({ map, bounds, grid, base }: RadarProps) {
     );
     // Con movimiento reducido no hay barrido: el radar despeja su círculo de una vez.
     let revealed = reduce.matches;
-    if (revealed) clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
+    if (revealed) {
+      clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
+      detectSector(0, FULL_TURN);
+    }
 
     // animate: MapLibre copia el canvas en cada cuadro solo mientras la niebla cambia, que es la
     // primera vuelta del haz; después se pausa y queda la última copia.
@@ -109,9 +139,11 @@ export function Radar({ map, bounds, grid, base }: RadarProps) {
         // Lo que barrió el haz desde el cuadro anterior, sin pasar de la vuelta completa.
         const to = Math.min(angle, FULL_TURN);
         clearSector(fog, base, RADAR_RADIUS, swept, to);
+        detectSector(swept, to);
         swept = to;
         if (to === FULL_TURN || reduce.matches) {
           clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
+          detectSector(0, FULL_TURN);
           revealed = true;
           source?.pause();
         }
@@ -140,7 +172,7 @@ export function Radar({ map, bounds, grid, base }: RadarProps) {
       if (map.getLayer(FOG_SOURCE)) map.removeLayer(FOG_SOURCE);
       if (map.getSource(FOG_SOURCE)) map.removeSource(FOG_SOURCE);
     };
-  }, [map, bounds, grid, base]);
+  }, [map, bounds, grid, base, spawns]);
 
   return null;
 }

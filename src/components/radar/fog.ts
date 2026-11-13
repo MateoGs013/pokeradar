@@ -2,6 +2,10 @@
 // una capa raster (fuente `canvas`). Cada píxel es opaco mientras la celda está cubierta y
 // transparente cuando el radar la despejó. MapLibre filtra la textura en lineal al estirarla, así
 // que el borde entre lo cubierto y lo despejado sale suave sin dibujarlo.
+//
+// El canvas tiene un píxel más de cada lado, fuera del mundo, que nunca se despeja: el borde de
+// una capa raster no cubre entero su último píxel de pantalla, y sin ese margen se veía una línea
+// de mar sin niebla en el borde del mundo (medido a 320 px).
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position } from "@/lib/world/types";
 
@@ -10,12 +14,17 @@ export interface Fog {
   context: CanvasRenderingContext2D;
   /** Los píxeles del canvas: se editan acá y se copian al canvas con putImageData. */
   image: ImageData;
-  /** 1 si la celda ya se despejó. Mismo orden que los píxeles: fila por fila, de norte a sur. */
+  /** 1 si la celda ya se despejó: fila por fila, de norte a sur, como la grilla del mundo. */
   cleared: Uint8Array;
+  /** Celdas de la grilla del mundo (el canvas tiene dos más en cada sentido, por el margen). */
   width: number;
   height: number;
+  /** Extensión del mundo, sin el margen. */
   bounds: Bounds;
 }
+
+/** Píxeles de margen de cada lado del canvas. */
+const MARGIN = 1;
 
 /** Una niebla que cubre todo el mundo, pintada con `color` (un color de CSS). */
 export function createFog(
@@ -25,17 +34,17 @@ export function createFog(
   color: string,
 ): Fog {
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = width + 2 * MARGIN;
+  canvas.height = height + 2 * MARGIN;
   const context = canvas.getContext("2d");
   if (!context)
     throw new Error("El navegador no dio un contexto 2D para la niebla");
   context.fillStyle = color;
-  context.fillRect(0, 0, width, height);
+  context.fillRect(0, 0, canvas.width, canvas.height);
   return {
     canvas,
     context,
-    image: context.getImageData(0, 0, width, height),
+    image: context.getImageData(0, 0, canvas.width, canvas.height),
     cleared: new Uint8Array(width * height),
     width,
     height,
@@ -43,10 +52,14 @@ export function createFog(
   };
 }
 
-/** Las cuatro esquinas del canvas sobre el mapa, en el orden que pide MapLibre. */
-export function fogCorners({
-  bounds: [[west, south], [east, north]],
-}: Fog): [Position, Position, Position, Position] {
+/** Las cuatro esquinas del canvas sobre el mapa, con el margen, en el orden que pide MapLibre. */
+export function fogCorners(fog: Fog): [Position, Position, Position, Position] {
+  const [[worldWest, worldSouth], [worldEast, worldNorth]] = fog.bounds;
+  const margin = (MARGIN * (worldEast - worldWest)) / fog.width;
+  const west = worldWest - margin;
+  const east = worldEast + margin;
+  const south = worldSouth - margin;
+  const north = worldNorth + margin;
   return [
     [west, north],
     [east, north],
@@ -55,12 +68,32 @@ export function fogCorners({
   ];
 }
 
-const FULL_TURN = 2 * Math.PI;
+export const FULL_TURN = 2 * Math.PI;
 
 /**
- * Despeja las celdas del sector del círculo entre los ángulos `from` y `to` (en radianes, desde el
- * norte y en el sentido de las agujas del reloj, como un radar). Cuenta una celda si su centro cae
- * adentro. Devuelve cuántas celdas despejó: si es 0, no hace falta volver a dibujar.
+ * Si `point` cae en el sector del círculo entre los ángulos `from` y `to`: en radianes, desde el
+ * norte y en el sentido de las agujas del reloj, como un radar. Un sector de 0 a FULL_TURN es el
+ * círculo entero.
+ */
+export function inSector(
+  center: Position,
+  radius: number,
+  from: number,
+  to: number,
+  point: Position,
+): boolean {
+  const east = point[0] - center[0];
+  const north = point[1] - center[1];
+  if (east * east + north * north > radius * radius) return false;
+  // atan2(este, norte): 0 al norte, π/2 al este. Se pasa a [0, 2π).
+  const angle = (Math.atan2(east, north) + FULL_TURN) % FULL_TURN;
+  return angle >= from && angle < to;
+}
+
+/**
+ * Despeja las celdas del sector del círculo entre `from` y `to` (ver inSector). Cuenta una celda
+ * si su centro cae adentro. Devuelve cuántas celdas despejó: si es 0, no hace falta volver a
+ * dibujar.
  */
 export function clearSector(
   fog: Fog,
@@ -97,14 +130,14 @@ export function clearSector(
     for (let x = firstX; x <= lastX; x++) {
       const index = x + y * width;
       if (fog.cleared[index]) continue;
-      const east = west + (x + 0.5) * degreesPerCell - center[0];
-      const northward = north - (y + 0.5) * degreesPerCell - center[1];
-      if (east * east + northward * northward > radius * radius) continue;
-      // atan2(este, norte): 0 al norte, π/2 al este. Se pasa a [0, 2π).
-      const angle = (Math.atan2(east, northward) + FULL_TURN) % FULL_TURN;
-      if (angle < from || angle >= to) continue;
+      const cellCenter: Position = [
+        west + (x + 0.5) * degreesPerCell,
+        north - (y + 0.5) * degreesPerCell,
+      ];
+      if (!inSector(center, radius, from, to, cellCenter)) continue;
       fog.cleared[index] = 1;
-      fog.image.data[index * 4 + 3] = 0;
+      const pixel = x + MARGIN + (y + MARGIN) * (width + 2 * MARGIN);
+      fog.image.data[pixel * 4 + 3] = 0;
       count++;
     }
   }
