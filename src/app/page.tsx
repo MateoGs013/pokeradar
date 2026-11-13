@@ -6,7 +6,7 @@ import { MapLoader } from "@/components/map/map-loader";
 import { placeSpawns } from "@/lib/geo/spawns";
 import { getSpeciesDataset } from "@/lib/pokeapi/dataset";
 import { generateWorld, worldHash } from "@/lib/world/generate";
-import { WORLD_BOUNDS } from "@/lib/world/grid";
+import { GRID_HEIGHT, GRID_WIDTH, WORLD_BOUNDS } from "@/lib/world/grid";
 
 export default async function Home() {
   const world = generateWorld();
@@ -43,6 +43,8 @@ export default async function Home() {
         ]}
         spawns={spawns}
         places={world.places}
+        grid={{ width: GRID_WIDTH, height: GRID_HEIGHT }}
+        radarBase={world.radarBase}
       />
     </main>
   );

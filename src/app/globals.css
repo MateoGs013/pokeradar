@@ -53,6 +53,9 @@
   --map-label-tracking: 0.1;
   --map-label-halo: 1.5;
 
+  /* La niebla tapa el terreno sin borrarlo del todo: se adivina la silueta de la isla. */
+  --fog-opacity: 0.9;
+
   /* Tokens que leen los componentes de shadcn, conectados al HUD. */
   --background: var(--hud-bg);
   --foreground: var(--hud-fg);

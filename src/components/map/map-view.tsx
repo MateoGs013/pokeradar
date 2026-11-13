@@ -14,6 +14,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { DossierPanel } from "@/components/dossier/dossier-panel";
+import { underFog } from "@/components/radar/fog";
+import { Radar } from "@/components/radar/radar";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type {
@@ -24,6 +26,7 @@ import type {
 } from "@/lib/world/types";
 
 import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
+import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
 import { MapLoading } from "./map-status";
 import { labelAnchor } from "./places";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
@@ -45,6 +48,10 @@ export interface MapViewProps {
   spawns: readonly Spawn[];
   /** Las ciudades, el volcán y los lagos, con su nombre inventado. */
   places: readonly Place[];
+  /** Cuántas celdas tiene la grilla del mundo, para la niebla. */
+  grid: { width: number; height: number };
+  /** Dónde está el radar base. */
+  radarBase: Position;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -104,34 +111,6 @@ function placeLayers(): SymbolLayerSpecification[] {
   ];
 }
 
-/** Lee un token de globals.css (los colores y las medidas viven en un solo lugar). */
-function cssToken(name: string): string {
-  return getComputedStyle(document.documentElement)
-    .getPropertyValue(name)
-    .trim();
-}
-
-/** Un token numérico. Si falta o no es un número, falla acá y no con un valor raro en el mapa. */
-function cssNumber(name: string): number {
-  const value = Number.parseFloat(cssToken(name));
-  if (Number.isNaN(value)) throw new Error(`El token ${name} no es un número`);
-  return value;
-}
-
-/**
- * Las familias de una variable de fuente de next/font (`"Martian Mono", "Martian Mono Fallback"`),
- * sin comillas: MapLibre arma su propia lista de CSS con los nombres. Así el nombre sale del mismo
- * token que usa la página, no de una copia escrita a mano.
- */
-function cssFontFamilies(name: string): string[] {
-  const families = cssToken(name)
-    .split(",")
-    .map((family) => family.trim().replace(/^["']|["']$/g, ""))
-    .filter((family) => family !== "");
-  if (families.length === 0) throw new Error(`El token ${name} está vacío`);
-  return families;
-}
-
 /** Límite del mapa: el mundo agrandado a la proporción actual del contenedor. */
 function worldLimit(world: Bounds, container: HTMLElement): Bounds {
   return expandToAspect(world, container.clientWidth / container.clientHeight);
@@ -148,7 +127,14 @@ function biomeLayers(biomes: BiomeCollection): FillLayerSpecification[] {
   }));
 }
 
-export function MapView({ biomes, bounds, spawns, places }: MapViewProps) {
+export function MapView({
+  biomes,
+  bounds,
+  spawns,
+  places,
+  grid,
+  radarBase,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
@@ -200,7 +186,14 @@ export function MapView({ biomes, bounds, spawns, places }: MapViewProps) {
           {
             id: "fondo",
             type: "background",
-            paint: { "background-color": cssToken("--bioma-sea") },
+            // Fuera del mundo hay mar que nunca se despeja: se pinta ya cubierto por la niebla.
+            paint: {
+              "background-color": underFog(
+                cssToken("--bioma-sea"),
+                cssToken("--hud-bg"),
+                cssNumber("--fog-opacity"),
+              ),
+            },
           },
           ...biomeLayers(initial.biomes),
           ...placeLayers(),
@@ -279,19 +272,25 @@ export function MapView({ biomes, bounds, spawns, places }: MapViewProps) {
     <div className="absolute inset-0">
       <div ref={containerRef} inert={!loadedMap} className="h-full w-full" />
       {loadedMap ? (
-        <SignalMarkers
-          map={loadedMap}
-          places={places}
-          spawns={spawns}
-          selectedId={dossierOpen ? (selection?.spawn.speciesId ?? null) : null}
-          identified={identified}
-          onSelect={(next) => {
-            setSelection(next);
-            setDossierOpen(true);
-            focusRef.current = next.spawn.position;
-            focusSignal(loadedMap, bounds, next.spawn.position);
-          }}
-        />
+        <>
+          {/* Antes que las señales: su Marker se agrega primero y el haz queda debajo de ellas. */}
+          <Radar map={loadedMap} bounds={bounds} grid={grid} base={radarBase} />
+          <SignalMarkers
+            map={loadedMap}
+            places={places}
+            spawns={spawns}
+            selectedId={
+              dossierOpen ? (selection?.spawn.speciesId ?? null) : null
+            }
+            identified={identified}
+            onSelect={(next) => {
+              setSelection(next);
+              setDossierOpen(true);
+              focusRef.current = next.spawn.position;
+              focusSignal(loadedMap, bounds, next.spawn.position);
+            }}
+          />
+        </>
       ) : (
         <MapLoading />
       )}
