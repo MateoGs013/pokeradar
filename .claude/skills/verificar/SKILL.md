@@ -47,6 +47,9 @@ de Vercel): `VERIFICAR_URL=<url> node .claude/skills/verificar/capturar.mjs`.
 - Cruzar con el JSON: `desbordaHorizontal`, `anchoReal` distinto del pedido, cualquier error de consola.
 - Si el cambio toca animaciones, mencionar que el movimiento reducido no se cubre con estas capturas y cómo probarlo
   (DevTools → Rendering → Emulate `prefers-reduced-motion: reduce`).
+- Si el cambio agrega o toca una animación (un panel que entra, una transición, un sprite), las capturas muestran solo
+  el estado final: medir también la entrada, cuadro por cuadro desde el disparo, y la duración real contra la que
+  dicen los comentarios y la descripción del PR (E-18).
 
 ## 4. Limpiar
 
