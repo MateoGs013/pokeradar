@@ -38,7 +38,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 - **Síntoma:** qué se vio.
 - **Causa:** por qué pasó.
-- **Detección:** hook, typecheck, CI, /pr-review, vista previa o a mano.
+- **Detección:** hook, typecheck, CI, /pr-review, vista previa, Claude o a mano (Mateo).
 - **Arreglo:** qué se cambió, con el PR (#n) y el asunto del commit. El hash corto, solo si el commit ya está en `main`:
   el merge con `--rebase` lo cambia (E-20).
 - **Prevención:** la regla, el hook, el chequeo o la línea de CLAUDE.md que se agregó; o "ninguna" y por qué.
@@ -97,7 +97,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
   hacia los bordes (`EDGE_FALLOFF` de 0.9 a 1.4) y la tierra siguió tocando el borde de abajo.
 - **Causa:** los umbrales de altura salen por percentil (`HEIGHT_SHARES`): el 40 % más bajo siempre es mar. Endurecer
   la caída cambia la forma del continente pero no cuánto mar hay, así que no garantiza que el borde sea agua.
-- **Detección:** a mano, en la captura de `/verificar` a 1440 px.
+- **Detección:** Claude, mirando la captura de `/verificar` a 1440 px.
 - **Arreglo:** un hundimiento propio en las últimas 10 celdas de cada borde (`borderSink` en `fields.ts`). Este
   arreglo tampoco garantizaba el mar en toda la franja, como afirmaba: ver E-05.
 - **Prevención:** el comentario de `HEIGHT_SHARES` en `src/lib/world/biomes.ts` explica que las proporciones son fijas
@@ -154,7 +154,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
   sospechó sin medir que el `<main>` tenía altura 0 y cambió `flex-1` por `h-dvh`: la página siguió igual, y recién
   después leyó el CSS de la librería. El `<main>` no era parte del problema: con `flex-1` y el arreglo, el mapa se ve
   igual (comprobado en el build, a 390 y 1440 px).
-- **Detección:** a mano, mirando las capturas de `/verificar` (vacías, sin errores de consola).
+- **Detección:** Claude, mirando las capturas de `/verificar` (vacías, sin errores de consola).
 - **Arreglo:** el posicionamiento pasó a un div de afuera y el contenedor del mapa usa `h-full w-full`. El `<main>`
   volvió a `flex-1`.
 - **Prevención:** comentario en `map-view.tsx`, nota en `docs/decisiones.md` (maplibre-gl) y se agregó a
@@ -292,7 +292,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
   empezar, y recién después ponen el nuevo: `tr.applyConstrain` en `handleFlyTo`
   (`maplibre-gl/src/geo/projection/mercator_camera_helper.ts:156`), y en `jumpTo` (`src/ui/camera.ts`) el centro se
   ajusta antes de `tr.setPadding`. Desde el mapa sin padding, el destino quedaba recortado como si la ficha no existiera.
-- **Detección:** a mano, midiendo con CDP las señales de los cuatro extremos en 390, 768 y 1440, antes del commit.
+- **Detección:** Claude, midiendo con CDP las señales de los cuatro extremos en 390, 768 y 1440, antes del commit.
 - **Arreglo:** `setPaddingInPlace` en `src/components/map/camera.ts` pone el padding sin mover la vista (`setPadding` y
   después `setCenter` con el punto que ya estaba en el medio de la parte libre) y recién ahí vuela. Los 12 casos quedan
   con la señal entera en la parte libre (8827ada).

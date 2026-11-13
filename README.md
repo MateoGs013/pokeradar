@@ -111,7 +111,7 @@ detectó, arreglo y prevención. De las 20 entradas, 18 son errores de la IA. Lo
   anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
 Quién detectó las 20: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
-encontró 9; yo, 2; las otras 9 salieron antes del commit, midiendo, mirando capturas o releyendo.
+encontró 9; yo, 2; y la propia IA, otras 9: midiendo, mirando capturas o releyendo.
 
 ## Próximos Pasos
 
