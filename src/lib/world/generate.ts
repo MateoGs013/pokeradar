@@ -22,11 +22,12 @@ import {
   sinkBorder,
   terrainField,
 } from "./fields";
-import { cellCenter, distanceToEdge, valueAt } from "./grid";
+import { cellCenter, distanceToEdge, lngLatToCell, valueAt } from "./grid";
+import { namePlaces } from "./names";
 import { fieldToPolygons, worldRectangle } from "./polygons";
 import { distanceField, highestCell, placeCities } from "./sites";
-import type { World } from "./types";
-import { findLakes } from "./water";
+import type { Place, PlaceKind, World } from "./types";
+import { findLakes, lakeLabelCell, splitLakes } from "./water";
 
 /** La semilla del mundo. Cambiarla genera otro mundo; la misma semilla, siempre el mismo. */
 export const WORLD_SEED = 151;
@@ -47,23 +48,36 @@ export function generateWorld(seed: number = WORLD_SEED): World {
     CITY_COUNT,
     CITY_MIN_SPACING,
   );
+  const volcano = highestCell(height);
+  const lakes = findLakes(height, thresholds.coast);
 
   const fields = layerFields({
     height,
     moisture,
     thresholds,
     cityDistance: distanceField(cities),
-    volcanoDistance: distanceField([highestCell(height)]),
-    lakes: findLakes(height, thresholds.coast),
+    volcanoDistance: distanceField([volcano]),
+    lakes,
   });
 
   const cells = classifyCells(fields);
   assertEveryHabitat(cells);
   assertSeaBorder(cells);
 
+  const places = namePlaces(
+    {
+      city: cities,
+      volcano: [volcano],
+      lake: splitLakes(lakes).map(lakeLabelCell),
+    },
+    createRandom(deriveSeed(seed, "nombres")),
+  );
+  assertPlaces(places, cells);
+
   return {
     seed,
     cells,
+    places,
     biomes: {
       type: "FeatureCollection",
       features: LAYER_ORDER.map((habitat) => ({
@@ -111,6 +125,36 @@ function assertSeaBorder(cells: readonly HabitatName[]): void {
       );
     }
   });
+}
+
+/** El hábitat que tiene que tener la celda de cada tipo de lugar. */
+const PLACE_HABITAT: Record<PlaceKind, HabitatName> = {
+  city: "urban",
+  volcano: "rare",
+  lake: "waters-edge",
+};
+
+/**
+ * Lanza si dos lugares se llaman igual o si un nombre cae en una celda que no es de su hábitat
+ * (una ciudad fuera de la ciudad, un lago en tierra). Se comprueba desde la posición que va a usar
+ * el mapa, como `assertSpawns`.
+ */
+function assertPlaces(
+  places: readonly Place[],
+  cells: readonly HabitatName[],
+): void {
+  const names = new Set(places.map((place) => place.name));
+  if (names.size !== places.length) {
+    throw new Error("Hay dos lugares con el mismo nombre");
+  }
+  for (const place of places) {
+    const habitat = cells[lngLatToCell(place.position)];
+    if (habitat !== PLACE_HABITAT[place.kind]) {
+      throw new Error(
+        `${place.name} (${place.kind}) cae en ${habitat ?? "ninguna celda"}`,
+      );
+    }
+  }
 }
 
 /** Huella corta del mundo: si coincide entre local y producción, el mundo es el mismo. */
