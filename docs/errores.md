@@ -8,25 +8,26 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ## Índice
 
-| Id   | Fecha      | Origen   | Área  | Resumen                                                                                                             |
-| ---- | ---------- | -------- | ----- | ------------------------------------------------------------------------------------------------------------------- |
-| E-01 | 2026-11-12 | IA       | docs  | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible                        |
-| E-02 | 2026-11-12 | IA       | docs  | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                                         |
-| E-03 | 2026-11-12 | IA       | data  | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset                             |
-| E-04 | 2026-11-12 | IA       | world | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil               |
-| E-05 | 2026-11-12 | IA       | world | Afirmó un borde de mar garantizado en 10 celdas sin medirlo; quedaban 71 celdas de tierra                           |
-| E-06 | 2026-11-12 | IA       | docs  | Al agregar una tabla en decisiones.md, mudó la fila de tw-animate-css a la tabla equivocada                         |
-| E-07 | 2026-11-12 | librería | map   | Con Turbopack, MapLibre v6 se queda sin la URL de su worker y el worker pide la página                              |
-| E-08 | 2026-11-12 | IA       | map   | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
-| E-09 | 2026-11-12 | IA       | docs  | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
-| E-10 | 2026-11-12 | IA       | map   | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
-| E-11 | 2026-11-12 | IA       | map   | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
-| E-12 | 2026-11-12 | IA       | docs  | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
-| E-13 | 2026-11-12 | IA       | map   | Afirmó sin medir que en pantallas extremas el mapa carga; con el tope de ±180°, desde 30:1 de ancho no cargaba      |
-| E-14 | 2026-11-12 | IA       | map   | El arreglo del cartel de carga dejó el canvas enfocable con Tab debajo del cartel; se probó sin teclado             |
-| E-15 | 2026-11-12 | IA       | map   | Dos comentarios del PR #3 afirmaban comportamientos sin medirlos, y la cuenta de E-11 dejaba afuera a E-03 y E-09   |
-| E-16 | 2026-11-12 | IA       | map   | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
-| E-17 | 2026-11-13 | librería | map   | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
+| Id   | Fecha      | Origen   | Área    | Resumen                                                                                                             |
+| ---- | ---------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| E-01 | 2026-11-12 | IA       | docs    | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible                        |
+| E-02 | 2026-11-12 | IA       | docs    | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                                         |
+| E-03 | 2026-11-12 | IA       | data    | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset                             |
+| E-04 | 2026-11-12 | IA       | world   | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil               |
+| E-05 | 2026-11-12 | IA       | world   | Afirmó un borde de mar garantizado en 10 celdas sin medirlo; quedaban 71 celdas de tierra                           |
+| E-06 | 2026-11-12 | IA       | docs    | Al agregar una tabla en decisiones.md, mudó la fila de tw-animate-css a la tabla equivocada                         |
+| E-07 | 2026-11-12 | librería | map     | Con Turbopack, MapLibre v6 se queda sin la URL de su worker y el worker pide la página                              |
+| E-08 | 2026-11-12 | IA       | map     | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
+| E-09 | 2026-11-12 | IA       | docs    | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
+| E-10 | 2026-11-12 | IA       | map     | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
+| E-11 | 2026-11-12 | IA       | map     | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
+| E-12 | 2026-11-12 | IA       | docs    | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
+| E-13 | 2026-11-12 | IA       | map     | Afirmó sin medir que en pantallas extremas el mapa carga; con el tope de ±180°, desde 30:1 de ancho no cargaba      |
+| E-14 | 2026-11-12 | IA       | map     | El arreglo del cartel de carga dejó el canvas enfocable con Tab debajo del cartel; se probó sin teclado             |
+| E-15 | 2026-11-12 | IA       | map     | Dos comentarios del PR #3 afirmaban comportamientos sin medirlos, y la cuenta de E-11 dejaba afuera a E-03 y E-09   |
+| E-16 | 2026-11-12 | IA       | map     | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
+| E-17 | 2026-11-13 | librería | map     | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
+| E-18 | 2026-11-13 | IA       | dossier | Los comentarios decían que la ficha entraba deslizándose; aparecía de golpe, y el PR daba 600 ms en vez de 300      |
 
 ## Formato de cada entrada
 
@@ -294,3 +295,20 @@ Para agregar una entrada se puede usar `/registrar-error`.
   con la señal entera en la parte libre (b733c4a).
 - **Prevención:** ninguna regla nueva. El porqué quedó en el comentario de `setPaddingInPlace`, y lo detectó la regla
   que ya existe: medir antes de afirmar (`CLAUDE.md`).
+
+### E-18 · 2026-11-13 12:13 · IA · dossier
+
+- **Síntoma:** los comentarios de `sheet.tsx` y `drawer.tsx` decían que el panel "entra deslizándose" y "entra y sale
+  por abajo", pero la ficha aparecía de golpe: solo animaba la salida. Medido cuadro por cuadro, el panel estaba en su
+  lugar desde el primer cuadro y sin `data-starting-style`. La descripción del PR #4, además, daba 600 ms para la
+  entrada del sprite de la señal, que dura 300.
+- **Causa:** `map-view.tsx` montaba `DossierPanel` ya abierto (la señal y el `open` cambiaban en el mismo evento), y
+  Base UI no anima la entrada de un popup que se monta abierto (`animateInitialOpen`, apagado por defecto en
+  `useTransitionStatus`). Los comentarios se escribieron sin medir la entrada: las pruebas medían la salida, el foco
+  y la cámara. Los 600 ms eran el momento de la medición, no la duración.
+- **Detección:** `/pr-review` del PR #4 (subagente).
+- **Arreglo:** `DossierPanel` montado siempre, con el contenido solo cuando hay una señal (35d4f47). Medido: a 1440 el
+  panel entra desde x = 1440 y llega a 1080 a los 348 ms; a 390 sube desde y = 844 y llega a 338 a los 445 ms. La
+  descripción del PR se corrigió.
+- **Prevención:** se agregó al paso "Revisar" de `.claude/skills/verificar/SKILL.md`: si el cambio agrega o toca una
+  animación, medir también la entrada, cuadro por cuadro, y la duración real contra la que dicen los comentarios y el PR.
