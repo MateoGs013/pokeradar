@@ -4,8 +4,9 @@
 // señal que se decodifica, y vuelve a empezar mientras dure la carga. El lector de pantalla lee
 // el texto real (sr-only) y no el revuelto (aria-hidden). Con movimiento reducido, el texto
 // queda quieto (docs/decisiones.md, sección 8).
-import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
+
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 
 /** Caracteres de relleno: ASCII, para que en la monoespaciada midan lo mismo que las letras. */
 const GLYPHS = "#%&*+=/<>?01";
@@ -23,7 +24,7 @@ function scramble(text: string, revealed: number): string {
 }
 
 export function ScrambleText({ text }: { text: string }) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = usePrefersReducedMotion();
   const [shown, setShown] = useState(text);
 
   useEffect(() => {

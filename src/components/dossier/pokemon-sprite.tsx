@@ -3,9 +3,9 @@
 // El sprite de un Pokémon: el GIF animado, y con movimiento reducido el sprite quieto. Lo usan la
 // ficha (96 px) y la señal identificada en el mapa (40 px).
 import { cn } from "cn";
-import { useReducedMotion } from "motion/react";
 import Image from "next/image";
 
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 
 interface PokemonSpriteProps {
@@ -28,7 +28,7 @@ export function PokemonSprite({
   size,
   className,
 }: PokemonSpriteProps) {
-  const reducedMotion = useReducedMotion();
+  const reducedMotion = usePrefersReducedMotion();
   const src = reducedMotion
     ? (sprites.still ?? sprites.animated)
     : (sprites.animated ?? sprites.still);
