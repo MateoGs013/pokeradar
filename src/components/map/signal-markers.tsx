@@ -12,7 +12,7 @@ import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type { Place, Position, Spawn } from "@/lib/world/types";
 
-import { signalPlaces } from "./places";
+import { northToSouth, signalPlaces } from "./places";
 
 /**
  * Gestos que MapLibre escucha en el contenedor de los marcadores y que no tienen que llegarle
@@ -72,8 +72,6 @@ interface SignalMarkersProps {
   identified: ReadonlyMap<number, PokemonDetail>;
   /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
   detected: ReadonlySet<number>;
-  /** Las de la última detección, para el aviso al lector de pantalla. */
-  lastDetected: readonly number[];
   onSelect: (selection: SignalSelection) => void;
 }
 
@@ -84,27 +82,21 @@ export function SignalMarkers({
   selectedId,
   identified,
   detected,
-  lastDetected,
   onSelect,
 }: SignalMarkersProps) {
   // Un div por señal, que MapLibre posiciona, y el lugar que la nombra. El div lo comparten el
   // Marker y el portal, así que tiene que ser el mismo mientras el componente viva: useState lo
   // guarda (useMemo es una caché, y React puede descartarla). Las señales se ubican al compilar y
-  // no cambian. Van de norte a sur: ese es el orden del Tab, y el de los números de los lugares
-  // repetidos.
+  // no cambian. Van de norte a sur: ese es el orden del Tab.
   const [anchors] = useState(() =>
-    signalPlaces(
-      [...spawns].sort(
-        (a, b) =>
-          b.position[1] - a.position[1] || a.position[0] - b.position[0],
-      ),
-      places,
-    ).map(({ spawn, place, label }) => ({
-      spawn,
-      place,
-      label,
-      element: document.createElement("div"),
-    })),
+    signalPlaces(northToSouth(spawns), places).map(
+      ({ spawn, place, label }) => ({
+        spawn,
+        place,
+        label,
+        element: document.createElement("div"),
+      }),
+    ),
   );
 
   useEffect(() => {
@@ -124,17 +116,6 @@ export function SignalMarkers({
       }
     };
   }, [map, anchors]);
-
-  // Un aviso por detección: con una sola señal, dónde está; con varias, cuántas.
-  const announced = anchors.filter(({ spawn }) =>
-    lastDetected.includes(spawn.speciesId),
-  );
-  const [first, ...others] = announced;
-  const announcement = !first
-    ? ""
-    : others.length === 0
-      ? `Señal detectada en ${first.label}`
-      : `${announced.length} señales detectadas`;
 
   // Los Marker de todas las señales existen desde el principio, en el orden de norte a sur: un
   // botón que aparece después queda en su lugar del Tab.
@@ -156,14 +137,7 @@ export function SignalMarkers({
       ),
   );
 
-  return (
-    <>
-      {buttons}
-      <p role="status" className="sr-only">
-        {announcement}
-      </p>
-    </>
-  );
+  return buttons;
 }
 
 interface SignalButtonProps {
