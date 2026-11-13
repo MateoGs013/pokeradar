@@ -107,14 +107,16 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
           )}
         </p>
         {detail ? (
-          <h3 className="truncate text-xl leading-7 font-semibold">
+          <h3 className="truncate font-display text-2xl leading-8 font-extrabold">
             {detail.name}
           </h3>
         ) : (
-          <Placeholder className="h-7 w-32" />
+          <Placeholder className="h-8 w-32" />
         )}
+        {/* Comprimida con el eje de ancho, entra en una línea con los 40 géneros desde 390 px
+            (medido); a 320, los más largos se cortan con "…". En dos líneas, la ficha saltaría. */}
         {detail ? (
-          <p className="font-mono text-xs text-muted-foreground">
+          <p className="truncate font-mono text-xs text-muted-foreground font-stretch-condensed">
             #{String(detail.id).padStart(3, "0")}
             {detail.genus && ` · ${detail.genus}`}
           </p>
@@ -144,8 +146,9 @@ function Threat({ detail }: { detail: PokemonDetail | null }) {
   const total = detail?.stats.reduce((sum, stat) => sum + stat.value, 0);
   const level = total === undefined ? null : threatLevel(total);
   const critical = level === "Crítico";
+  // Comprimida y sin cortes: así "Crítico · suma 600" entra en una línea también a 320 px (medido).
   return (
-    <dl className="flex items-center gap-3 font-mono text-xs">
+    <dl className="flex items-center gap-3 font-mono text-xs font-stretch-condensed">
       <dt className="tracking-widest text-muted-foreground uppercase">
         Amenaza
       </dt>
@@ -168,7 +171,7 @@ function Threat({ detail }: { detail: PokemonDetail | null }) {
         {level ? (
           <span
             className={cn(
-              "tracking-widest uppercase",
+              "tracking-widest whitespace-nowrap uppercase",
               critical ? "text-destructive" : "text-foreground",
             )}
           >
@@ -271,7 +274,7 @@ function DossierError({ onRetry }: { onRetry: () => void }) {
     <div className="flex flex-col items-start gap-3">
       <p
         role="alert"
-        className="font-mono text-xs tracking-widest text-destructive uppercase"
+        className="font-display text-2xl leading-8 font-extrabold tracking-wider text-destructive uppercase"
       >
         Señal perdida
       </p>

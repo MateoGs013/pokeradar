@@ -115,8 +115,9 @@ encontró 9; yo, 2; las otras 9 salieron antes del commit, midiendo, mirando cap
 
 ## Próximos Pasos
 
-Este README describe `v0.1.0`. El plan sigue hasta el cierre del sábado 14/11 ([docs/decisiones.md](docs/decisiones.md),
-sección 8): al cerrar `v1.0.0`, lo que se haya hecho pasa a las secciones de arriba y acá queda lo que no entró.
+Este README describe `v0.1.0`, más la tipografía que se sumó después. El plan sigue hasta el cierre del sábado 14/11
+([docs/decisiones.md](docs/decisiones.md), sección 8): al cerrar `v1.0.0`, lo que se haya hecho pasa a las secciones
+de arriba y acá queda lo que no entró.
 
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
@@ -127,7 +128,6 @@ En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real.
 - **Sonido y atajos de teclado.**
-- **Tipografía:** la decidida es IBM Plex; hoy la app todavía usa Geist, la de create-next-app.
 
 Con una semana más, además del plan:
 
