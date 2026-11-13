@@ -43,21 +43,21 @@ y el foco vuelve a la señal.
 - **Nombres de lugares:** las cuatro ciudades, el volcán y los dos lagos tienen nombres inventados, elegidos con la
   semilla, que el mapa dibuja con Martian Mono. Cada señal se nombra desde la ciudad o el volcán más cercano ("la
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
-- **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz gira
-  y en su primera vuelta despeja un círculo, el 17 % de la isla. Solo las señales que detecta existen como botones:
+- **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz da
+  una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
   aparecen con un ping, se anuncian al lector de pantalla y el rótulo las cuenta ("5 de 40 señales"). Con movimiento
   reducido, el círculo se despeja de una vez.
 
 ## Arquitectura y Stack
 
-| Pieza             | Elección                                                              | Por qué                                                                                                               |
-| ----------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Framework         | Next.js 16.4 (App Router, Turbopack), React 19.3, TypeScript estricto | Lo pide la consigna                                                                                                   |
-| Mapa              | `maplibre-gl` 6.18, directo en un Client Component                    | Capas, cámara y marcadores contra la API de MapLibre, sin envoltorios                                                 |
-| Mundo             | `simplex-noise` + `d3-contour`, calculado una vez en el build         | Página estática; al navegador viajan solo los polígonos y las señales                                                 |
-| Estilos           | Tailwind 4 con tokens en `src/app/globals.css`                        | Un solo lugar para colores, tipografía y radios                                                                       |
-| Paneles y botones | shadcn sobre Base UI (Sheet, Drawer, Button), reestilados             | Foco, Esc y teclado resueltos; el aspecto es del HUD                                                                  |
-| Animación         | `motion` 14.13 (el nombre actual de Framer Motion) y `tw-animate-css` | `motion` para las barras; transiciones de Tailwind para el panel, `tw-animate-css` para el sprite y CSS para el pulso |
+| Pieza             | Elección                                                              | Por qué                                                                                                                                                                                      |
+| ----------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework         | Next.js 16.4 (App Router, Turbopack), React 19.3, TypeScript estricto | Lo pide la consigna                                                                                                                                                                          |
+| Mapa              | `maplibre-gl` 6.18, directo en un Client Component                    | Capas, cámara y marcadores contra la API de MapLibre, sin envoltorios                                                                                                                        |
+| Mundo             | `simplex-noise` + `d3-contour`, calculado una vez en el build         | Página estática; al navegador viajan solo los polígonos y las señales                                                                                                                        |
+| Estilos           | Tailwind 4 con tokens en `src/app/globals.css`                        | Un solo lugar para colores, tipografía y radios                                                                                                                                              |
+| Paneles y botones | shadcn sobre Base UI (Sheet, Drawer, Button), reestilados             | Foco, Esc y teclado resueltos; el aspecto es del HUD                                                                                                                                         |
+| Animación         | `motion` 14.13 (el nombre actual de Framer Motion) y `tw-animate-css` | `motion` para las barras; transiciones de Tailwind para el panel, `tw-animate-css` para el sprite, CSS para el pulso y el ping de detección, y `requestAnimationFrame` para el haz del radar |
 
 Las decisiones, con sus alternativas y versiones, están en [docs/decisiones.md](docs/decisiones.md). Lo que aprendí de
 PokéAPI, en [docs/hallazgos-pokeapi.md](docs/hallazgos-pokeapi.md).
@@ -71,6 +71,8 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 ```
 src/app/                   layout, página (servidor) y estilos globales
 src/components/map/        mapa, señales, cámara, carga y error
+src/components/radar/      niebla y radar base: el canvas de la niebla, el haz y la detección
+src/components/hud/        sala de monitoreo: rótulo de la esquina, aviso de detecciones y su estado
 src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
 src/components/ui/         componentes de shadcn con los tokens del HUD
 src/hooks/                 identificación con caché y cancelación; media queries
