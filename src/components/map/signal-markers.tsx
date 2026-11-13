@@ -4,7 +4,7 @@
 // <button> de React adentro, montado con un portal. Son decenas, no cientos: como botones del DOM
 // tienen foco, teclado y aria-label sin trabajo extra (docs/decisiones.md, "Señales").
 import { type Map as MapLibreMap, Marker } from "maplibre-gl";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import type { Spawn } from "@/lib/world/types";
@@ -24,16 +24,17 @@ export function SignalMarkers({
   selectedId,
   onSelect,
 }: SignalMarkersProps) {
-  // Un div por señal, que MapLibre posiciona. Van de norte a sur: ese es el orden del Tab.
-  const anchors = useMemo(
-    () =>
-      [...spawns]
-        .sort(
-          (a, b) =>
-            b.position[1] - a.position[1] || a.position[0] - b.position[0],
-        )
-        .map((spawn) => ({ spawn, element: document.createElement("div") })),
-    [spawns],
+  // Un div por señal, que MapLibre posiciona. Lo comparten el Marker y el portal, así que tiene
+  // que ser el mismo mientras el componente viva: useState lo crea una sola vez, al montar
+  // (useMemo es una caché, y React puede descartarla). Las señales se ubican al compilar y no
+  // cambian. Van de norte a sur: ese es el orden del Tab.
+  const [anchors] = useState(() =>
+    [...spawns]
+      .sort(
+        (a, b) =>
+          b.position[1] - a.position[1] || a.position[0] - b.position[0],
+      )
+      .map((spawn) => ({ spawn, element: document.createElement("div") })),
   );
 
   useEffect(() => {
