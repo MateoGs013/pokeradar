@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type { BiomeCollection, Spawn } from "@/lib/world/types";
 
+import { MapLoading } from "./map-status";
 import { SignalMarkers } from "./signal-markers";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
@@ -120,11 +121,12 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   }, []);
 
   // MapLibre le pone `position: relative` al contenedor (.maplibregl-map), y su CSS le gana a
-  // las clases de Tailwind: por eso el posicionamiento va en un div de afuera.
+  // las clases de Tailwind: por eso el posicionamiento va en un div de afuera. Hasta `load`, el
+  // cartel de carga tapa el mapa todavía vacío.
   return (
     <div className="absolute inset-0">
       <div ref={containerRef} className="h-full w-full" />
-      {loadedMap && (
+      {loadedMap ? (
         <SignalMarkers
           map={loadedMap}
           spawns={spawns}
@@ -134,6 +136,8 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
             setSelectedId((current) => (current === id ? null : id))
           }
         />
+      ) : (
+        <MapLoading />
       )}
     </div>
   );
