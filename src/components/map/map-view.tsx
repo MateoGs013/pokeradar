@@ -5,6 +5,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
+  type ErrorEvent as MapErrorEvent,
   type FillLayerSpecification,
   Map as MapLibreMap,
   setWorkerUrl,
@@ -66,6 +67,8 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
   const initialRef = useRef({ biomes, bounds });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
+  // Un error del mapa antes de `load`, que lo deja sin dibujar.
+  const [failure, setFailure] = useState<Error | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   // Crea el mapa una sola vez y lo destruye al desmontar.
@@ -109,16 +112,30 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
       map.fitBounds(initial.bounds, { animate: false });
     };
     map.on("resize", onResize);
-    const onLoad = () => setLoadedMap(map);
+    // Antes de `load`, un error deja el mapa sin dibujar: por ejemplo, si no baja el worker (como
+    // en E-07). Después de `load` se deja de escuchar, y MapLibre los muestra en la consola.
+    const onError = ({ error }: MapErrorEvent) =>
+      setFailure(new Error(error.message));
+    map.on("error", onError);
+    const onLoad = () => {
+      map.off("error", onError);
+      setLoadedMap(map);
+    };
     map.on("load", onLoad);
 
     return () => {
       map.off("resize", onResize);
+      map.off("error", onError);
       map.off("load", onLoad);
       map.remove();
       setLoadedMap(null);
     };
   }, []);
+
+  // React lleva al error boundary (map-error.tsx) lo que se lanza al renderizar o en un efecto,
+  // como el GPUInitializationError del constructor, pero no lo que llega en un evento: por eso
+  // el error del mapa se guarda en el estado y se lanza acá.
+  if (failure) throw failure;
 
   // MapLibre le pone `position: relative` al contenedor (.maplibregl-map), y su CSS le gana a
   // las clases de Tailwind: por eso el posicionamiento va en un div de afuera. Hasta `load`, el
