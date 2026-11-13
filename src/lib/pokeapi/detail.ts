@@ -91,7 +91,8 @@ export function buildPokemonDetail(
         .at(-1)
         ?.flavor_text.replace(/\s+/g, " ")
         .trim() ?? null,
-    // El orden de respaldo de docs/hallazgos-pokeapi.md ("Sprites animados").
+    // Los órdenes de respaldo de docs/hallazgos-pokeapi.md ("Sprites animados"): el animado, B/W y después
+    // Showdown; el quieto, front_default y después el artwork oficial, que no es pixel art.
     sprites: {
       animated:
         urlAt(sprites, [
