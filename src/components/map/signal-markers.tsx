@@ -92,9 +92,10 @@ export function SignalMarkers({
           b.position[1] - a.position[1] || a.position[0] - b.position[0],
       ),
       places,
-    ).map(({ spawn, place }) => ({
+    ).map(({ spawn, place, label }) => ({
       spawn,
       place,
+      label,
       element: document.createElement("div"),
     })),
   );
@@ -117,11 +118,12 @@ export function SignalMarkers({
     };
   }, [map, anchors]);
 
-  return anchors.map(({ spawn, place, element }) =>
+  return anchors.map(({ spawn, place, label, element }) =>
     createPortal(
       <SignalButton
         spawn={spawn}
         place={place}
+        label={label}
         selected={spawn.speciesId === selectedId}
         detail={identified.get(spawn.speciesId)}
         onSelect={onSelect}
@@ -135,8 +137,10 @@ export function SignalMarkers({
 
 interface SignalButtonProps {
   spawn: Spawn;
-  /** Dónde está, para el aria-label: "el bosque, al noreste de Monte Brasa". */
+  /** Dónde está, para la ficha: "el bosque, al noreste de Monte Brasa". */
   place: string;
+  /** El lugar para el aria-label, con "(n de m)" si otra señal comparte el lugar. */
+  label: string;
   selected: boolean;
   /** La ficha de la especie, si ya se identificó. */
   detail: PokemonDetail | undefined;
@@ -156,6 +160,7 @@ interface SignalButtonProps {
 function SignalButton({
   spawn,
   place,
+  label,
   selected,
   detail,
   onSelect,
@@ -166,8 +171,8 @@ function SignalButton({
       type="button"
       aria-label={
         detail
-          ? `${detail.name} en ${place}`
-          : `Señal sin identificar en ${place}`
+          ? `${detail.name} en ${label}`
+          : `Señal sin identificar en ${label}`
       }
       aria-haspopup="dialog"
       aria-expanded={selected}

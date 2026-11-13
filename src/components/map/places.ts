@@ -128,9 +128,10 @@ function describePlace(spawn: Spawn, places: readonly Place[]): string {
 }
 
 /**
- * El lugar de cada señal, en el orden en que vienen. Si varias comparten lugar, se numeran en ese
- * orden ("el bosque, al noreste de Monte Brasa (2 de 2)"): con lector de pantalla, dos botones con
- * el mismo nombre no se distinguen.
+ * El lugar de cada señal, en el orden en que vienen, y su etiqueta para el botón. Si varias
+ * comparten lugar, la etiqueta las numera en ese orden ("el bosque, al noreste de Monte Brasa (2 de
+ * 2)"): con lector de pantalla, dos botones con el mismo nombre no se distinguen. La ficha muestra
+ * el lugar sin el número.
  */
 export function signalPlaces(
   spawns: readonly Spawn[],
@@ -142,10 +143,10 @@ export function signalPlaces(
   }));
   return named.map(({ spawn, place }, index) => {
     const total = named.filter((other) => other.place === place).length;
-    if (total === 1) return { spawn, place };
+    if (total === 1) return { spawn, place, label: place };
     const order = named
       .slice(0, index + 1)
       .filter((other) => other.place === place).length;
-    return { spawn, place: `${place} (${order} de ${total})` };
+    return { spawn, place, label: `${place} (${order} de ${total})` };
   });
 }
