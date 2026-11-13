@@ -7,7 +7,7 @@ import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
-import type { Spawn } from "@/lib/world/types";
+import type { Position, Spawn } from "@/lib/world/types";
 
 import { HABITAT_PLACES } from "./places";
 
@@ -26,6 +26,29 @@ const MAP_GESTURES = [
 
 function stopPropagation(event: Event) {
   event.stopPropagation();
+}
+
+/**
+ * Hasta dónde llega el contorno del foco desde el centro de una señal: 10 px de radio, 2 de
+ * separación y 2 de contorno.
+ */
+const FOCUS_REACH = 14;
+
+/**
+ * Si la señal enfocada no se ve entera, el mapa va hasta ella. Pasa con el mapa acercado: el Tab
+ * llega a señales fuera de la vista, y el navegador no puede mostrarlas porque MapLibre vuelve a 0
+ * el scroll de su contenedor. `panTo` anima con `easeTo`, que con movimiento reducido no anima
+ * (MapLibre pone la duración en 0).
+ */
+function revealSignal(map: MapLibreMap, position: Position) {
+  const { x, y } = map.project(position);
+  const { clientWidth, clientHeight } = map.getContainer();
+  const visible =
+    x >= FOCUS_REACH &&
+    x <= clientWidth - FOCUS_REACH &&
+    y >= FOCUS_REACH &&
+    y <= clientHeight - FOCUS_REACH;
+  if (!visible) map.panTo(position);
 }
 
 interface SignalMarkersProps {
@@ -78,6 +101,7 @@ export function SignalMarkers({
         spawn={spawn}
         selected={spawn.speciesId === selectedId}
         onSelect={onSelect}
+        onFocus={() => revealSignal(map, spawn.position)}
       />,
       element,
       String(spawn.speciesId),
@@ -89,6 +113,7 @@ interface SignalButtonProps {
   spawn: Spawn;
   selected: boolean;
   onSelect: (speciesId: number) => void;
+  onFocus: () => void;
 }
 
 /**
@@ -97,13 +122,19 @@ interface SignalButtonProps {
  * con la medición). El foco se ve como un contorno verde separado del botón; la señal marcada,
  * como un anillo claro pegado a él, para que no se confundan cuando están en señales distintas.
  */
-function SignalButton({ spawn, selected, onSelect }: SignalButtonProps) {
+function SignalButton({
+  spawn,
+  selected,
+  onSelect,
+  onFocus,
+}: SignalButtonProps) {
   return (
     <button
       type="button"
       aria-label={`Señal sin identificar en ${HABITAT_PLACES[spawn.habitat]}`}
       aria-pressed={selected}
       onClick={() => onSelect(spawn.speciesId)}
+      onFocus={onFocus}
       className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-pressed:ring-2 aria-pressed:ring-foreground"
     >
       {/* Cada señal arranca el pulso en otro momento del ciclo, para que no laten todas juntas.
