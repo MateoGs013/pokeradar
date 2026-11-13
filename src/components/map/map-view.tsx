@@ -9,16 +9,23 @@ import {
   type FillLayerSpecification,
   Map as MapLibreMap,
   setWorkerUrl,
+  type SymbolLayerSpecification,
 } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 
 import { DossierPanel } from "@/components/dossier/dossier-panel";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
-import type { BiomeCollection, Position, Spawn } from "@/lib/world/types";
+import type {
+  BiomeCollection,
+  Place,
+  Position,
+  Spawn,
+} from "@/lib/world/types";
 
-import { focusSignal, releaseFocus } from "./camera";
+import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
 import { MapLoading } from "./map-status";
+import { labelAnchor } from "./places";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
@@ -36,9 +43,64 @@ export interface MapViewProps {
   bounds: Bounds;
   /** Las señales del mundo, ya ubicadas en el servidor. */
   spawns: readonly Spawn[];
+  /** Las ciudades, el volcán y los lagos, con su nombre inventado. */
+  places: readonly Place[];
 }
 
 const BIOMES_SOURCE = "biomas";
+const PLACES_SOURCE = "lugares";
+
+/**
+ * Desde qué zoom aparecen los nombres. Con el mundo entero en un celular, el mapa queda tan chico que
+ * los botones de las señales los tapan: ahí aparecen después de acercar una vez (medido en capturas).
+ */
+const NAMES_MIN_ZOOM = 4.5;
+/** Los lagos son de pocas celdas: su nombre aparece recién con este zoom (medido en capturas). */
+const LAKE_NAMES_MIN_ZOOM = 7;
+
+/**
+ * Los nombres de los lugares, con Martian Mono: sin URL de `glyphs`, MapLibre dibuja el texto con
+ * la fuente que la página ya cargó (docs/decisiones.md, "Texto en el mundo"). No puede pedirla
+ * comprimida ni con otro peso, así que va regular, en mayúsculas y con aire entre las letras.
+ * Cada nombre va del lado opuesto a la señal más cercana (`labelAnchor`), para que el botón no lo tape.
+ * Contraste (WCAG 1.4.3, AA pide 4,5:1), con la fórmula de WCAG sobre los colores de globals.css y
+ * sin contar el halo: --hud-fg da de 5,94:1 sobre las cuevas, el bioma más claro, a 14,34:1 sobre el
+ * mar (E-16).
+ */
+function placeLayers(): SymbolLayerSpecification[] {
+  const base = {
+    type: "symbol",
+    source: PLACES_SOURCE,
+    layout: {
+      "text-field": ["get", "name"],
+      "text-font": ["Martian Mono"],
+      "text-size": 12,
+      "text-transform": "uppercase",
+      "text-letter-spacing": 0.1,
+      "text-anchor": ["get", "anchor"],
+      "text-radial-offset": 1.2,
+    },
+    paint: {
+      "text-color": cssToken("--hud-fg"),
+      "text-halo-color": cssToken("--hud-bg"),
+      "text-halo-width": 1.5,
+    },
+  } satisfies Omit<SymbolLayerSpecification, "id">;
+  return [
+    {
+      ...base,
+      id: "nombres",
+      filter: ["!=", ["get", "kind"], "lake"],
+      minzoom: NAMES_MIN_ZOOM,
+    },
+    {
+      ...base,
+      id: "nombres-lagos",
+      filter: ["==", ["get", "kind"], "lake"],
+      minzoom: LAKE_NAMES_MIN_ZOOM,
+    },
+  ];
+}
 
 /** Lee un token de color de globals.css (los colores viven en un solo lugar). */
 function cssToken(name: string): string {
@@ -63,11 +125,11 @@ function biomeLayers(biomes: BiomeCollection): FillLayerSpecification[] {
   }));
 }
 
-export function MapView({ biomes, bounds, spawns }: MapViewProps) {
+export function MapView({ biomes, bounds, spawns, places }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
-  const initialRef = useRef({ biomes, bounds });
+  const initialRef = useRef({ biomes, bounds, places, spawns });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Un error del mapa antes de `load`, que lo deja sin dibujar.
@@ -95,6 +157,21 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
         version: 8,
         sources: {
           [BIOMES_SOURCE]: { type: "geojson", data: initial.biomes },
+          [PLACES_SOURCE]: {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: initial.places.map(({ name, kind, position }) => ({
+                type: "Feature",
+                properties: {
+                  name,
+                  kind,
+                  anchor: labelAnchor(position, initial.spawns),
+                },
+                geometry: { type: "Point", coordinates: position },
+              })),
+            },
+          },
         },
         layers: [
           {
@@ -103,8 +180,12 @@ export function MapView({ biomes, bounds, spawns }: MapViewProps) {
             paint: { "background-color": cssToken("--bioma-sea") },
           },
           ...biomeLayers(initial.biomes),
+          ...placeLayers(),
         ],
       },
+      // Sin fundido de los nombres al aparecer o al chocar, con movimiento reducido. Se lee al crear
+      // el mapa: MapLibre no lo deja cambiar después.
+      fadeDuration: prefersReducedMotion() ? 0 : 300,
       bounds: initial.bounds,
       // Si el límite fuera el mundo tal cual, en una pantalla angosta MapLibre acercaría el mapa
       // para no mostrar nada afuera, y la isla quedaría cortada a los costados.

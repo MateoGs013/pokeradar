@@ -42,6 +42,7 @@ export default async function Home() {
           [east, north],
         ]}
         spawns={spawns}
+        places={world.places}
       />
     </main>
   );
