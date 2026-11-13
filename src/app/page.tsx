@@ -16,8 +16,15 @@ export default async function Home() {
   );
   const { west, south, east, north } = WORLD_BOUNDS;
 
+  // El rótulo va antes que el mapa para que el encabezado sea lo primero que lee un lector de
+  // pantalla; z-10 lo deja dibujado encima del mapa, que viene después.
   return (
     <main className="relative flex-1 overflow-hidden">
+      <div className="pointer-events-none absolute top-3 left-3 z-10 font-mono text-xs text-muted-foreground">
+        <h1 className="inline tracking-widest text-hud uppercase">PokéRadar</h1>{" "}
+        · semilla {world.seed} · huella {worldHash(world)} · {spawns.length}{" "}
+        señales
+      </div>
       <MapLoader
         biomes={world.biomes}
         bounds={[
@@ -26,11 +33,6 @@ export default async function Home() {
         ]}
         spawns={spawns}
       />
-      <p className="pointer-events-none absolute top-3 left-3 font-mono text-xs text-muted-foreground">
-        <span className="tracking-widest text-hud uppercase">PokéRadar</span> ·
-        semilla {world.seed} · huella {worldHash(world)} · {spawns.length}{" "}
-        señales
-      </p>
     </main>
   );
 }
