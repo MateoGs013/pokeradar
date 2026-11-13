@@ -12,6 +12,7 @@ import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type { Place, Position, Spawn } from "@/lib/world/types";
 
+import { prefersReducedMotion } from "./camera";
 import { northToSouth, signalPlaces } from "./places";
 
 /**
@@ -171,6 +172,11 @@ function SignalButton({
   onSelect,
   onFocus,
 }: SignalButtonProps) {
+  // El ping suena una vez, cuando el botón aparece, y después se saca: si quedara, volvería a sonar
+  // al pasar de movimiento reducido a sin preferencia con la página abierta. Con movimiento
+  // reducido no está desde el principio. El botón se monta solo en el cliente (es un portal), así
+  // que se puede leer la preferencia al crear el estado.
+  const [pinged, setPinged] = useState(prefersReducedMotion);
   return (
     <button
       type="button"
@@ -188,12 +194,15 @@ function SignalButton({
       className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-expanded:ring-2 aria-expanded:ring-foreground"
     >
       {/* El ping de la detección: el botón aparece cuando el haz pasa por la señal, y este anillo
-          crece una sola vez desde ahí. Va primero para que no se vuelva a montar, y animarse,
-          cuando la señal se identifica. Termina invisible y no recibe toques. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-full border-2 border-hud opacity-0 motion-safe:animate-deteccion"
-      />
+          crece una sola vez desde ahí. Va primero: sacarlo no cambia el lugar de lo que sigue, que
+          así no se vuelve a montar. No recibe toques. */}
+      {!pinged && (
+        <span
+          aria-hidden
+          onAnimationEnd={() => setPinged(true)}
+          className="pointer-events-none absolute inset-0 rounded-full border-2 border-hud opacity-0 motion-safe:animate-deteccion"
+        />
+      )}
       {detail && hasSprite(detail.sprites) ? (
         // La señal se transforma en el sprite (docs/concepto.md, "Señales e identificación"); sin
         // sprite, sigue siendo el punto, con el nombre en el aria-label. Mide
