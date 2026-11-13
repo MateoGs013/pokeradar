@@ -26,6 +26,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-14 | 2026-11-12 | IA       | map   | El arreglo del cartel de carga dejó el canvas enfocable con Tab debajo del cartel; se probó sin teclado             |
 | E-15 | 2026-11-12 | IA       | map   | Dos comentarios del PR #3 afirmaban comportamientos sin medirlos, y la cuenta de E-11 dejaba afuera a E-03 y E-09   |
 | E-16 | 2026-11-12 | IA       | map   | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
+| E-17 | 2026-11-13 | librería | map   | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
 
 ## Formato de cada entrada
 
@@ -277,3 +278,19 @@ Para agregar una entrada se puede usar `/registrar-error`.
   las flechas, a 390 y 1440: 6,29:1 como mínimo, en 7 de los 9 biomas.
 - **Prevención:** se agregó a `.claude/rules/ui.md`: "El texto que va sobre el mapa lleva fondo, o su contraste se
   mide contra cada bioma (E-16)."
+
+### E-17 · 2026-11-13 02:03 · librería · map
+
+- **Síntoma:** con la ficha abierta a 768 px, la señal del extremo oeste quedaba en x = −7, fuera de la pantalla, y la
+  del este en x = 469, debajo del panel (lo libre llega a 408). A 1440 quedaban a la vista, pero hasta 295 px del centro
+  de la parte libre.
+- **Causa:** `flyTo` y `jumpTo` ajustan el destino al límite del mapa (`maxBounds`) con el padding que el mapa tiene al
+  empezar, y recién después ponen el nuevo: `tr.applyConstrain` en `handleFlyTo`
+  (`maplibre-gl/src/geo/projection/mercator_camera_helper.ts:156`), y en `jumpTo` (`src/ui/camera.ts`) el centro se
+  ajusta antes de `tr.setPadding`. Desde el mapa sin padding, el destino quedaba recortado como si la ficha no existiera.
+- **Detección:** a mano, midiendo con CDP las señales de los cuatro extremos en 390, 768 y 1440, antes del commit.
+- **Arreglo:** `setPaddingInPlace` en `src/components/map/camera.ts` pone el padding sin mover la vista (`setPadding` y
+  después `setCenter` con el punto que ya estaba en el medio de la parte libre) y recién ahí vuela. Los 12 casos quedan
+  con la señal entera en la parte libre (b733c4a).
+- **Prevención:** ninguna regla nueva. El porqué quedó en el comentario de `setPaddingInPlace`, y lo detectó la regla
+  que ya existe: medir antes de afirmar (`CLAUDE.md`).
