@@ -55,6 +55,8 @@
 
   /* La niebla tapa el terreno sin borrarlo del todo: se adivina la silueta de la isla. */
   --fog-opacity: 0.9;
+  /* Lo que tarda el haz del radar en dar su vuelta, en ms: el radar lo lee con getComputedStyle. */
+  --radar-turn: 4000;
 
   /* Tokens que leen los componentes de shadcn, conectados al HUD. */
   --background: var(--hud-bg);

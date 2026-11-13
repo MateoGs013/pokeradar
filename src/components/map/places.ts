@@ -18,6 +18,12 @@ const HABITAT_PLACES: Record<HabitatName, string> = {
   "waters-edge": "la orilla",
 };
 
+/**
+ * La capa de los nombres de lugares, menos los de los lagos. La niebla se dibuja debajo de ella:
+ * los lugares se ven aunque el terreno no.
+ */
+export const PLACE_NAMES_LAYER = "nombres";
+
 /** De qué lado del punto va un nombre del mapa: el ancla de MapLibre es el borde del texto que lo toca. */
 export type LabelAnchor = "top" | "bottom" | "left" | "right";
 

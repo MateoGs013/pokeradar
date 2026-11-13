@@ -1,9 +1,10 @@
 "use client";
 
-// El radar base, en la sala de monitoreo: un haz que gira y, en su primera vuelta, despeja la
-// niebla del círculo que cubre (docs/concepto.md, "Niebla y radar"). La niebla es una capa del
-// mapa (fog.ts); el haz es un elemento del DOM pegado al mapa con un Marker, así gira con CSS sin
-// que MapLibre tenga que volver a dibujar el mapa en cada cuadro.
+// El radar base, en la sala de monitoreo: un haz que da una vuelta, despeja la niebla del círculo
+// que cubre y detecta las señales que toca (docs/concepto.md, "Niebla y radar"). Después se apaga:
+// no hay más nada que barrer. La niebla es una capa del mapa (fog.ts). El haz es un elemento del
+// DOM pegado al mapa con un Marker, que gira con requestAnimationFrame: rotarlo no le pide nada al
+// mapa, que se redibuja en cada cuadro de esa vuelta solo porque la niebla cambia.
 import {
   type CanvasSource,
   type Map as MapLibreMap,
@@ -12,21 +13,18 @@ import {
 import { useEffect, useEffectEvent } from "react";
 
 import { cssNumber, cssToken } from "@/components/map/css-token";
+import { PLACE_NAMES_LAYER } from "@/components/map/places";
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position, Spawn } from "@/lib/world/types";
 
 import { clearSector, createFog, fogCorners, FULL_TURN, inSector } from "./fog";
 
 const FOG_SOURCE = "niebla";
-/** La niebla se dibuja debajo de los nombres: los lugares se ven aunque el terreno no. */
-const FOG_BELOW = "nombres";
 /**
  * Alcance del radar base, en grados: 2,4° son 30 celdas. Con la semilla 151 cubre el 17 % de la
  * isla (2271 de 13.292 celdas de tierra, medido): las antenas tienen terreno para sumar.
  */
 const RADAR_RADIUS = 2.4;
-/** Lo que tarda el haz en dar una vuelta. */
-const TURN_MS = 4000;
 
 interface RadarProps {
   map: MapLibreMap;
@@ -73,6 +71,7 @@ export function Radar({
     };
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const turn = cssNumber("--radar-turn");
     const fog = createFog(
       grid.width,
       grid.height,
@@ -80,7 +79,7 @@ export function Radar({
       cssToken("--hud-bg"),
     );
     // Con movimiento reducido no hay barrido: el radar despeja su círculo de una vez.
-    let revealed = reduce.matches;
+    const revealed = reduce.matches;
     if (revealed) {
       clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
       detectSector(0, FULL_TURN);
@@ -105,17 +104,19 @@ export function Radar({
           "raster-fade-duration": 0,
         },
       },
-      FOG_BELOW,
+      PLACE_NAMES_LAYER,
     );
     const source = map.getSource<CanvasSource>(FOG_SOURCE);
 
-    // El haz: un círculo del tamaño del alcance, con un degradé cónico que gira. El Marker lo
-    // centra en la base; el tamaño se recalcula al cambiar el zoom.
+    // El alcance es un aro fijo del tamaño del círculo; el haz, un degradé cónico adentro, que da
+    // la vuelta y se desvanece. Con movimiento reducido el haz no se ve. El Marker centra el aro
+    // en la base, y su tamaño se recalcula al cambiar el zoom.
     const beam = document.createElement("div");
     beam.className =
-      "absolute inset-0 rounded-full border border-hud/40 bg-conic from-transparent from-75% to-hud/35 motion-reduce:bg-none";
+      "absolute inset-0 rounded-full bg-conic from-transparent from-75% to-hud/35 transition-opacity duration-700 motion-reduce:hidden";
+    if (revealed) beam.style.opacity = "0";
     const element = document.createElement("div");
-    element.className = "pointer-events-none";
+    element.className = "pointer-events-none rounded-full border border-hud/40";
     element.append(beam);
     const marker = new Marker({ element }).setLngLat(base).addTo(map);
     const resize = () => {
@@ -134,37 +135,28 @@ export function Radar({
     let swept = 0;
     const tick = (now: number) => {
       start ??= now;
-      const angle = ((now - start) / TURN_MS) * FULL_TURN;
-      if (!revealed) {
-        // Lo que barrió el haz desde el cuadro anterior, sin pasar de la vuelta completa.
-        const to = Math.min(angle, FULL_TURN);
-        clearSector(fog, base, RADAR_RADIUS, swept, to);
-        detectSector(swept, to);
-        swept = to;
-        if (to === FULL_TURN || reduce.matches) {
-          clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
-          detectSector(0, FULL_TURN);
-          revealed = true;
-          source?.pause();
-        }
-      }
-      // Si el movimiento reducido se activa con la página abierta, el haz se detiene acá.
-      if (reduce.matches) {
+      // Lo que barrió el haz desde el cuadro anterior, sin pasar de la vuelta completa.
+      const to = Math.min(((now - start) / turn) * FULL_TURN, FULL_TURN);
+      clearSector(fog, base, RADAR_RADIUS, swept, to);
+      detectSector(swept, to);
+      swept = to;
+      beam.style.rotate = `${to}rad`;
+      // Al completar la vuelta, o si el movimiento reducido se activa con la página abierta, el
+      // radar despeja lo que faltara, la niebla deja de copiarse y el haz se apaga.
+      if (to === FULL_TURN || reduce.matches) {
+        clearSector(fog, base, RADAR_RADIUS, 0, FULL_TURN);
+        detectSector(0, FULL_TURN);
+        source?.pause();
+        beam.style.opacity = "0";
         frame = 0;
         return;
       }
-      beam.style.rotate = `${angle % FULL_TURN}rad`;
       frame = requestAnimationFrame(tick);
     };
-    const onMotionChange = () => {
-      if (!reduce.matches && !frame) frame = requestAnimationFrame(tick);
-    };
-    reduce.addEventListener("change", onMotionChange);
-    if (!reduce.matches) frame = requestAnimationFrame(tick);
+    if (!revealed) frame = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(frame);
-      reduce.removeEventListener("change", onMotionChange);
       map.off("zoom", resize);
       map.off("resize", resize);
       marker.remove();
