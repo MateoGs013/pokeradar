@@ -28,7 +28,7 @@ import type {
 import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
 import { MapLoading } from "./map-status";
-import { labelAnchor } from "./places";
+import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
@@ -102,7 +102,7 @@ function placeLayers(): SymbolLayerSpecification[] {
   return [
     {
       ...base,
-      id: "nombres",
+      id: PLACE_NAMES_LAYER,
       filter: ["!=", ["get", "kind"], "lake"],
       minzoom: NAMES_MIN_ZOOM,
     },
