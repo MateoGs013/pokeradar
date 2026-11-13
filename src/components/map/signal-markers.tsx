@@ -70,9 +70,9 @@ export function SignalMarkers({
 }: SignalMarkersProps) {
   // Un div por señal, que MapLibre posiciona, y el lugar que la nombra. El div lo comparten el
   // Marker y el portal, así que tiene que ser el mismo mientras el componente viva: useState lo
-  // crea una sola vez, al montar (useMemo es una caché, y React puede descartarla). Las señales
-  // se ubican al compilar y no cambian. Van de norte a sur: ese es el orden del Tab, y el de los
-  // números de los lugares repetidos.
+  // guarda (useMemo es una caché, y React puede descartarla). Las señales se ubican al compilar y
+  // no cambian. Van de norte a sur: ese es el orden del Tab, y el de los números de los lugares
+  // repetidos.
   const [anchors] = useState(() =>
     signalPlaces(
       [...spawns].sort(
