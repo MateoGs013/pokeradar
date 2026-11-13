@@ -30,6 +30,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-18 | 2026-11-13 | IA       | dossier | Los comentarios decían que la ficha entraba deslizándose; aparecía de golpe, y el PR daba 600 ms en vez de 300      |
 | E-19 | 2026-11-13 | IA       | docs    | El README resumía errores.md sin releerlo, y la entrada del plan contradecía la tabla que cambiaba                  |
 | E-20 | 2026-11-13 | IA       | docs    | 16 hashes de E-11 a E-19 eran los de las ramas; el merge con --rebase los reescribe y no están en main              |
+| E-21 | 2026-11-13 | IA       | ui      | Commits del PR #7 con mediciones de otro estado de la rama, y saltos de la ficha medidos sin el texto más largo     |
 
 ## Formato de cada entrada
 
@@ -344,3 +345,22 @@ Para agregar una entrada se puede usar `/registrar-error`.
   commit de `main` con el mismo asunto, que en los 16 casos era uno solo.
 - **Prevención:** en "Formato de cada entrada", el arreglo cita el PR y el asunto del commit; el hash, solo si el
   commit ya está en `main`. Lo mismo en el paso 2 de `/registrar-error`.
+
+### E-21 · 2026-11-13 15:11 · IA · ui
+
+- **Síntoma:** en el PR #7, el mensaje del commit del rótulo daba una medición (de 510 a 440 px con el eje de ancho de
+  Martian) que en ese commit no se podía hacer: todavía cargaba Geist Mono, que solo tiene eje de peso. El commit de la
+  tipografía decía que la ficha no saltaba, medido con dos especies. Con las 40 del mapa, la línea del género cortaba
+  en dos a 768 y 1440 px (Dewgong, Lotad y Metang) y la columna pasaba de 98 a 110 px. A 320 px, la fila de amenaza
+  cortaba con Registeel y Latios. Atkinson Hyperlegible Next quedó sin fuente de respaldo. Un comentario decía, sin
+  medirlo, que los puntos redondos de Doto "se leen más llenos que los cuadrados".
+- **Causa:** Claude midió sobre el estado final de la rama y puso el resultado en el mensaje de un commit anterior.
+  Midió los saltos con las especies de siempre, no con el texto más largo, que con una fuente más ancha es el caso que
+  importa. Y no miró en el CSS del build las fuentes de respaldo.
+- **Detección:** `/pr-review` del PR #7 (subagente). Las filas se confirmaron después, midiendo las 40 especies a 320,
+  390, 768 y 1440 px. El comentario de Doto lo vio Claude antes del commit.
+- **Arreglo:** PR #7, con la rama rehecha. "fix(hud): cortar el rótulo de la esquina solo entre datos" va después de
+  "feat(ui): pasar la tipografía a Martian Mono, Atkinson Hyperlegible Next y Doto". Este último comprime el género y
+  la amenaza con el eje de ancho, trunca el género y le da a Atkinson `fallback: ["system-ui", "arial"]`.
+- **Prevención:** en `CLAUDE.md`, la regla de probar lo que se afirma suma que la medición es del estado del commit que
+  la afirma, y con el caso peor: el texto más largo y el ancho más chico (320 px).

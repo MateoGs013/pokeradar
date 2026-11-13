@@ -84,7 +84,8 @@ Las carpetas se crean cuando tienen su primer archivo real. Reglas por carpeta e
   ultrawork, team, workflows), aunque estén instalados: en este proyecto manda este archivo.
 - Ante una API dudosa, verificá en la documentación oficial (o en `node_modules`) antes de escribir.
 - Lo que un comentario, un mensaje de commit o la descripción de un PR afirma del comportamiento se prueba antes de
-  escribirlo; si no, dice "sin probar".
+  escribirlo; si no, dice "sin probar". La medición es del estado del commit que la afirma, y con el caso peor: el
+  texto más largo y el ancho más chico, 320 px (E-21).
 - El MVP de la consigna va antes que cualquier extra del concepto.
 - Los comandos que se le pasan a Mateo para el `!` corren en Git Bash: los flags de Windows van con doble barra
   (`taskkill //PID 123 //F`) o se pasan como comando de PowerShell.
