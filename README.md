@@ -16,6 +16,10 @@ La idea la saqué del producto de DataInt (monitoreo, alertas, niveles de amenaz
 Radar existe como ítem y como condición de encuentro. Quise que los requisitos de la consigna fueran parte del relato: el
 skeleton es "Analizando firma…", el error es "Señal perdida" con "Reintentar", y los marcadores son pulsos de radar.
 
+Para quien lo usa, la metáfora hace de instrucciones: una señal que pulsa se toca, la espera es el sistema analizando y
+un error es una señal que se perdió y se puede volver a buscar. Cada estado dice qué está pasando con palabras de la
+historia, en lugar de un spinner o un mensaje genérico.
+
 El mundo no es un mapa real: es una isla generada con ruido y semilla (151), con nueve biomas, uno por cada hábitat de
 PokéAPI (el mar, la cueva, la ciudad; el volcán es el de las especies raras). Cada una de las 40 señales es una especie
 distinta, ubicada en su hábitat.
@@ -34,22 +38,23 @@ señal.
 
 ## Arquitectura y Stack
 
-| Pieza             | Elección                                                              | Por qué                                                               |
-| ----------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Framework         | Next.js 16.4 (App Router, Turbopack), React 19.3, TypeScript estricto | Lo pide la consigna                                                   |
-| Mapa              | `maplibre-gl` 6.18, directo en un Client Component                    | Capas, cámara y marcadores contra la API de MapLibre, sin envoltorios |
-| Mundo             | `simplex-noise` + `d3-contour`, calculado una vez en el build         | Página estática; al navegador viajan solo los polígonos y las señales |
-| Estilos           | Tailwind 4 con tokens en `src/app/globals.css`                        | Un solo lugar para colores, tipografía y radios                       |
-| Paneles y botones | shadcn sobre Base UI (Sheet, Drawer, Button), reestilados             | Foco, Esc y teclado resueltos; el aspecto es del HUD                  |
-| Animación         | `motion` 14.13 y `tw-animate-css`                                     | Barras y transiciones; CSS para el pulso                              |
+| Pieza             | Elección                                                              | Por qué                                                                                                               |
+| ----------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Framework         | Next.js 16.4 (App Router, Turbopack), React 19.3, TypeScript estricto | Lo pide la consigna                                                                                                   |
+| Mapa              | `maplibre-gl` 6.18, directo en un Client Component                    | Capas, cámara y marcadores contra la API de MapLibre, sin envoltorios                                                 |
+| Mundo             | `simplex-noise` + `d3-contour`, calculado una vez en el build         | Página estática; al navegador viajan solo los polígonos y las señales                                                 |
+| Estilos           | Tailwind 4 con tokens en `src/app/globals.css`                        | Un solo lugar para colores, tipografía y radios                                                                       |
+| Paneles y botones | shadcn sobre Base UI (Sheet, Drawer, Button), reestilados             | Foco, Esc y teclado resueltos; el aspecto es del HUD                                                                  |
+| Animación         | `motion` 14.13 (el nombre actual de Framer Motion) y `tw-animate-css` | `motion` para las barras; transiciones de Tailwind para el panel, `tw-animate-css` para el sprite y CSS para el pulso |
 
 Las decisiones, con sus alternativas y versiones, están en [docs/decisiones.md](docs/decisiones.md). Lo que aprendí de
 PokéAPI, en [docs/hallazgos-pokeapi.md](docs/hallazgos-pokeapi.md).
 
 **Servidor y cliente.** `src/app/page.tsx` es un Server Component: genera el mundo, arma el dataset de especies (con
 caché sin vencimiento) y ubica las señales. Lo que no debe llegar al navegador lleva `import "server-only"`. El mapa se
-carga con `dynamic(..., { ssr: false })` dentro de un Client Component, como sugiere la consigna. La ficha pide los
-datos desde el navegador, al identificar.
+carga con `dynamic(..., { ssr: false })`, el tip de la consigna, que no dice dónde va: la documentación de Next 16.4
+dice que `ssr: false` da error en un Server Component, así que vive en un Client Component que envuelve al mapa
+([docs/decisiones.md](docs/decisiones.md), sección 3). La ficha pide los datos desde el navegador, al identificar.
 
 ```
 src/app/                   layout, página (servidor) y estilos globales
@@ -65,16 +70,22 @@ docs/                      consigna, concepto, decisiones, hallazgos, errores y 
 
 ## Uso de Inteligencia Artificial (AI-Native Workflow)
 
-**Herramientas.** Usé Claude Code, con Claude Opus 5.5, para escribir código, documentación y mensajes de commit. La
-regla fue que antes de editar me contara un plan corto y esperara mi OK. Una noche lo dejé avanzar solo con una lista
-de tareas, sin pushear y con un informe de lo que decidió sin mí, que revisé a la mañana. Para medir y sacar capturas,
-Chrome headless manejado por scripts.
+**Herramientas.** Usé Claude Code, con Claude Opus 5.5, para escribir código, documentación y mensajes de commit. Para
+medir y sacar capturas, Chrome headless manejado por scripts. `next-devtools-mcp` quedó configurado en `.mcp.json`,
+pero no lo usé.
+
+La regla fue que antes de editar me contara un plan corto y esperara mi OK. Hubo una excepción, pedida por mí: la noche
+del 13/11 lo dejé avanzar solo con una lista de tareas, sin pushear. Fueron 14 commits, de 00:41 a 02:30: los arreglos
+de la review del PR #3 y la ficha entera. A la mañana leí su informe, aprobé las entradas de errores que había dejado
+en borrador y elegí dos arreglos más (el respaldo cuando una especie no trae sprite y el rótulo de la esquina a 768
+px). Después, la review del PR #4 encontró ocho problemas; el único mayor venía de esa noche: la ficha no animaba su
+entrada (E-18).
 
 **Cómo la dirigí.** Las reglas están en [CLAUDE.md](CLAUDE.md) y en `.claude/`, públicas a propósito:
 
 - **Pasos chicos con mi OK:** antes de editar, el plan; después, qué hizo y por qué. Nada de push, PR ni merge sin mi
   OK.
-- **Hooks:** ESLint sobre cada archivo editado y `pnpm typecheck` al terminar cada turno.
+- **Hooks:** ESLint sobre cada `.ts` o `.tsx` editado y `pnpm typecheck` al terminar cada turno.
 - **`/verificar`:** lint, typecheck, build y capturas en 390, 768 y 1440 px con los errores de consola, en Chrome
   headless.
 - **`/pr-review`:** el análisis de cada PR lo hace un subagente nuevo, de solo lectura y sin la conversación donde se
@@ -85,30 +96,40 @@ Chrome headless manejado por scripts.
 **Dónde se equivocó y cómo lo corregí.** Todo está en [docs/errores.md](docs/errores.md), con síntoma, causa, cómo se
 detectó, arreglo y prevención. De las 18 entradas, 16 son errores de la IA. Los que más me enseñaron:
 
-- **Afirmar sin medir** fue el error más repetido (E-03, E-05, E-09, E-10, E-11, E-13, E-15 y E-18). Por ejemplo, dijo
-  que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10); que sin WebGL "solo faltaba el
-  mapa", cuando se caía la página entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe (E-18).
-  Cada vez sumé una prevención; una de ellas, una línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
+- **Afirmar sin medir, o de memoria,** fue el error más repetido (E-03, E-05, E-08, E-09, E-10, E-11, E-12, E-13, E-15
+  y E-18). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10);
+  que sin WebGL "el mapa no se dibuja y no hay un mensaje propio", cuando se caía la página entera (E-11); y que la
+  ficha entraba deslizándose, cuando aparecía de golpe (E-18). En ocho de esos diez sumé una prevención; E-12 y E-15
+  ya los cubría una anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
 - **Dimensionar mal:** planificó con las "3 a 4 horas" de la consigna en lugar del tiempo real que yo tenía; lo
   corregí (E-01).
-- **Comandos de Windows:** me pasó un `taskkill` con flags que Git Bash convierte en rutas (E-02).
-- **Arreglos que rompen otra cosa:** el arreglo del cartel de carga dejó el mapa enfocable con Tab debajo del cartel
-  (E-14), y el rótulo quedó sin contraste sobre algunos biomas (E-16). Los marcó la review delegada.
+- **Comandos de Windows:** me pasó un `taskkill` con flags que, probablemente, Git Bash convirtió en rutas (E-02).
+- **Cambios que rompen otra cosa:** el arreglo del cartel de carga dejó el mapa enfocable con Tab debajo del cartel
+  (E-14). Al rehacer la página para el mapa, el rótulo de la esquina quedó por debajo de 4,5:1 de contraste sobre
+  cuatro biomas y la página perdió su `<h1>` (E-16).
 - **Librerías:** MapLibre v6 con Turbopack se quedaba sin su worker (E-07), y su cámara recorta el destino con el padding
-  anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se encontraron midiendo, no leyendo.
+  anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
-Quién los detectó: la review delegada (`/pr-review`) encontró 8; la propia IA, midiendo, mirando capturas o releyendo
-antes del commit, otros 8; y yo, 2.
+Quién detectó las 18: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
+encontró 8; yo, 2; las otras 8 salieron antes del commit, midiendo, mirando capturas o releyendo.
 
 ## Próximos Pasos
 
-Con una semana más, el resto del concepto ([docs/concepto.md](docs/concepto.md)):
+Este README describe `v0.1.0`. El plan sigue hasta el cierre del sábado 14/11 ([docs/decisiones.md](docs/decisiones.md),
+sección 8): al cerrar `v1.0.0`, lo que se haya hecho pasa a las secciones de arriba y acá queda lo que no entró.
 
-- **Niebla y radar:** el mapa empieza cubierto y un barrido lo despeja; solo las señales detectadas son botones.
+En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
+
+- **Nombres de lugares** sobre el mapa, con glyphs propios de IBM Plex Mono: lo primero después del tag.
+- **Niebla, radar y antenas:** el mapa empieza cubierto y un barrido lo despeja; solo las señales detectadas son botones.
 - **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema.
-- **Nombres de lugares** sobre el mapa, con glyphs propios de IBM Plex Mono.
 - **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
-- **Bitácora, compartir por URL** (`?modo=mundo&p=25`) e informe exportable del turno.
+- **Bitácora, compartir por URL** (`?modo=mundo&p=25`), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real.
+- **Sonido y atajos de teclado.**
+- **Tipografía:** la decidida es IBM Plex; hoy la app todavía usa Geist, la de create-next-app.
+
+Con una semana más, además del plan:
+
 - **Calidad:** pruebas con lector de pantalla y en Safari, Firefox y teléfonos reales, que hoy faltan; pruebas
   automatizadas de las interacciones del mapa.
