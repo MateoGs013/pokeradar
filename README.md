@@ -36,6 +36,14 @@ Accesibilidad: cada señal es un `<button>` con `aria-label` ("Señal sin identi
 después "Shuppet en la ciudad de Cruz del Viento"), foco visible, Tab entre señales de norte a sur, Esc cierra la ficha
 y el foco vuelve a la señal.
 
+**Después de `v0.1.0`:**
+
+- **Tipografía propia:** Martian Mono para el sistema y los datos, Atkinson Hyperlegible Next para leer y Doto, de
+  matriz de puntos, solo para el nombre identificado y "Señal perdida".
+- **Nombres de lugares:** las cuatro ciudades, el volcán y los dos lagos tienen nombres inventados, elegidos con la
+  semilla, que el mapa dibuja con Martian Mono. Cada señal se nombra desde la ciudad o el volcán más cercano ("la
+  llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
+
 ## Arquitectura y Stack
 
 | Pieza             | Elección                                                              | Por qué                                                                                                               |
@@ -115,13 +123,12 @@ encontró 10; yo, 2; y la propia IA, otras 9: midiendo, mirando capturas o reley
 
 ## Próximos Pasos
 
-Este README describe `v0.1.0`, más la tipografía que se sumó después. El plan sigue hasta el cierre del sábado 14/11
+Este README describe `v0.1.0` y lo que se sumó después. El plan sigue hasta el cierre del sábado 14/11
 ([docs/decisiones.md](docs/decisiones.md), sección 8): al cerrar `v1.0.0`, lo que se haya hecho pasa a las secciones
 de arriba y acá queda lo que no entró.
 
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
-- **Nombres de lugares** sobre el mapa, con Martian Mono, la fuente del HUD: lo primero después del tag.
 - **Niebla, radar y antenas:** el mapa empieza cubierto y un barrido lo despeja; solo las señales detectadas son botones.
 - **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema.
 - **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
