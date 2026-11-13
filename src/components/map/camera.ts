@@ -64,7 +64,14 @@ export function focusSignal(
   map: MapLibreMap,
   world: Bounds,
   position: Position,
-  { animate = true }: { animate?: boolean } = {},
+  {
+    animate = true,
+    keepZoom = map.getZoom(),
+  }: {
+    animate?: boolean;
+    /** El zoom que no tiene que bajar: por defecto, el actual. */
+    keepZoom?: number;
+  } = {},
 ) {
   // absolutePadding: el zoom del mundo entero en toda la pantalla, sin el padding que tenga el mapa.
   const worldZoom =
@@ -74,7 +81,7 @@ export function focusSignal(
   setPaddingInPlace(map, padding);
   const camera: JumpToOptions = {
     center: position,
-    zoom: Math.max(map.getZoom(), worldZoom + FOCUS_ZOOM_STEP),
+    zoom: Math.max(keepZoom, worldZoom + FOCUS_ZOOM_STEP),
     padding,
   };
   if (animate && !prefersReducedMotion()) map.flyTo(camera);
