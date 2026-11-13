@@ -45,14 +45,27 @@ export async function fetchPokemonDetail(
   id: number,
   signal: AbortSignal,
 ): Promise<PokemonDetail> {
-  const init = {
-    signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]),
-  };
-  const [pokemon, species] = await Promise.all([
-    requestJson(`/pokemon/${id}`, isPokemonResponse, init),
-    requestJson(`/pokemon-species/${id}`, isPokemonSpeciesResponse, init),
-  ]);
-  return buildPokemonDetail(pokemon, species);
+  // Una señal que se corta con la de afuera o a los 10 s. Se arma a mano y no con
+  // `AbortSignal.any`, que llega recién en Chrome 116, Firefox 124 y Safari 17.4 (MDN
+  // browser-compat-data), y Next 16 soporta desde Chrome 111, Firefox 111 y Safari 16.4
+  // (node_modules/next/dist/docs/01-app/01-getting-started/01-installation.md).
+  const controller = new AbortController();
+  const timeout = AbortSignal.timeout(TIMEOUT_MS);
+  const abort = () => controller.abort();
+  if (signal.aborted) abort();
+  signal.addEventListener("abort", abort);
+  timeout.addEventListener("abort", abort);
+  const init = { signal: controller.signal };
+  try {
+    const [pokemon, species] = await Promise.all([
+      requestJson(`/pokemon/${id}`, isPokemonResponse, init),
+      requestJson(`/pokemon-species/${id}`, isPokemonSpeciesResponse, init),
+    ]);
+    return buildPokemonDetail(pokemon, species);
+  } finally {
+    signal.removeEventListener("abort", abort);
+    timeout.removeEventListener("abort", abort);
+  }
 }
 
 /** Cruza las dos respuestas en la ficha. Es pura: no usa la red. */
