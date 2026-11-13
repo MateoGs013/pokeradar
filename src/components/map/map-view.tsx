@@ -68,6 +68,12 @@ const PLACES_SOURCE = "lugares";
 const NAMES_MIN_ZOOM = 4.5;
 /** Los lagos son de pocas celdas: su nombre aparece recién con este zoom (medido en capturas). */
 const LAKE_NAMES_MIN_ZOOM = 7;
+/**
+ * Hasta dónde se acerca el mapa: con 9, una celda del mundo mide 58 px (medido), más que el sprite
+ * de una señal identificada. Sin tope, el de MapLibre es 22, y el aro del radar, un div del tamaño
+ * de su alcance, llegaba a medir 28 millones de píxeles de ancho (medido).
+ */
+const MAX_ZOOM = 9;
 
 /**
  * Los nombres de los lugares, con Martian Mono: sin URL de `glyphs`, MapLibre dibuja el texto con
@@ -212,6 +218,7 @@ export function MapView({
       // Si el límite fuera el mundo tal cual, en una pantalla angosta MapLibre acercaría el mapa
       // para no mostrar nada afuera, y la isla quedaría cortada a los costados.
       maxBounds: worldLimit(initial.bounds, container),
+      maxZoom: MAX_ZOOM,
       // El canvas de MapLibre ya es una región con nombre (role="region", y tabindex="0" para
       // moverlo con las flechas). `locale` traduce ese nombre, que por defecto es "Map".
       locale: { "Map.Title": "Mapa del mundo" },
