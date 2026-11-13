@@ -22,11 +22,17 @@ import {
   sinkBorder,
   terrainField,
 } from "./fields";
-import { cellCenter, distanceToEdge, lngLatToCell, valueAt } from "./grid";
+import {
+  cellCenter,
+  distanceToEdge,
+  lngLatToCell,
+  valueAt,
+  WORLD_BOUNDS,
+} from "./grid";
 import { namePlaces } from "./names";
 import { fieldToPolygons, worldRectangle } from "./polygons";
 import { distanceField, highestCell, placeCities } from "./sites";
-import type { Place, PlaceKind, World } from "./types";
+import type { Place, PlaceKind, Position, World } from "./types";
 import { findLakes, lakeLabelCell, splitLakes } from "./water";
 
 /** La semilla del mundo. Cambiarla genera otro mundo; la misma semilla, siempre el mismo. */
@@ -78,6 +84,7 @@ export function generateWorld(seed: number = WORLD_SEED): World {
     seed,
     cells,
     places,
+    radarBase: centralCity(places),
     biomes: {
       type: "FeatureCollection",
       features: LAYER_ORDER.map((habitat) => ({
@@ -94,6 +101,20 @@ export function generateWorld(seed: number = WORLD_SEED): World {
       })),
     },
   };
+}
+
+/** La ciudad más cercana al centro del mundo: ahí va el radar base. */
+function centralCity(places: readonly Place[]): Position {
+  const { west, east, south, north } = WORLD_BOUNDS;
+  const center: Position = [(west + east) / 2, (south + north) / 2];
+  const distance = ({ position }: Place) =>
+    Math.hypot(position[0] - center[0], position[1] - center[1]);
+  const [first, ...rest] = places.filter((place) => place.kind === "city");
+  if (!first) throw new Error("El mundo no tiene ciudades para el radar base");
+  return rest.reduce(
+    (nearest, place) => (distance(place) < distance(nearest) ? place : nearest),
+    first,
+  ).position;
 }
 
 /** Celdas de llanura (tierra baja, ni árida ni bosque): donde pueden ir las ciudades. */

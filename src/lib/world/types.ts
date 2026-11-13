@@ -48,4 +48,6 @@ export interface World {
   cells: HabitatName[];
   /** Las ciudades, el volcán y los lagos, con su nombre. */
   places: Place[];
+  /** Dónde está el radar base, la sala de monitoreo: la ciudad más cercana al centro del mundo. */
+  radarBase: Position;
 }
