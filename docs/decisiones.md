@@ -308,3 +308,10 @@ El bloque 1 cerró con el dataset (PR #1) y el mundo generado (PR #2). Antes de 
    el mapa, no la vista previa. La herramienta para generar los PBF de los glyphs sigue a definir.
 
 No cambia el alcance: los nombres y los glyphs siguen en el plan, solo cambian de orden.
+
+**13/11: los nombres de lugares y los glyphs pasan a después de `v0.1.0`.**
+
+El bloque 2 cerró sin ellos: el mapa (PR #3) y la ficha (PR #4) ya cubren los tres puntos del MVP de la consigna, y la
+consigna no pide nombres de lugares (salen de docs/concepto.md). Mateo decidió cerrar primero el MVP: README y
+`v0.1.0`. Los nombres y los glyphs son el primer extra después del tag, y la herramienta para generar los PBF sigue a
+definir.
