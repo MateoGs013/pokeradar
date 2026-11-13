@@ -173,10 +173,12 @@ function SignalButton({
   onFocus,
 }: SignalButtonProps) {
   // El ping suena una vez, cuando el botón aparece, y después se saca: si quedara, volvería a sonar
-  // al pasar de movimiento reducido a sin preferencia con la página abierta. Con movimiento
-  // reducido no está desde el principio. El botón se monta solo en el cliente (es un portal), así
-  // que se puede leer la preferencia al crear el estado.
+  // al pasar de movimiento reducido a sin preferencia con la página abierta. Se saca al terminar o
+  // si se cancela: activar el movimiento reducido a mitad del ping lo corta sin animationend. Con
+  // movimiento reducido no está desde el principio. El botón se monta solo en el cliente (es un
+  // portal), así que se puede leer la preferencia al crear el estado.
   const [pinged, setPinged] = useState(prefersReducedMotion);
+  const endPing = () => setPinged(true);
   return (
     <button
       type="button"
@@ -199,7 +201,12 @@ function SignalButton({
       {!pinged && (
         <span
           aria-hidden
-          onAnimationEnd={() => setPinged(true)}
+          onAnimationEnd={endPing}
+          // React no tiene onAnimationCancel: el listener va a mano, y se saca en la limpieza.
+          ref={(span) => {
+            span?.addEventListener("animationcancel", endPing);
+            return () => span?.removeEventListener("animationcancel", endPing);
+          }}
           className="pointer-events-none absolute inset-0 rounded-full border-2 border-hud opacity-0 motion-safe:animate-deteccion"
         />
       )}
