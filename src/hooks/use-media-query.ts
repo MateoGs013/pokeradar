@@ -18,3 +18,12 @@ export function useMediaQuery(query: string): boolean {
     () => false,
   );
 }
+
+/**
+ * Si el sistema pide menos movimiento, y avisa cuando cambia. Se usa en lugar de
+ * `useReducedMotion` de motion, que lee el valor una sola vez al montar
+ * (framer-motion, utils/reduced-motion/use-reduced-motion.mjs, con un TODO al respecto).
+ */
+export function usePrefersReducedMotion(): boolean {
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
+}
