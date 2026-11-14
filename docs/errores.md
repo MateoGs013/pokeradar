@@ -35,6 +35,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-23 | 2026-11-13 | IA       | map     | Un comentario describía la regla vieja de `labelAnchor`, y el contraste de los nombres se afirmaba con una cuenta   |
 | E-24 | 2026-11-13 | IA       | radar   | Un commit daba parejo el borde de la niebla, medido en puntos sueltos; quedaba una línea sin niebla                 |
 | E-25 | 2026-11-13 | IA       | map     | Un commit sostenía WCAG 1.4.3 con una cuenta, y el fondo del cartel se midió en un clon, no en el real              |
+| E-26 | 2026-11-13 | IA       | radar   | Las antenas dejaron el aro y el haz de los radares debajo del mapa; se miró el orden del DOM, no una captura        |
 
 ## Formato de cada entrada
 
@@ -429,3 +430,19 @@ Para agregar una entrada se puede usar `/registrar-error`.
   servidor con los scripts apagados) a 1440 y 320 px, los 194 píxeles de letra quedan a 6,18:1 o más del mismo píxel
   sin texto, y el fondo da 7 14 13.
 - **Prevención:** ninguna nueva: la regla de `ui.md` sobre WCAG ya lo cubría; no se aplicó.
+
+### E-26 · 2026-11-13 23:03 · IA · radar
+
+- **Síntoma:** en la rama del PR #9, antes del push, desde "feat(radar): instalar hasta cuatro antenas con un clic o un
+  toque" no se veían el aro ni el haz de ninguna estación, tampoco los del radar base: la niebla se despejaba sin haz.
+  El commit decía "Su aro va al principio del contenedor de marcadores, debajo de las señales".
+- **Causa:** Claude movió el aro con `getCanvasContainer().prepend()` para dejarlo debajo de las señales, sin ver que
+  ese contenedor también tiene el canvas del mapa: el aro quedó antes del canvas, y el mapa lo tapaba. Comprobó el orden
+  en el DOM y no en una captura, y el grupo del arnés que revisa el haz lee sus estilos (`opacity`, `rotate`), no
+  píxeles.
+- **Detección:** Claude, en la corrida completa del arnés antes del push: el contraste de los nombres daba lo mismo con
+  el haz en los 13 giros y sin el haz. Una captura a mitad del barrido lo confirmó.
+- **Arreglo:** PR #9, "fix(radar): dibujar el aro y el haz encima del mapa": `map.getCanvas().after(element)`, justo
+  después del canvas y antes de los marcadores. El mensaje del commit de las antenas se reescribió antes del push.
+- **Prevención:** en `.claude/rules/map.md`, un elemento propio dentro del contenedor del canvas va después del canvas,
+  y lo que se afirma de su lugar (encima o debajo de algo) se comprueba en una captura, no en el orden del DOM.

@@ -13,6 +13,9 @@ paths:
 - Lo que son muchos elementos va como **capas**: los biomas con fuentes GeoJSON, la niebla con una fuente `canvas`
   (docs/decisiones.md, "Niebla"). Marcadores DOM solo para decenas como mucho: las señales (un `<button>` dentro de un
   `Marker`; docs/decisiones.md, "Señales"), las antenas y el haz de cada radar.
+- El contenedor de los marcadores (`getCanvasContainer()`) también tiene el canvas del mapa, primero: un elemento que
+  se mueve ahí va después del canvas (`map.getCanvas().after`), o el mapa lo tapa. Lo que se afirma de su lugar
+  (encima o debajo de algo) se comprueba en una captura, no en el orden del DOM (E-26).
 - La niebla es una **capa del mapa** (máscara), no elementos HTML encima del canvas.
 - Cámara: `flyTo` con `padding` según el panel abierto (lateral en desktop, abajo en mobile). Con movimiento reducido,
   `jumpTo` con el mismo destino y padding.
