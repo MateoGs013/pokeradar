@@ -90,8 +90,9 @@ export function RadarStation({
     let frame = 0;
     let start: number | null = null;
     let swept = 0;
-    // Al completar la vuelta, o si el movimiento reducido se activa con la página abierta, la
-    // estación despeja lo que faltara, avisa a la red que terminó y el haz se apaga.
+    // Al completar la vuelta, o en el primer cuadro con movimiento reducido (también si se activa
+    // con la página abierta), la estación despeja lo que faltara, avisa a la red que terminó y el
+    // haz se apaga.
     const finish = () => {
       sweep(0, FULL_TURN);
       network.endSweep();
@@ -113,9 +114,11 @@ export function RadarStation({
       frame = requestAnimationFrame(tick);
     };
     network.startSweep();
-    // Con movimiento reducido no hay barrido: la estación despeja su círculo de una vez.
-    if (reduce.matches) finish();
-    else frame = requestAnimationFrame(tick);
+    // Con movimiento reducido no hay barrido: en el primer cuadro, tick despeja el círculo de una
+    // vez. Esperar ese cuadro también con movimiento reducido deja que la limpieza del modo estricto
+    // corte la primera corrida antes de detectar nada; si no, la segunda no encontraba señales y
+    // avisaba "ninguna señal en alcance" (medido en desarrollo).
+    frame = requestAnimationFrame(tick);
 
     return () => {
       // Un barrido cortado a la mitad también termina para la red.
