@@ -4,7 +4,6 @@ import {
   Doto,
   Martian_Mono,
 } from "next/font/google";
-import Script from "next/script";
 
 import { HUD_COLORS, SHIFT_STORAGE_KEY } from "@/lib/shift";
 
@@ -43,13 +42,15 @@ export const metadata: Metadata = {
 };
 
 /**
- * Aplica el color del HUD guardado antes de que React hidrate. Sin esto, con ámbar o cian guardado,
- * los dos primeros cuadros se pintaban con el verde del HTML (medido). Si lo guardado no sirve, queda
- * el verde; la sala lo vuelve a aplicar al hidratar (monitoring-room.tsx).
+ * Aplica el color del HUD guardado antes del primer cuadro: el navegador corre un script del <head>
+ * mientras lee el HTML, antes de pintar (node_modules/next/dist/docs, "How to prevent flash before
+ * hydration", sección "Themes"). next/script con beforeInteractive no sirve para esto: en el App
+ * Router lo corre Next cuando ya cargó su JS. Valida lo mismo que el hook (use-shift-settings.ts):
+ * si lo guardado no sirve, queda el verde y se abre el inicio de turno.
  */
 const applyStoredHud = `try {
   var shift = JSON.parse(localStorage.getItem(${JSON.stringify(SHIFT_STORAGE_KEY)}));
-  if (shift && ${JSON.stringify(HUD_COLORS)}.indexOf(shift.hud) >= 0) {
+  if (shift && typeof shift.operator === "string" && ${JSON.stringify(HUD_COLORS)}.indexOf(shift.hud) >= 0) {
     document.documentElement.dataset.hud = shift.hud;
   }
 } catch (error) {}`;
@@ -59,16 +60,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="es"
       data-hud="verde"
-      // El script de abajo puede cambiar data-hud antes de hidratar.
+      // El script del <head> puede cambiar data-hud antes de hidratar.
       suppressHydrationWarning
       className={`dark ${atkinson.variable} ${martianMono.variable} ${doto.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
-        <Script id="color-del-hud" strategy="beforeInteractive">
-          {applyStoredHud}
-        </Script>
-        {children}
-      </body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: applyStoredHud }} />
+      </head>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }
