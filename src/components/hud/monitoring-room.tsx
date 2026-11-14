@@ -113,7 +113,7 @@ export function MonitoringRoom({
     }
     setRadarStatus("");
     setAnnouncement(
-      "Instalando una antena: tocá el mapa donde va, o desde el mapa movelo con las flechas y apretá Enter para instalarla en la mira. Esc cancela.",
+      "Instalando una antena: tocá el mapa donde va, o mové la mira con las flechas y apretá Enter para instalarla ahí. Esc cancela.",
     );
     setInstalling(true);
   };
