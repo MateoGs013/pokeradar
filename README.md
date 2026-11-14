@@ -61,12 +61,17 @@ y el foco vuelve a la señal.
   antenas en los puntos de las 38 señales, 44 %.
 - **Tripulación:** los avisos los dan Pokémon, con su sprite. Pelipper avisa los avistamientos en un solo aviso que
   suma las señales mientras sigue abierto, con "Ver señal" para abrir la última; Rotom, la cobertura después de cada
-  vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta). Van
+  vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta); Xatu,
+  el pronóstico del clima. Van
   arriba a la derecha y se cierran solos 5 s después del último cambio. F6 lleva el foco a ellos, y la campana los
   silencia: las detecciones van entonces solo al lector de pantalla.
 - **Variocolor:** cada señal tiene una chance en 64, decidida con la semilla, de ser variocolor (shiny). Identificada,
   muestra ese sprite en el mapa y en la ficha, y Porygon da un aviso crítico. Con la semilla del mundo no sale ninguna
   de las 40 (medido), así que `?shiny=<id>` fuerza una para verla: `?shiny=4` es Charmander.
+- **Clima:** el clima real de Viedma (Río Negro), de Open-Meteo, va en el HUD con un enlace a Open-Meteo, como pide su
+  licencia. Xatu lo pronostica al empezar el turno, con los tipos que potencia. Una señal identificada de uno de esos
+  tipos lleva una flecha en su sprite; en la ficha, el tipo va lleno y con la flecha, y la fila Clima dice "potenciado".
+  No cambia qué señales hay. Si Open-Meteo no responde, el HUD dice "clima sin datos" y Xatu no habla.
 
 ## Arquitectura y Stack
 
@@ -101,7 +106,9 @@ src/hooks/                 identificación con caché y cancelación; media quer
 src/lib/pokeapi/           tipos, guards y cliente tipado de PokéAPI
 src/lib/world/             generación del mundo (ruido, biomas, polígonos)
 src/lib/geo/               encuadre y ubicación de las señales
+src/lib/weather/           el clima de Open-Meteo y los tipos que potencia cada condición
 src/lib/shift.ts           ajustes del turno: nombre en clave y color del HUD
+src/lib/shiny.ts           qué señales son variocolor, con la semilla
 docs/                      consigna, concepto, decisiones, hallazgos, errores y flujo
 ```
 
@@ -161,8 +168,7 @@ de arriba y acá queda lo que no entró.
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
-- **Eventos del mundo:** día y noche, y el clima con Open-Meteo, que se muestra sin cambiar las señales. Los enjambres,
-  si hay tiempo.
+- **Eventos del mundo:** día y noche, y los enjambres si hay tiempo.
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
 - **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo
