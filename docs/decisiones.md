@@ -362,7 +362,8 @@ los tipos que potencia, sin cambiar qué señales hay. Los enjambres quedan en e
 
 **14/11 (de noche, con permiso de Mateo para seguir solo): el bloque 7 va antes que las geocercas y el modo híbrido.**
 
-El plan dice que, si algo se atrasa, primero cae el bloque 6 y después las geocercas. El sonido del bloque 7 es una
-idea de la consigna ("Experiencia Sonora"), y la intensidad visual y los atajos tocan "Fluidez del Mapa e
-Interacciones"; las geocercas y el modo híbrido salen solo del concepto. El bloque 5 se cerró sin geocercas (PR #12) y
-el 7 va antes que el 6. Lo que no entre queda en "Próximos pasos" del README.
+Va contra el pedido de Mateo de llegar cuanto antes al bloque 6 ("necesito minimamente llegar al bloque 6"): la
+decisión la tomó Claude solo y queda para que Mateo la confirme. El plan dice que, si algo se atrasa, primero cae el
+bloque 6 y después las geocercas. El sonido del bloque 7 es una idea de la consigna ("Experiencia Sonora"), y la
+intensidad visual y los atajos tocan "Fluidez del Mapa e Interacciones"; las geocercas y el modo híbrido salen solo del
+concepto. El bloque 5 se cerró sin geocercas (PR #12) y el 7 va antes que el 6. Lo que no entre queda en "Próximos pasos" del README.
