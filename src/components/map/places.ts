@@ -74,7 +74,7 @@ export function labelAnchor(
 }
 
 /** Los 8 rumbos, desde el este y en sentido antihorario: el orden de los ángulos de Math.atan2. */
-const DIRECTIONS = [
+export const DIRECTIONS = [
   "este",
   "noreste",
   "norte",
@@ -113,7 +113,7 @@ function nearestPlace(
  * llanura, al noreste de Campo Garza"; o "la ciudad de Villa Bruma" si está en el lugar mismo.
  * Los lagos no sirven de referencia: su nombre recién se ve con zoom.
  */
-function describePlace(spawn: Spawn, places: readonly Place[]): string {
+export function describePlace(spawn: Spawn, places: readonly Place[]): string {
   const habitat = HABITAT_PLACES[spawn.habitat];
   const nearest = nearestPlace(
     spawn.position,
@@ -148,16 +148,14 @@ export function northToSouth(spawns: readonly Spawn[]): Spawn[] {
  * comparten lugar, la etiqueta las numera en ese orden ("el bosque, al noreste de Monte Brasa (2 de
  * 2)"): con lector de pantalla, dos botones con el mismo nombre no se distinguen. El número cuenta
  * todas las señales del lugar, también las que el radar todavía no detectó: así la etiqueta de una
- * señal no cambia cuando aparece otra. La ficha muestra el lugar sin el número.
+ * señal no cambia cuando aparece otra. La ficha muestra el lugar sin el número. `describe` nombra el
+ * lugar de una señal: el del marco del mapa (frame.ts).
  */
 export function signalPlaces(
   spawns: readonly Spawn[],
-  places: readonly Place[],
+  describe: (spawn: Spawn) => string,
 ) {
-  const named = spawns.map((spawn) => ({
-    spawn,
-    place: describePlace(spawn, places),
-  }));
+  const named = spawns.map((spawn) => ({ spawn, place: describe(spawn) }));
   return named.map(({ spawn, place }, index) => {
     const total = named.filter((other) => other.place === place).length;
     if (total === 1) return { spawn, place, label: place };

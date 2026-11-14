@@ -8,6 +8,7 @@ import { CanvasSource, type Map as MapLibreMap } from "maplibre-gl";
 import { useEffect, useEffectEvent, useState } from "react";
 
 import { cssNumber, cssToken } from "@/components/map/css-token";
+import { type Frame, mapCorners } from "@/components/map/frame";
 import { PLACE_NAMES_LAYER } from "@/components/map/places";
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position, Spawn } from "@/lib/world/types";
@@ -44,6 +45,8 @@ interface RadarProps {
   onCoverage: (coverage: number) => void;
   /** Avisa que el mapa ya dibujó un cuadro con la niebla: recién ahí se puede sacar el cartel. */
   onFogDrawn: () => void;
+  /** Dónde se dibuja el mundo (components/map/frame.ts): la niebla y las estaciones calculan en el mundo. */
+  frame: Frame;
 }
 
 export function Radar({
@@ -56,6 +59,7 @@ export function Radar({
   onSweepEnd,
   onCoverage,
   onFogDrawn,
+  frame,
 }: RadarProps) {
   const fogDrawn = useEffectEvent(onFogDrawn);
   // La red, con la niebla entera, se crea una vez: el mundo y las señales vienen del servidor y no
@@ -76,7 +80,7 @@ export function Radar({
     map.addSource(FOG_SOURCE, {
       type: "canvas",
       canvas: network.fog.canvas,
-      coordinates: fogCorners(network.fog),
+      coordinates: mapCorners(frame, fogCorners(network.fog)),
       animate: false,
     });
     map.addLayer(
@@ -90,7 +94,9 @@ export function Radar({
           "raster-fade-duration": 0,
         },
       },
-      PLACE_NAMES_LAYER,
+      // En el modo real no hay nombres propios: la niebla va arriba de todo, también de los nombres
+      // del mapa real, que se ven al despejar.
+      map.getLayer(PLACE_NAMES_LAYER) ? PLACE_NAMES_LAYER : undefined,
     );
     // getSource<T> no valida el tipo, solo lo afirma: instanceof sí lo comprueba.
     const source = map.getSource(FOG_SOURCE);
@@ -112,7 +118,7 @@ export function Radar({
       if (map.getLayer(FOG_SOURCE)) map.removeLayer(FOG_SOURCE);
       if (map.getSource(FOG_SOURCE)) map.removeSource(FOG_SOURCE);
     };
-  }, [map, network]);
+  }, [map, network, frame]);
 
   return stations.map((station) => (
     <RadarStation
@@ -120,6 +126,7 @@ export function Radar({
       map={map}
       network={network}
       position={station.position}
+      toMap={frame.toMap}
       mark={station.kind === "antenna"}
       onDetect={onDetect}
       onSweepEnd={(found) => {

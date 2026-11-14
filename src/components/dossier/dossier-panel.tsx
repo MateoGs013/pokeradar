@@ -134,8 +134,8 @@ export function DossierPanel({
 }
 
 /**
- * Copia el enlace de la señal (`?p=25`): abre la sala con esa señal identificada, salteando el
- * inicio de turno. El resultado se ve en el ícono y se anuncia en una región viva. Si el navegador
+ * Copia el enlace de la señal (`?p=25`, con `modo=real` delante en el mapa real): abre la sala con
+ * esa señal identificada, salteando el inicio de turno. El resultado se ve en el ícono y se anuncia en una región viva. Si el navegador
  * no deja copiar, el enlace igual está en la barra de direcciones.
  */
 function ShareButton({ speciesId }: { speciesId: number }) {
@@ -145,7 +145,12 @@ function ShareButton({ speciesId }: { speciesId: number }) {
   // Otra señal: el resultado anterior ya no corre.
   const current = result?.id === speciesId ? result : null;
   const copy = async () => {
-    const url = `${window.location.origin}${window.location.pathname}?p=${speciesId}`;
+    // De la consulta actual, solo el modo: los parámetros de demo (`?shiny=4`) no se comparten.
+    const params = new URLSearchParams();
+    if (new URLSearchParams(window.location.search).get("modo") === "real")
+      params.set("modo", "real");
+    params.set("p", String(speciesId));
+    const url = `${window.location.origin}${window.location.pathname}?${params}`;
     try {
       await navigator.clipboard.writeText(url);
       setResult({ id: speciesId, copied: true });
