@@ -36,6 +36,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-24 | 2026-11-13 | IA       | radar   | Un commit daba parejo el borde de la niebla, medido en puntos sueltos; quedaba una línea sin niebla                 |
 | E-25 | 2026-11-13 | IA       | map     | Un commit sostenía WCAG 1.4.3 con una cuenta, y el fondo del cartel se midió en un clon, no en el real              |
 | E-26 | 2026-11-13 | IA       | radar   | Las antenas dejaron el aro y el haz de los radares debajo del mapa; se miró el orden del DOM, no una captura        |
+| E-27 | 2026-11-13 | IA       | map     | Un commit decía que las flechas movían el mapa para ubicar la antena; se midió acercado y en frío no se movía       |
 
 ## Formato de cada entrada
 
@@ -446,3 +447,20 @@ Para agregar una entrada se puede usar `/registrar-error`.
   después del canvas y antes de los marcadores. El mensaje del commit de las antenas se reescribió antes del push.
 - **Prevención:** en `.claude/rules/map.md`, un elemento propio dentro del contenedor del canvas va después del canvas,
   y lo que se afirma de su lugar (encima o debajo de algo) se comprueba en una captura, no en el orden del DOM.
+
+### E-27 · 2026-11-13 23:41 · IA · map
+
+- **Síntoma:** en la rama del PR #9, antes del push, "feat(radar): instalar antenas con teclado" decía que con el foco
+  en el mapa las flechas lo movían, y que Enter instalaba la antena en la mira del centro; el README, `decisiones.md`,
+  el aviso y la línea de ayuda decían lo mismo. Al cargar, el mundo entero está a la vista y el límite del mapa
+  coincide con ella: con A y ocho flechas, el centro se movía 0,01° a 1440 px y 0,27° a 390. Con teclado, la antena
+  solo se instalaba en el centro del mundo, salvo acercando con `+`, que no se decía en ningún lado.
+- **Causa:** Claude probó las flechas después de acercar el mapa (el arnés apretaba `=` antes) y no desde el estado en
+  que llega el usuario. Cuando la primera prueba no movió el mapa, lo explicó con el eje horizontal y no midió el
+  vertical, que tampoco tenía lugar.
+- **Detección:** Claude, en una revisión antes del push (el advisor), y confirmado con una prueba desde una carga en
+  frío a 1440 y 390 px.
+- **Arreglo:** PR #9, "fix(map): mover la mira de las antenas con las flechas": en el modo, las flechas mueven una mira
+  por el mundo y no el mapa; Enter instala donde está. El mensaje del commit del teclado se reescribió antes del push.
+- **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de medir el caso peor (E-21) ya lo cubría, y el caso peor era
+  la carga en frío, sin acercar; no se aplicó.
