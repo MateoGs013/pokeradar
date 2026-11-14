@@ -125,12 +125,14 @@ function Identity({
             <ScrambleText text="Analizando firma…" />
           )}
         </p>
+        {/* Desde md, donde la ficha va al costado, el nombre crece para pesar más que el rótulo
+            de arriba; su lugar vacío crece con él. */}
         {detail ? (
-          <h3 className="truncate font-display text-2xl leading-8 font-extrabold">
+          <h3 className="truncate font-display text-2xl leading-8 font-extrabold md:text-3xl md:leading-9">
             {detail.name}
           </h3>
         ) : (
-          <Placeholder className="h-8 w-32" />
+          <Placeholder className="h-8 w-32 md:h-9" />
         )}
         {/* Comprimida con el eje de ancho, entra en una línea con los 40 géneros desde 390 px
             (medido); a 320, los más largos se cortan con "…". En dos líneas, la ficha saltaría. */}
