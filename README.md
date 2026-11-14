@@ -64,6 +64,9 @@ y el foco vuelve a la señal.
   vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta). Van
   arriba a la derecha y se cierran solos 5 s después del último cambio. F6 lleva el foco a ellos, y la campana los
   silencia: las detecciones van entonces solo al lector de pantalla.
+- **Variocolor:** cada señal tiene una chance en 64, decidida con la semilla, de ser variocolor (shiny). Identificada,
+  muestra ese sprite en el mapa y en la ficha, y Porygon da un aviso crítico. Con la semilla del mundo no sale ninguna
+  de las 40 (medido), así que `?shiny=<id>` fuerza una para verla: `?shiny=4` es Charmander.
 
 ## Arquitectura y Stack
 
@@ -158,8 +161,8 @@ de arriba y acá queda lo que no entró.
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
-- **Eventos del mundo:** shiny, día y noche, y el clima con Open-Meteo, que se muestra sin cambiar las señales. Los
-  enjambres, si hay tiempo.
+- **Eventos del mundo:** día y noche, y el clima con Open-Meteo, que se muestra sin cambiar las señales. Los enjambres,
+  si hay tiempo.
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
 - **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo
