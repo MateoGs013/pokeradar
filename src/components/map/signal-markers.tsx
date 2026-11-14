@@ -189,6 +189,8 @@ function SignalButton({
       }
       aria-haspopup="dialog"
       aria-expanded={selected}
+      // Para encontrar el botón de una señal desde afuera del mapa: el aviso de Pelipper lo toca.
+      data-species-id={spawn.speciesId}
       onClick={(event) =>
         onSelect({ spawn, place, button: event.currentTarget })
       }
