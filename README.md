@@ -75,6 +75,14 @@ y el foco vuelve a la señal.
 - **Día y noche:** con la hora del operador, de 20:00 a 6:59 es de noche: el mapa se oscurece, Noctowl toma la guardia
   y se potencian Fantasma y Siniestro, con las mismas marcas que el clima. Cambia también con la página abierta, al
   pasar el minuto. `?noche=1` y `?noche=0` la fuerzan, para verla a cualquier hora.
+- **Bitácora e informe:** el botón Bitácora, abajo a la izquierda, lista lo identificado en el turno, de lo más nuevo
+  a lo más viejo, con hora, amenaza y lugar; "Ver" abre la ficha de esa señal. El informe se baja como CSV (con BOM,
+  para que Excel lea los acentos). La bitácora vive en memoria: recargar la página empieza otra.
+- **Fin de turno:** un resumen con la duración, la cobertura, las señales detectadas e identificadas, las anomalías
+  (variocolor), la amenaza más alta y las antenas. "Empezar otro turno" vuelve a cubrir el mundo.
+- **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=25`), y el botón del enlace la copia. Ese
+  enlace abre la sala con la señal identificada y saltea el inicio de turno. Un número que no está en el mundo lo
+  avisa Rotom.
 
 ## Arquitectura y Stack
 
@@ -100,7 +108,7 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 src/app/                   layout, página (servidor) y estilos globales
 src/components/map/        mapa, señales, cámara, carga y error
 src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
-src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno y antenas
+src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno, antenas, bitácora y fin de turno
 src/components/crew/       tripulación: quién avisa y los avisos
 src/components/onboarding/ inicio de turno y arranque del sistema con Rotom
 src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
@@ -115,6 +123,7 @@ src/lib/shift.ts           ajustes del turno: nombre en clave y color del HUD
 src/lib/shiny.ts           qué señales son variocolor, con la semilla
 src/lib/night.ts           de qué hora a qué hora es de noche, y los tipos que potencia
 src/lib/boosts.ts          lo que potencia tipos (el clima y la noche)
+src/lib/report.ts          la bitácora como informe CSV
 docs/                      consigna, concepto, decisiones, hallazgos, errores y flujo
 ```
 
@@ -175,7 +184,8 @@ En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
 - **Eventos del mundo:** los enjambres, si hay tiempo.
-- **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
+- **Geocercas:** dibujar un área y que avise lo que se detecta adentro.
+- **Compartir las antenas por URL:** hoy el enlace lleva solo la señal.
 - **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
 - **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo
   de `prefers-reduced-motion`.
