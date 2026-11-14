@@ -5,6 +5,7 @@ import { useSyncExternalStore } from "react";
 import {
   DEFAULT_SETTINGS,
   isHudColor,
+  isMotionLevel,
   OPERATOR_MAX_LENGTH,
   SHIFT_STORAGE_KEY,
   type ShiftSettings,
@@ -26,7 +27,14 @@ function parse(raw: string | null): ShiftSettings | null {
   if (!("operator" in data) || typeof data.operator !== "string") return null;
   if (!("hud" in data) || !isHudColor(data.hud)) return null;
   const operator = data.operator.trim().slice(0, OPERATOR_MAX_LENGTH);
-  return { operator: operator || DEFAULT_SETTINGS.operator, hud: data.hud };
+  // El sonido y la intensidad llegaron después: lo guardado antes no los tiene, y vale con los de
+  // por defecto.
+  return {
+    operator: operator || DEFAULT_SETTINGS.operator,
+    hud: data.hud,
+    sound: "sound" in data && data.sound === true,
+    motion: "motion" in data && isMotionLevel(data.motion) ? data.motion : null,
+  };
 }
 
 // Una pestaña avisa a las suscripciones de esta; el evento `storage` llega de las otras.

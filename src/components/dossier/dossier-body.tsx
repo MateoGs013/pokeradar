@@ -10,6 +10,7 @@ import { MotionConfig, motion } from "motion/react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
+import { usePrefersReducedMotion } from "@/hooks/use-media-query";
 import type { Identification } from "@/hooks/use-pokemon-detail";
 import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
@@ -44,14 +45,16 @@ export function DossierBody({
   boosts,
   onRetry,
 }: DossierBodyProps) {
+  const reduced = usePrefersReducedMotion();
   if (identification.status === "error") {
     return <DossierError onRetry={onRetry} />;
   }
   const detail =
     identification.status === "ready" ? identification.detail : null;
-  // Con movimiento reducido, motion no anima transform: las barras aparecen ya llenas.
+  // Con movimiento reducido, motion no anima transform: las barras aparecen ya llenas. Se le pasa
+  // la intensidad de los ajustes (lib/motion.ts): con "user" leería solo la del sistema.
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion={reduced ? "always" : "never"}>
       <div className="flex flex-col gap-5">
         <Identity detail={detail} shiny={shiny} boosts={boosts} />
         <Threat detail={detail} />

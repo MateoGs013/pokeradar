@@ -1,7 +1,8 @@
 "use client";
 
-// El formulario del turno: el nombre en clave y el color del HUD. Lo usan los ajustes del HUD y el
-// inicio de turno; cada uno pone su botón principal y, si hace falta, otros (como "Saltar").
+// El formulario del turno: el nombre en clave, el color del HUD, la intensidad visual y el sonido. Lo
+// usan los ajustes del HUD y el inicio de turno; cada uno pone su botón principal y, si hace falta,
+// otros (como "Saltar").
 import { type FormEvent, type ReactNode, useId } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,21 @@ import {
   HUD_COLORS,
   type HudColor,
   isHudColor,
+  isMotionLevel,
+  MOTION_LEVELS,
+  type MotionLevel,
   OPERATOR_MAX_LENGTH,
   type ShiftSettings,
 } from "@/lib/shift";
+import { reducedMotion } from "@/lib/motion";
+
+const MOTION_NAMES: Record<MotionLevel, string> = {
+  completa: "Completa",
+  reducida: "Reducida",
+};
+
+const CHOICE_INPUT =
+  "size-4 accent-hud focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 const COLOR_NAMES: Record<HudColor, string> = {
   verde: "Verde",
@@ -44,6 +57,10 @@ export function ShiftForm({
   children,
 }: ShiftFormProps) {
   const nameId = useId();
+  // Sin elegir todavía, la que rige ahora: la del sistema (lib/motion.ts). El formulario se abre en
+  // un diálogo, solo en el navegador, así que se puede leer <html>.
+  const motion: MotionLevel =
+    initial.motion ?? (reducedMotion() ? "reducida" : "completa");
 
   // Los campos no se controlan: el formulario se lee entero al confirmar. Un nombre vacío vuelve
   // al de por defecto.
@@ -52,11 +69,14 @@ export function ShiftForm({
     const data = new FormData(event.currentTarget);
     const operator = data.get("operator");
     const hud = data.get("hud");
+    const chosen = data.get("motion");
     onSubmit({
       operator:
         (typeof operator === "string" && operator.trim()) ||
         DEFAULT_SETTINGS.operator,
       hud: isHudColor(hud) ? hud : DEFAULT_SETTINGS.hud,
+      sound: data.get("sound") === "on",
+      motion: isMotionLevel(chosen) ? chosen : DEFAULT_SETTINGS.motion,
     });
   };
 
@@ -95,7 +115,7 @@ export function ShiftForm({
                 name="hud"
                 value={color}
                 defaultChecked={initial.hud === color}
-                className="size-4 accent-hud focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className={CHOICE_INPUT}
               />
               <span
                 aria-hidden
@@ -106,6 +126,37 @@ export function ShiftForm({
           ))}
         </div>
       </fieldset>
+      <fieldset className="grid gap-1.5">
+        <legend className="mb-1.5 font-mono text-xs text-muted-foreground">
+          Intensidad visual
+        </legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-2">
+          {MOTION_LEVELS.map((level) => (
+            <label
+              key={level}
+              className="flex cursor-pointer items-center gap-2 text-sm"
+            >
+              <input
+                type="radio"
+                name="motion"
+                value={level}
+                defaultChecked={motion === level}
+                className={CHOICE_INPUT}
+              />
+              {MOTION_NAMES[level]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <label className="flex cursor-pointer items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          name="sound"
+          defaultChecked={initial.sound}
+          className={CHOICE_INPUT}
+        />
+        Sonido: el ping del radar y el grito de cada Pokémon
+      </label>
       <div className="flex flex-wrap justify-end gap-2">
         {children}
         <Button type="submit">{submitLabel}</Button>

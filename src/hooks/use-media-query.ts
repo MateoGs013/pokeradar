@@ -2,6 +2,8 @@
 // tamaño de la ventana). useSyncExternalStore es la forma de React de leer un valor de afuera.
 import { useCallback, useSyncExternalStore } from "react";
 
+import { reducedMotion, subscribeToMotion } from "@/lib/motion";
+
 export function useMediaQuery(query: string): boolean {
   const subscribe = useCallback(
     (onChange: () => void) => {
@@ -20,10 +22,11 @@ export function useMediaQuery(query: string): boolean {
 }
 
 /**
- * Si el sistema pide menos movimiento, y avisa cuando cambia. Se usa en lugar de
- * `useReducedMotion` de motion, que lee el valor una sola vez al montar
- * (framer-motion, utils/reduced-motion/use-reduced-motion.mjs, con un TODO al respecto).
+ * Si va con movimiento reducido (la intensidad visual de lib/motion.ts: la elegida en los ajustes o
+ * la del sistema), y avisa cuando cambia. Se usa en lugar de `useReducedMotion` de motion, que lee
+ * el sistema una sola vez al montar (framer-motion, utils/reduced-motion/use-reduced-motion.mjs,
+ * con un TODO al respecto) y no sabe de los ajustes.
  */
 export function usePrefersReducedMotion(): boolean {
-  return useMediaQuery("(prefers-reduced-motion: reduce)");
+  return useSyncExternalStore(subscribeToMotion, reducedMotion, () => false);
 }

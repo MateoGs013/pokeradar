@@ -42,7 +42,9 @@ import {
   reportFileName,
   toCsv,
 } from "@/lib/report";
+import { REDUCED_MOTION_QUERY, systemMotion } from "@/lib/motion";
 import { NIGHT_BOOST } from "@/lib/night";
+import { playCry, playPing } from "@/lib/sound/sounds";
 import { isShiny } from "@/lib/shiny";
 import { CONDITIONS, type Weather } from "@/lib/weather/conditions";
 import type { Position } from "@/lib/world/types";
@@ -62,6 +64,42 @@ const typeList = new Intl.ListFormat("es", { type: "conjunction" });
 /** "lluvia 13 °C". */
 function describeWeather({ condition, temperature }: Weather) {
   return `${CONDITIONS[condition].label.toLowerCase()} ${Math.round(temperature)} °C`;
+}
+
+// Los atajos, como los lista el diálogo de ajustes (la tecla ? lo abre).
+const SHORTCUTS: [string, string][] = [
+  ["A", "Instalar una antena, o cancelar"],
+  ["Flechas", "Mover la mira de la antena"],
+  ["Enter", "Instalar la antena en la mira"],
+  ["B", "Abrir la bitácora"],
+  ["M", "Silenciar los avisos y el sonido"],
+  ["?", "Estos ajustes y los atajos"],
+  ["Esc", "Cerrar la ficha o el panel abierto"],
+];
+
+function Shortcuts() {
+  return (
+    <section className="grid gap-1.5">
+      <h3 className="font-mono text-xs text-muted-foreground">
+        Atajos de teclado
+      </h3>
+      <p className="text-xs text-muted-foreground">
+        Con el foco en el mapa o en el panel de las antenas.
+      </p>
+      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+        {SHORTCUTS.map(([keys, action]) => (
+          <div key={keys} className="contents">
+            <dt>
+              <kbd className="rounded-sm border border-border px-1 font-mono text-xs">
+                {keys}
+              </kbd>
+            </dt>
+            <dd>{action}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
 }
 
 /**
@@ -149,6 +187,9 @@ export function MonitoringRoom({
   const { shared, invalid } = useSharedSignal(mapProps.spawns);
   const started = hydrated && (saved || shared !== null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // El sonido suena si se prendió en los ajustes y los avisos no están silenciados: el botón de la
+  // campana silencia la sala entera.
+  const sound = settings.sound && !muted;
   // La bitácora: lo identificado en este turno, en el orden en que llegó cada ficha.
   const [log, setLog] = useState<readonly LogEntry[]>([]);
   const [logOpen, setLogOpen] = useState(false);
@@ -194,6 +235,7 @@ export function MonitoringRoom({
     setDetected((previous) => new Set([...previous, ...ids]));
     const last = ids.at(-1);
     if (last === undefined) return;
+    if (sound) playPing();
     if (muted) {
       announce(
         ids.length === 1
@@ -249,6 +291,7 @@ export function MonitoringRoom({
       shiny: shiny.has(speciesId),
     };
     setLog((previous) => [...previous, entry]);
+    if (sound && detail.cry) playCry(detail.cry);
     if (muted) return;
     if (shiny.has(speciesId)) {
       notify({
@@ -437,6 +480,23 @@ export function MonitoringRoom({
     document.documentElement.dataset.hud = settings.hud;
   }, [settings.hud]);
 
+  // La intensidad visual va en <html> también (lib/motion.ts). Si no se eligió, sigue a la del
+  // sistema, también si cambia con la página abierta.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.motion !== null) {
+      root.dataset.motion = settings.motion;
+      return;
+    }
+    const media = window.matchMedia(REDUCED_MOTION_QUERY);
+    const apply = () => {
+      root.dataset.motion = systemMotion();
+    };
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, [settings.motion]);
+
   // Esc sale del modo de instalación sin instalar. Con la ficha o los ajustes del turno abiertos (un
   // clic en una señal abre la ficha también en el modo), ese Esc es del diálogo: lo cierra y el modo
   // sigue.
@@ -454,6 +514,33 @@ export function MonitoringRoom({
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [installing]);
+
+  // Los atajos de la sala (docs/concepto.md, "Teclado"): B abre la bitácora, M silencia y ? abre
+  // los ajustes, que listan los atajos. La A, de las antenas, la atiende el mapa (map-view.tsx).
+  // Como la A, valen solo con el foco en el mapa (también en una señal) o en el panel de abajo: un
+  // atajo de una letra en toda la página también se dispararía al dictar con la voz (WCAG 2.1.4).
+  const shortcut = useEffectEvent((key: string) => {
+    if (key === "b") setLogOpen(true);
+    else if (key === "m") toggleMuted();
+    else if (key === "?") setSettingsOpen(true);
+    else return false;
+    return true;
+  });
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat || event.ctrlKey || event.metaKey || event.altKey)
+        return;
+      const target = event.target;
+      if (
+        !(target instanceof Element) ||
+        !target.closest(".maplibregl-map, [data-antenna-control]")
+      )
+        return;
+      if (shortcut(event.key.toLowerCase())) event.preventDefault();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const full = antennas.length >= MAX_ANTENNAS;
 
@@ -546,6 +633,7 @@ export function MonitoringRoom({
               setSettingsOpen(false);
             }}
           />
+          <Shortcuts />
           {/* La huella del mundo: si coincide entre local y producción, el mundo es el mismo. */}
           <p className="font-mono text-xs text-muted-foreground">
             Mundo: semilla {seed} · huella {hash}
