@@ -5,13 +5,16 @@
 // lugares vacíos del mismo alto: al llegar los datos, nada se corre. Solo cambia el alto de la
 // descripción, que va al final y no tiene nada abajo.
 import { cn } from "cn";
+import { ChevronsUpIcon } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Identification } from "@/hooks/use-pokemon-detail";
+import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
+import { boosts, CONDITIONS, type Weather } from "@/lib/weather/conditions";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
 import { hasSprite, PokemonSprite } from "./pokemon-sprite";
@@ -27,6 +30,7 @@ interface DossierBodyProps {
   place: string;
   /** Si es variocolor: ese sprite, y "Firma variocolor" en lugar de "Firma identificada". */
   shiny: boolean;
+  weather: WeatherState;
   onRetry: () => void;
 }
 
@@ -34,6 +38,7 @@ export function DossierBody({
   identification,
   place,
   shiny,
+  weather,
   onRetry,
 }: DossierBodyProps) {
   if (identification.status === "error") {
@@ -41,14 +46,15 @@ export function DossierBody({
   }
   const detail =
     identification.status === "ready" ? identification.detail : null;
+  const ready = weather.status === "ready" ? weather.weather : null;
   // Con movimiento reducido, motion no anima transform: las barras aparecen ya llenas.
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex flex-col gap-5">
-        <Identity detail={detail} shiny={shiny} />
+        <Identity detail={detail} shiny={shiny} weather={ready} />
         <Threat detail={detail} />
         <Stats detail={detail} />
-        <Facts detail={detail} place={place} />
+        <Facts detail={detail} place={place} weather={weather} />
         <Description detail={detail} />
       </div>
     </MotionConfig>
@@ -71,9 +77,11 @@ function Placeholder({ className }: { className: string }) {
 function Identity({
   detail,
   shiny,
+  weather,
 }: {
   detail: PokemonDetail | null;
   shiny: boolean;
+  weather: Weather | null;
 }) {
   const sprites = detail && (shiny ? detail.shinySprites : detail.sprites);
   return (
@@ -131,12 +139,25 @@ function Identity({
         )}
         {detail ? (
           <ul aria-label="Tipos" className="flex gap-1.5">
+            {/* Un tipo que el clima potencia va lleno y con la flecha; el lector de pantalla lo
+                escucha dicho. */}
             {detail.types.map((type) => (
               <li
                 key={type}
-                className="rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase"
+                className={cn(
+                  "flex items-center gap-0.5 rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase",
+                  boosts(weather, type) && "border-hud bg-hud text-background",
+                )}
               >
                 {TYPE_LABELS[type]}
+                {weather && boosts(weather, type) && (
+                  <>
+                    <ChevronsUpIcon aria-hidden className="size-3" />
+                    <span className="sr-only">
+                      , potenciado por {CONDITIONS[weather.condition].by}
+                    </span>
+                  </>
+                )}
               </li>
             ))}
           </ul>
@@ -237,10 +258,17 @@ function formatNumber(value: number): string {
 function Facts({
   detail,
   place,
+  weather,
 }: {
   detail: PokemonDetail | null;
   place: string;
+  weather: WeatherState;
 }) {
+  // El clima ya se sabe mientras se identifica la señal; con la ficha, se suma si la potencia. Es
+  // corto a propósito: en una línea, la fila no cambia de alto al llegar los datos.
+  const boosted =
+    weather.status === "ready" &&
+    detail?.types.some((type) => boosts(weather.weather, type));
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
       <dt className="tracking-widest text-muted-foreground uppercase">
@@ -253,6 +281,14 @@ function Facts({
         Ubicación
       </dt>
       <dd>{place.charAt(0).toUpperCase() + place.slice(1)}</dd>
+      <dt className="tracking-widest text-muted-foreground uppercase">Clima</dt>
+      <dd>
+        {weather.status === "ready"
+          ? `${CONDITIONS[weather.weather.condition].label}${boosted ? " · potenciado" : ""}`
+          : weather.status === "error"
+            ? "Sin datos"
+            : "—"}
+      </dd>
     </dl>
   );
 }

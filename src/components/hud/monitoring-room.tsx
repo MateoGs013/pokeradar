@@ -5,13 +5,20 @@
 // mapa muestra solo esas, el HUD las cuenta y Pelipper dice dónde aparecieron. Y guarda las antenas:
 // el control las instala y el mapa las dibuja.
 import { BellIcon, BellOffIcon, Settings2Icon } from "lucide-react";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 import {
   closeNotices,
   CrewNotices,
   notify,
 } from "@/components/crew/crew-notices";
+import { TYPE_LABELS } from "@/components/dossier/labels";
 import { threatLevel } from "@/components/dossier/threat";
 import { MapLoader } from "@/components/map/map-loader";
 import type { MapViewProps } from "@/components/map/map-view";
@@ -30,7 +37,9 @@ import {
   saveShiftSettings,
   useShiftSettings,
 } from "@/hooks/use-shift-settings";
+import { useWeather } from "@/hooks/use-weather";
 import { isShiny } from "@/lib/shiny";
+import { CONDITIONS, type Weather } from "@/lib/weather/conditions";
 import type { Position } from "@/lib/world/types";
 
 import { Clock } from "./clock";
@@ -40,6 +49,13 @@ const percent = new Intl.NumberFormat("es-AR", {
   style: "percent",
   maximumFractionDigits: 0,
 });
+
+const typeList = new Intl.ListFormat("es", { type: "conjunction" });
+
+/** "lluvia 13 °C". */
+function describeWeather({ condition, temperature }: Weather) {
+  return `${CONDITIONS[condition].label.toLowerCase()} ${Math.round(temperature)} °C`;
+}
 
 // La URL no cambia mientras la sala está abierta: no hay a qué suscribirse.
 const subscribeToNothing = () => () => {};
@@ -71,6 +87,7 @@ interface MonitoringRoomProps extends Omit<
   | "onIdentify"
   | "active"
   | "shiny"
+  | "weather"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -97,6 +114,7 @@ export function MonitoringRoom({
       .map(({ speciesId }) => speciesId)
       .filter((id) => id === forcedShiny || isShiny(seed, id)),
   );
+  const weather = useWeather();
   // Qué parte del mundo despejó el radar (de 0 a 1), y qué especies se identificaron.
   const [coverage, setCoverage] = useState(0);
   const [identified, setIdentified] = useState<ReadonlySet<number>>(
@@ -203,6 +221,27 @@ export function MonitoringRoom({
       text: `Análisis completado: ${detail.name}. Nivel de amenaza: ${threat}.`,
     });
   };
+
+  // Xatu da el pronóstico una vez, cuando el turno empezó y el clima ya llegó. Si Open-Meteo falla,
+  // no dice nada: el HUD muestra que no hay datos.
+  const forecastGiven = useRef(false);
+  const forecast = useEffectEvent((current: Weather) => {
+    if (muted) return;
+    const types = CONDITIONS[current.condition].boosted.map(
+      (type) => TYPE_LABELS[type],
+    );
+    notify({
+      id: "xatu",
+      member: "xatu",
+      priority: "informativo",
+      text: `Pronóstico: ${describeWeather(current)}. Potencia a los tipos ${typeList.format(types)}.`,
+    });
+  });
+  useEffect(() => {
+    if (!started || weather.status !== "ready" || forecastGiven.current) return;
+    forecastGiven.current = true;
+    forecast(weather.weather);
+  }, [started, weather]);
 
   const toggleMuted = () => {
     if (!muted) closeNotices();
@@ -315,6 +354,29 @@ export function MonitoringRoom({
         <span className="whitespace-nowrap">
           {identified.size}{" "}
           {identified.size === 1 ? "identificada" : "identificadas"}
+        </span>{" "}
+        ·{" "}
+        {/* Los datos de Open-Meteo van con un enlace a ellos al lado (CC BY 4.0,
+            open-meteo.com/en/licence). El HUD no recibe el puntero: el enlace sí. */}
+        <span className="whitespace-nowrap">
+          {weather.status === "ready" ? (
+            <>
+              {describeWeather(weather.weather)} (
+              <a
+                href="https://open-meteo.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="pointer-events-auto underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                Open-Meteo
+              </a>
+              )
+            </>
+          ) : weather.status === "error" ? (
+            "clima sin datos"
+          ) : (
+            "clima —"
+          )}
         </span>
       </div>
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-background/80 pl-1.5 font-mono text-xs text-muted-foreground font-stretch-condensed">
@@ -404,6 +466,7 @@ export function MonitoringRoom({
         active={started}
         onIdentify={onIdentify}
         shiny={shiny}
+        weather={weather}
       />
       <CrewNotices />
     </>

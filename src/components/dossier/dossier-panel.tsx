@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import type { Identification } from "@/hooks/use-pokemon-detail";
+import type { WeatherState } from "@/hooks/use-weather";
 
 import { DossierBody } from "./dossier-body";
 import {
@@ -37,6 +38,8 @@ interface DossierPanelProps {
   place: string | null;
   /** Si la señal es variocolor (lib/shiny.ts). */
   shiny: boolean;
+  /** El clima: la ficha dice si potencia a la especie. */
+  weather: WeatherState;
   onRetry: () => void;
   /** Se pidió cerrar: Esc, la cruz, tocar afuera o, en el celular, deslizar hacia abajo. */
   onClose: () => void;
@@ -54,6 +57,7 @@ export function DossierPanel({
   identification,
   place,
   shiny,
+  weather,
   onRetry,
   onClose,
   onClosed,
@@ -74,6 +78,7 @@ export function DossierPanel({
       identification={identification}
       place={place}
       shiny={shiny}
+      weather={weather}
       onRetry={onRetry}
     />
   );

@@ -20,6 +20,7 @@ import { SystemBoot } from "@/components/onboarding/system-boot";
 import { underFog } from "@/components/radar/fog";
 import { Radar, type Station } from "@/components/radar/radar";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
+import type { WeatherState } from "@/hooks/use-weather";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
@@ -78,6 +79,8 @@ export interface MapViewProps {
   onCoverage: (coverage: number) => void;
   /** Las señales variocolor (lib/shiny.ts). */
   shiny: ReadonlySet<number>;
+  /** El clima: las señales y la ficha marcan los tipos que potencia. */
+  weather: WeatherState;
   /** Se identificó por primera vez la especie de una señal: llegó su ficha. */
   onIdentify: (speciesId: number, detail: PokemonDetail) => void;
 }
@@ -193,6 +196,7 @@ export function MapView({
   onIdentify,
   active,
   shiny,
+  weather,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -466,6 +470,7 @@ export function MapView({
             }
             identified={identified}
             shiny={shiny}
+            weather={weather.status === "ready" ? weather.weather : null}
             onSelect={(next) => {
               setSelection(next);
               setDossierOpen(true);
@@ -483,6 +488,7 @@ export function MapView({
         identification={identification}
         place={selection?.place ?? null}
         shiny={selection ? shiny.has(selection.spawn.speciesId) : false}
+        weather={weather}
         onRetry={retry}
         onClose={() => {
           setDossierOpen(false);
