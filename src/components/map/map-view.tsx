@@ -421,7 +421,9 @@ export function MapView({
       <div ref={containerRef} inert={!fogDrawn} className="h-full w-full" />
       {loadedMap && (
         <>
-          {/* Antes que las señales: su Marker se agrega primero y el haz queda debajo de ellas. */}
+          {/* El aro y el haz de cada estación van justo después del canvas del mapa (station.tsx):
+              debajo de las señales, también en una antena que se instala con las señales ya puestas
+              (E-26). */}
           <Radar
             map={loadedMap}
             bounds={bounds}
