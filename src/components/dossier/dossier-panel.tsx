@@ -137,15 +137,22 @@ export function DossierPanel({
   );
 }
 
+const COPY_FAILED =
+  "No se pudo copiar. El enlace está en la barra de direcciones.";
+
 /**
  * Copia el enlace de la señal (`?p=25`, con `modo=real` delante en el mapa real): abre la sala con
- * esa señal identificada, salteando el inicio de turno. El resultado se ve en el ícono y se anuncia en una región viva. Si el navegador
- * no deja copiar, el enlace igual está en la barra de direcciones.
+ * esa señal identificada, salteando el inicio de turno. Si se copió, el ícono pasa a una tilde; si
+ * el navegador no deja copiar (sin permiso, o fuera de HTTPS), lo dice un texto debajo del
+ * encabezado. Los dos se anuncian en una región viva.
  */
 function ShareButton({ speciesId }: { speciesId: number }) {
-  const [result, setResult] = useState<{ id: number; copied: boolean } | null>(
-    null,
-  );
+  const [result, setResult] = useState<{
+    id: number;
+    copied: boolean;
+    /** Cuántas veces se intentó copiar. */
+    tries: number;
+  } | null>(null);
   // Otra señal: el resultado anterior ya no corre.
   const current = result?.id === speciesId ? result : null;
   const copy = async () => {
@@ -155,13 +162,24 @@ function ShareButton({ speciesId }: { speciesId: number }) {
       params.set("modo", "real");
     params.set("p", String(speciesId));
     const url = `${window.location.origin}${window.location.pathname}?${params}`;
+    let copied = true;
     try {
       await navigator.clipboard.writeText(url);
-      setResult({ id: speciesId, copied: true });
     } catch {
-      setResult({ id: speciesId, copied: false });
+      copied = false;
     }
+    setResult((previous) => ({
+      id: speciesId,
+      copied,
+      tries: previous?.id === speciesId ? previous.tries + 1 : 1,
+    }));
   };
+  // Copiar dos veces da el mismo texto, y una región viva que no cambia no se vuelve a anunciar: en
+  // los intentos pares se suma un espacio duro al final, que no se lee (como en la sala,
+  // monitoring-room.tsx).
+  const announcement = current
+    ? `${current.copied ? "Enlace copiado" : COPY_FAILED}${current.tries % 2 === 0 ? "\u00a0" : ""}`
+    : "";
   return (
     <>
       <Button
@@ -173,11 +191,18 @@ function ShareButton({ speciesId }: { speciesId: number }) {
         {current?.copied ? <CheckIcon aria-hidden /> : <LinkIcon aria-hidden />}
       </Button>
       <span role="status" className="sr-only">
-        {current &&
-          (current.copied
-            ? "Enlace copiado"
-            : "No se pudo copiar. El enlace está en la barra de direcciones.")}
+        {announcement}
       </span>
+      {/* El texto a la vista ocupa su propia línea en el encabezado (basis-full, al final). El
+          lector de pantalla ya lo oye en la región viva. */}
+      {current?.copied === false && (
+        <p
+          aria-hidden
+          className="order-last basis-full text-xs text-destructive"
+        >
+          {COPY_FAILED}
+        </p>
+      )}
     </>
   );
 }
@@ -191,7 +216,8 @@ function CloseButton(props: ComponentProps<typeof Button>) {
 }
 
 /**
- * El encabezado fijo, con el título y la cruz, y el contenido, que se desplaza si no entra. Cuando
+ * El encabezado fijo, con el título, el botón del enlace y la cruz (y, si no se pudo copiar, el
+ * aviso en una segunda línea), y el contenido, que se desplaza si no entra. Cuando
  * no entra (a 390 px pasa), Chrome deja enfocar el contenedor con Tab para bajarlo con las flechas:
  * su foco se ve con el mismo contorno que el resto, por dentro para que el borde no lo corte.
  */
@@ -208,7 +234,7 @@ function PanelLayout({
 }) {
   return (
     <>
-      <div className="flex shrink-0 items-center gap-2 py-2 pr-2 pl-4">
+      <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 py-2 pr-2 pl-4">
         <div className="min-w-0 flex-1">{title}</div>
         {share}
         {close}

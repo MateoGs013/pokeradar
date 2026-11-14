@@ -16,12 +16,12 @@ import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
 import { type Boost, boostOf } from "@/lib/boosts";
+import { THREAT_LEVELS, threatLevel } from "@/lib/threat";
 import { CONDITIONS, weatherBoost } from "@/lib/weather/conditions";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
 import { hasSprite, PokemonSprite } from "./pokemon-sprite";
 import { ScrambleText } from "./scramble-text";
-import { THREAT_LEVELS, threatLevel } from "./threat";
 
 /** La estadística base más alta de las 386 especies: 255 (docs/hallazgos-pokeapi.md). */
 const MAX_STAT = 255;

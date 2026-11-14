@@ -37,6 +37,11 @@ interface RadarProps {
   stations: readonly Station[];
   /** Las señales del mundo: cada estación detecta las que están a su alcance cuando el haz pasa. */
   spawns: readonly Spawn[];
+  /**
+   * Las señales que ya están detectadas cuando el mapa carga: la de un enlace compartido (`?p=25`).
+   * La red no las vuelve a detectar.
+   */
+  detected: ReadonlySet<number>;
   /** Avisa qué señales acaba de detectar una estación (por speciesId). */
   onDetect: (ids: number[]) => void;
   /** Avisa que una estación terminó su vuelta y cuántas señales detectó en total. */
@@ -55,6 +60,7 @@ export function Radar({
   grid,
   stations,
   spawns,
+  detected,
   onDetect,
   onSweepEnd,
   onCoverage,
@@ -65,12 +71,14 @@ export function Radar({
   // La red, con la niebla entera, se crea una vez: el mundo y las señales vienen del servidor y no
   // cambian mientras el mapa vive. useState la guarda (useMemo es una caché, y React puede
   // descartarla). El radar se monta solo en el cliente, después de que el mapa cargó, así que acá
-  // ya hay document y estilos.
+  // ya hay document y estilos. Las señales ya detectadas quedan afuera: la de un enlace compartido
+  // se detecta antes de que el mapa cargue, y un barrido la contaba otra vez en el aviso de
+  // Pelipper y en el total de la estación.
   const [network] = useState(
     () =>
       new RadarNetwork(
         createFog(grid.width, grid.height, bounds, cssToken("--hud-bg")),
-        spawns,
+        spawns.filter(({ speciesId }) => !detected.has(speciesId)),
       ),
   );
 

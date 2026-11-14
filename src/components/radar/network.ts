@@ -1,5 +1,5 @@
 // La red de radares: una sola niebla para todas las estaciones (el radar base y las antenas), y las
-// señales que ninguna detectó todavía. Cada estación barre por su cuenta (station.tsx); la red
+// señales que faltan detectar. Cada estación barre por su cuenta (station.tsx); la red
 // lleva la cuenta de los barridos en curso, porque mientras haya alguno el mapa tiene que copiar el
 // canvas de la niebla en cada cuadro, y cuando no queda ninguno, dejar de hacerlo.
 import type { CanvasSource } from "maplibre-gl";
@@ -23,7 +23,7 @@ export const MAX_ANTENNAS = 4;
 
 export class RadarNetwork {
   readonly fog: Fog;
-  /** Las señales que ninguna estación detectó todavía. */
+  /** Las señales que faltan detectar: la de un enlace compartido llega ya detectada (radar.tsx). */
   private pending: Spawn[];
   /** La fuente del mapa que muestra la niebla, mientras está en el mapa. */
   private source: CanvasSource | null = null;

@@ -2,7 +2,8 @@
 
 // El fin de turno (docs/concepto.md, "Herramientas del operador"): un resumen con cobertura,
 // identificados y anomalías, el informe para bajar y la salida a un turno nuevo.
-import { THREAT_LEVELS } from "@/components/dossier/threat";
+import { useRef } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { LogEntry } from "@/lib/report";
+import { THREAT_LEVELS } from "@/lib/threat";
 
 export interface ShiftSummary {
   operator: string;
@@ -64,6 +66,10 @@ export function ShiftEnd({
   onDownload,
   onRestart,
 }: ShiftEndProps) {
+  // El foco entra al diálogo y no a su primer botón: sin identificadas, el CSV está deshabilitado y
+  // el primero es "Empezar otro turno", que con un Enter de más reiniciaba el turno. Base UI hace lo
+  // mismo al abrir con un toque.
+  const popup = useRef<HTMLDivElement>(null);
   const top = summary && highestThreat(summary.entries);
   const shiny = summary?.entries.filter((entry) => entry.shiny) ?? [];
   const rows: [string, string][] = summary
@@ -88,7 +94,7 @@ export function ShiftEnd({
     : [];
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent ref={popup} initialFocus={popup}>
         <DialogTitle>Fin de turno</DialogTitle>
         <DialogDescription>
           El resumen del turno. Un turno nuevo empieza con el mundo cubierto
