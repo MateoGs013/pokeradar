@@ -127,7 +127,7 @@ y el foco vuelve a la señal.
   (variocolor), la amenaza más alta y las antenas. "Empezar otro turno" vuelve a cubrir el mundo, en la misma zona.
 - **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=4`, Charmander; en el mapa real,
   `?modo=real&p=279`, Pelipper), y el botón del enlace la copia. Ese enlace abre la sala con la señal identificada y
-  saltea el inicio de turno. Un número que no está en el mundo lo avisa Rotom.
+  saltea el inicio de turno. Un número que no está en el mundo, o algo que no es un número, lo avisa Rotom.
 - **Intensidad visual:** en el inicio de turno y en los ajustes, "Completa" o "Reducida". Sin elegir, sigue a
   `prefers-reduced-motion`; elegida, gana. Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de
   las señales, el texto que se descifra, el sprite animado y las transiciones, y la cámara salta en lugar de volar.
@@ -176,8 +176,8 @@ src/components/hud/        sala de monitoreo: HUD de esquinas, hora, ajustes del
                            turno y cambio de zona
 src/components/crew/       tripulación: quién avisa y los avisos
 src/components/onboarding/ inicio de turno y arranque del sistema con Rotom
-src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto, nivel de amenaza y nombres
-                           de tipos y estadísticas
+src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto y nombres de tipos y
+                           estadísticas
 src/components/ui/         componentes de shadcn con los tokens del HUD: Button, Dialog, Drawer, Sheet y Toast
 src/hooks/                 identificación con caché y cancelación; media queries; ajustes del turno guardados;
                            la hora, el clima, la noche y los parámetros de la URL
@@ -191,6 +191,7 @@ src/lib/shiny.ts           qué señales son variocolor, con la semilla
 src/lib/night.ts           de qué hora a qué hora es de noche, y los tipos que potencia
 src/lib/boosts.ts          lo que potencia tipos (el clima y la noche)
 src/lib/report.ts          la bitácora como informe CSV
+src/lib/threat.ts          el nivel de amenaza, con la suma de las estadísticas base
 src/lib/motion.ts          la intensidad visual: data-motion en <html>
 src/lib/sound/             el ping del radar (Web Audio) y el grito de cada Pokémon
 docs/                      consigna, concepto, decisiones, hallazgos, errores y flujo
