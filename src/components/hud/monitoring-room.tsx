@@ -1,12 +1,18 @@
 "use client";
 
-// La sala de monitoreo: el inicio de turno, el HUD de las esquinas, el control de las antenas, el
-// aviso de las detecciones y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el mapa
-// muestra solo esas, el HUD las cuenta y el aviso dice dónde aparecieron. Y guarda las antenas:
+// La sala de monitoreo: el inicio de turno, el HUD de las esquinas, el control de las antenas, los
+// avisos de la tripulación y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el
+// mapa muestra solo esas, el HUD las cuenta y Pelipper dice dónde aparecieron. Y guarda las antenas:
 // el control las instala y el mapa las dibuja.
-import { Settings2Icon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { BellIcon, BellOffIcon, Settings2Icon } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
+import {
+  closeNotices,
+  CrewNotices,
+  notify,
+} from "@/components/crew/crew-notices";
+import { threatLevel } from "@/components/dossier/threat";
 import { MapLoader } from "@/components/map/map-loader";
 import type { MapViewProps } from "@/components/map/map-view";
 import { northToSouth, signalPlaces } from "@/components/map/places";
@@ -61,6 +67,10 @@ export function MonitoringRoom({
     () => new Set(),
   );
   const [announcement, setAnnouncement] = useState("");
+  // Con los avisos silenciados, lo que diría la tripulación va solo al lector de pantalla.
+  const [muted, setMuted] = useState(false);
+  // Cuántas señales lleva contadas el aviso de Pelipper que sigue abierto.
+  const sightings = useRef(0);
   // Qué parte del mundo despejó el radar (de 0 a 1), y qué especies se identificaron.
   const [coverage, setCoverage] = useState(0);
   const [identified, setIdentified] = useState<ReadonlySet<number>>(
@@ -91,16 +101,77 @@ export function MonitoringRoom({
   const announce = (text: string) =>
     setAnnouncement((previous) => (previous === text ? `${text} ` : text));
 
-  // Un aviso por detección: con una sola señal, dónde está; con varias, cuántas.
+  // Abrir una señal desde un aviso es lo mismo que tocarla en el mapa: se abre la ficha, la cámara
+  // vuela hasta ella y, al cerrar, el foco vuelve a su botón.
+  const openSignal = (speciesId: number) =>
+    document
+      .querySelector<HTMLButtonElement>(`[data-species-id="${speciesId}"]`)
+      ?.click();
+
+  // Pelipper avisa los avistamientos. Mientras su aviso sigue abierto, el mismo aviso suma las
+  // nuevas en lugar de apilar uno por señal (la base detecta 5 en unos 4 s), y su botón abre la
+  // última. Silenciado, cada detección va al lector de pantalla, como antes de la tripulación.
   const onDetect = (ids: number[]) => {
     setDetected((previous) => new Set([...previous, ...ids]));
-    const [first, ...others] = ids;
-    if (first === undefined) return;
-    announce(
-      others.length === 0
-        ? `Señal detectada en ${labels.get(first)}`
-        : `${ids.length} señales detectadas`,
+    const last = ids.at(-1);
+    if (last === undefined) return;
+    if (muted) {
+      announce(
+        ids.length === 1
+          ? `Señal detectada en ${labels.get(last)}`
+          : `${ids.length} señales detectadas`,
+      );
+      return;
+    }
+    sightings.current += ids.length;
+    notify({
+      id: "pelipper",
+      member: "pelipper",
+      priority: "informativo",
+      text:
+        sightings.current === 1
+          ? `Señal detectada en ${labels.get(last)}.`
+          : `${sightings.current} señales detectadas. La última, en ${labels.get(last)}.`,
+      action: { label: "Ver señal", onClick: () => openSignal(last) },
+      onClose: () => {
+        sightings.current = 0;
+      },
+    });
+  };
+
+  // Rotom da la cobertura al terminar cada vuelta, en un solo aviso que se actualiza.
+  const onCoverage = (next: number) => {
+    setCoverage(next);
+    if (muted) return;
+    notify({
+      id: "rotom",
+      member: "rotom",
+      priority: "informativo",
+      text: `Vuelta completa. Cobertura del mundo: ${percent.format(next)}.`,
+    });
+  };
+
+  // Porygon termina el análisis cuando llega la ficha. Una amenaza alta o crítica es una alerta.
+  // Con la ficha abierta, el aviso queda detrás de su fondo y no se puede tocar; la región de los
+  // avisos no queda inerte ni oculta, así que igual se anuncia (medido el DOM; sin probar con un
+  // lector de pantalla).
+  const onIdentify: MapViewProps["onIdentify"] = (speciesId, detail) => {
+    setIdentified((previous) => new Set(previous).add(speciesId));
+    if (muted) return;
+    const threat = threatLevel(
+      detail.stats.reduce((total, stat) => total + stat.value, 0),
     );
+    notify({
+      member: "porygon",
+      priority:
+        threat === "Alto" || threat === "Crítico" ? "alerta" : "informativo",
+      text: `Análisis completado: ${detail.name}. Nivel de amenaza: ${threat}.`,
+    });
+  };
+
+  const toggleMuted = () => {
+    if (!muted) closeNotices();
+    setMuted(!muted);
   };
 
   // Lo que dice una estación al terminar su vuelta: si no detectó nada, el estado vacío, también al
@@ -168,7 +239,10 @@ export function MonitoringRoom({
     if (!installing) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
-      if (document.querySelector('[role="dialog"]')) return;
+      // Los avisos también tienen role="dialog" (ui/toast.tsx): no cuentan.
+      if (document.querySelector('[role="dialog"]:not([data-slot="toast"])')) {
+        return;
+      }
       setInstalling(false);
       announce("Instalación cancelada");
     };
@@ -183,14 +257,14 @@ export function MonitoringRoom({
   // puede quedar cualquier bioma debajo, y sin él el texto apagado no se lee bien sobre los más
   // claros. Arriba a la izquierda, el turno; arriba a la derecha, la hora y los ajustes. El de la
   // izquierda corta la línea antes que el de la derecha y, desde md, cuando la ficha va al costado,
-  // antes del panel (más un margen igual al de la izquierda), en vez de quedar tapado. Las 28
-  // unidades (112 px) son los 12 px de margen de cada lado, los 78 px de la esquina derecha (hora y
-  // botón, medidos) y 10 px de aire.
+  // antes del panel (más un margen igual al de la izquierda), en vez de quedar tapado. Las 37
+  // unidades (148 px) son los 12 px de margen de cada lado, los 114 px de la esquina derecha (hora y
+  // dos botones, medidos) y 10 px de aire.
   // El aviso existe desde el HTML del servidor, vacío: un lector de pantalla anuncia los cambios de
   // una región viva que ya estaba, no siempre los de una que aparece con el texto puesto.
   return (
     <>
-      <div className="pointer-events-none absolute top-3 left-3 z-10 max-w-[calc(100%-(--spacing(28)))] bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+      <div className="pointer-events-none absolute top-3 left-3 z-10 max-w-[calc(100%-(--spacing(37)))] bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
         {/* Cada dato en un span sin cortes: si no entra en una línea, corta en un " · " y
             no entre un nombre y su valor. */}
         <h1 className="inline tracking-widest text-hud uppercase">PokéRadar</h1>{" "}
@@ -210,6 +284,15 @@ export function MonitoringRoom({
       </div>
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-background/80 pl-1.5 font-mono text-xs text-muted-foreground font-stretch-condensed">
         <Clock />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Silenciar avisos"
+          aria-pressed={muted}
+          onClick={toggleMuted}
+        >
+          {muted ? <BellOffIcon aria-hidden /> : <BellIcon aria-hidden />}
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -282,12 +365,11 @@ export function MonitoringRoom({
         detected={detected}
         onDetect={onDetect}
         onSweepEnd={onSweepEnd}
-        onCoverage={setCoverage}
+        onCoverage={onCoverage}
         active={started}
-        onIdentify={(id) =>
-          setIdentified((previous) => new Set(previous).add(id))
-        }
+        onIdentify={onIdentify}
       />
+      <CrewNotices />
     </>
   );
 }

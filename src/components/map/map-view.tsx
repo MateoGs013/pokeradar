@@ -16,11 +16,12 @@ import {
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DossierPanel } from "@/components/dossier/dossier-panel";
+import { SystemBoot } from "@/components/onboarding/system-boot";
 import { underFog } from "@/components/radar/fog";
 import { Radar, type Station } from "@/components/radar/radar";
-import { SystemBoot } from "@/components/onboarding/system-boot";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
+import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
   BiomeCollection,
   Place,
@@ -75,8 +76,8 @@ export interface MapViewProps {
   onSweepEnd: (station: Station, found: number) => void;
   /** Al terminar cada vuelta: qué parte del mundo está despejada, de 0 a 1. */
   onCoverage: (coverage: number) => void;
-  /** Se identificó por primera vez la especie de una señal. */
-  onIdentify: (speciesId: number) => void;
+  /** Se identificó por primera vez la especie de una señal: llegó su ficha. */
+  onIdentify: (speciesId: number, detail: PokemonDetail) => void;
 }
 
 const BIOMES_SOURCE = "biomas";
