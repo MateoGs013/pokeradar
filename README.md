@@ -49,8 +49,8 @@ y el foco vuelve a la señal.
   reducido, el círculo se despeja de una vez.
 - **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
   mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
-  el mapa y Enter la instala en la mira del centro. Cada antena da su vuelta, y el panel dice cuántas señales
-  detectó o que no había ninguna en alcance. Esc cancela.
+  una mira y Enter la instala ahí. Cada antena da su vuelta, y el panel dice cuántas señales detectó o que no había
+  ninguna en alcance. Esc cancela.
 
 ## Arquitectura y Stack
 
