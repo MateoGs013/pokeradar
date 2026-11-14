@@ -1,7 +1,7 @@
 // El estilo del modo real (docs/concepto.md, "El mapa híbrido"): las teselas vectoriales de
-// OpenFreeMap, sin API key, con los colores del HUD. Se parte de su estilo oscuro y se cambian solo
-// los colores; las fuentes y los íconos quedan como vienen. La atribución va en el panel de las
-// antenas (monitoring-room.tsx).
+// OpenFreeMap, sin API key, con los colores del HUD. Se parte de su estilo oscuro: se cambian los
+// colores y se suman dos capas, la de la noche y la niebla fija de afuera del mundo; las fuentes y
+// los íconos quedan como vienen. La atribución va en el panel de las antenas (monitoring-room.tsx).
 import type {
   FillLayerSpecification,
   GeoJSONSourceSpecification,
