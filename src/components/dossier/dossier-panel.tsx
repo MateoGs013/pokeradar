@@ -3,8 +3,8 @@
 // La ficha de inteligencia: al costado en escritorio (Sheet) y abajo en el celular (Drawer), con el
 // mismo contenido (docs/decisiones.md, sección 8, "Panel de la ficha"). Los dos son modales: el
 // foco queda en la ficha, Esc o tocar afuera la cierran, y al cerrar el foco vuelve a la señal.
-import { XIcon } from "lucide-react";
-import type { ComponentProps, ReactNode } from "react";
+import { CheckIcon, LinkIcon, XIcon } from "lucide-react";
+import { type ComponentProps, type ReactNode, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +33,8 @@ import {
 
 interface DossierPanelProps {
   open: boolean;
+  /** La especie de la señal, para el enlace compartible; null sin señal elegida. */
+  speciesId: number | null;
   /** null cuando no hay señal elegida: el panel está cerrado y sin contenido. */
   identification: Identification | null;
   /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
@@ -57,6 +59,7 @@ const TITLE_CLASS =
 
 export function DossierPanel({
   open,
+  speciesId,
   identification,
   place,
   shiny,
@@ -99,6 +102,7 @@ export function DossierPanel({
                 Ficha de inteligencia
               </SheetTitle>
             }
+            share={speciesId !== null && <ShareButton speciesId={speciesId} />}
             close={<SheetClose render={<CloseButton />} />}
           >
             {body}
@@ -119,12 +123,53 @@ export function DossierPanel({
               Ficha de inteligencia
             </DrawerTitle>
           }
+          share={speciesId !== null && <ShareButton speciesId={speciesId} />}
           close={<DrawerClose render={<CloseButton />} />}
         >
           {body}
         </PanelLayout>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+/**
+ * Copia el enlace de la señal (`?p=25`): abre la sala con esa señal identificada, salteando el
+ * inicio de turno. El resultado se ve en el ícono y se anuncia en una región viva. Si el navegador
+ * no deja copiar, el enlace igual está en la barra de direcciones.
+ */
+function ShareButton({ speciesId }: { speciesId: number }) {
+  const [result, setResult] = useState<{ id: number; copied: boolean } | null>(
+    null,
+  );
+  // Otra señal: el resultado anterior ya no corre.
+  const current = result?.id === speciesId ? result : null;
+  const copy = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?p=${speciesId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setResult({ id: speciesId, copied: true });
+    } catch {
+      setResult({ id: speciesId, copied: false });
+    }
+  };
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Copiar el enlace de esta señal"
+        onClick={copy}
+      >
+        {current?.copied ? <CheckIcon aria-hidden /> : <LinkIcon aria-hidden />}
+      </Button>
+      <span role="status" className="sr-only">
+        {current &&
+          (current.copied
+            ? "Enlace copiado"
+            : "No se pudo copiar. El enlace está en la barra de direcciones.")}
+      </span>
+    </>
   );
 }
 
@@ -143,17 +188,20 @@ function CloseButton(props: ComponentProps<typeof Button>) {
  */
 function PanelLayout({
   title,
+  share,
   close,
   children,
 }: {
   title: ReactNode;
+  share: ReactNode;
   close: ReactNode;
   children: ReactNode;
 }) {
   return (
     <>
-      <div className="flex shrink-0 items-center justify-between gap-2 py-2 pr-2 pl-4">
-        {title}
+      <div className="flex shrink-0 items-center gap-2 py-2 pr-2 pl-4">
+        <div className="min-w-0 flex-1">{title}</div>
+        {share}
         {close}
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring">

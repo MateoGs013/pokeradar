@@ -324,6 +324,22 @@ export function MapView({
     nightApplied.current = true;
   }, [loadedMap, night]);
 
+  // La URL dice qué señal tiene la ficha abierta (`?p=25`): copiada de la barra de direcciones,
+  // abre la sala con esa señal identificada. Al cerrar la ficha, se saca. replaceState y no
+  // pushState: abrir y cerrar fichas no llena el historial del botón Atrás. Next integra los dos al
+  // router (docs de Next, "Linking and Navigating", "Native History API").
+  const openId = dossierOpen ? (selection?.spawn.speciesId ?? null) : null;
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (openId === null) params.delete("p");
+    else params.set("p", String(openId));
+    const search = params.toString();
+    const next = search ? `?${search}` : window.location.pathname;
+    if (`?${search}` === window.location.search) return;
+    if (!search && !window.location.search) return;
+    window.history.replaceState(null, "", next);
+  }, [openId]);
+
   // La tecla A entra o sale del modo de instalación (docs/concepto.md, "Teclado"), solo con el foco
   // en el mapa (también en una de sus señales) o en el control de las antenas: un atajo de una
   // letra en toda la página también se dispararía al dictar con la voz (WCAG 2.1.4). Con la ficha
@@ -521,6 +537,7 @@ export function MapView({
           existía cerrado y pasa a abierto (useTransitionStatus, animateInitialOpen). */}
       <DossierPanel
         open={dossierOpen}
+        speciesId={selection?.spawn.speciesId ?? null}
         identification={identification}
         place={selection?.place ?? null}
         shiny={selection ? shiny.has(selection.spawn.speciesId) : false}
