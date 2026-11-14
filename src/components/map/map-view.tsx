@@ -9,6 +9,7 @@ import {
   type MapMouseEvent,
   type FillLayerSpecification,
   Map as MapLibreMap,
+  Marker,
   setWorkerUrl,
   type SymbolLayerSpecification,
 } from "maplibre-gl";
@@ -85,6 +86,20 @@ const LAKE_NAMES_MIN_ZOOM = 7;
  * de su alcance, llegaba a medir 28 millones de píxeles de ancho (medido).
  */
 const MAX_ZOOM = 9;
+
+/**
+ * Cuánto se mueve la mira de las antenas con cada flecha: el 5 % del lado más corto del mapa, para
+ * que cruzar el mundo entero lleve unas 20 a 30 teclas en cualquier pantalla.
+ */
+const AIM_STEP = 0.05;
+
+/** Hacia dónde mueve la mira cada flecha, en píxeles de pantalla (y crece hacia abajo). */
+const AIM_DIRECTIONS: Partial<Record<string, [number, number]>> = {
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+};
 
 /**
  * Los nombres de los lugares, con Martian Mono: sin URL de `glyphs`, MapLibre dibuja el texto con
@@ -187,23 +202,70 @@ export function MapView({
   // Con el modo de instalación, un clic en el mapa elige el lugar de la antena. MapLibre no emite
   // `click` si el puntero se movió (un arrastre), así que mover el mapa no instala nada. Un clic en
   // una señal también le llega al mapa: ese abre la ficha y no instala.
-  // Con teclado, el foco en el mapa: las flechas lo mueven (MapLibre) y Enter instala en la mira,
-  // que marca el centro.
+  // Con teclado, al entrar al modo el foco va al mapa y una mira aparece en el centro: las flechas
+  // la mueven por el mundo y Enter instala ahí. Se mueve la mira y no el mapa porque al cargar el
+  // mundo entero está a la vista y el límite del mapa no deja lugar para moverlo (E-27). La mira es
+  // un Marker, así acompaña al mapa si se acerca o se arrastra; se ve solo con el foco del teclado
+  // en el mapa.
   const install = useEffectEvent(onInstall);
   useEffect(() => {
     if (!loadedMap || !installing) return;
     const canvas = loadedMap.getCanvas();
     canvas.style.cursor = "crosshair";
+    canvas.focus();
     const onClick = ({ lngLat, originalEvent }: MapMouseEvent) => {
       const target = originalEvent.target;
       if (target instanceof Element && target.closest(".maplibregl-marker"))
         return;
       install(lngLat.toArray());
     };
+
+    const aim = document.createElement("div");
+    aim.setAttribute("aria-hidden", "true");
+    aim.className =
+      "pointer-events-none hidden size-6 group-has-[.maplibregl-canvas:focus-visible]:block";
+    for (const line of [
+      "absolute top-1/2 left-0 h-px w-full bg-hud",
+      "absolute top-0 left-1/2 h-full w-px bg-hud",
+    ]) {
+      const span = document.createElement("span");
+      span.className = line;
+      aim.append(span);
+    }
+    const marker = new Marker({ element: aim })
+      .setLngLat(loadedMap.getCenter())
+      .addTo(loadedMap);
+
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Enter") return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === "Enter") {
+        event.preventDefault();
+        install(marker.getLngLat().toArray());
+        return;
+      }
+      const direction = AIM_DIRECTIONS[event.key];
+      if (!direction) return;
+      // La flecha es para la mira: MapLibre escucha en el contenedor, y no le llega.
       event.preventDefault();
-      install(loadedMap.getCenter().toArray());
+      event.stopPropagation();
+      const step = Math.min(canvas.clientWidth, canvas.clientHeight) * AIM_STEP;
+      const point = loadedMap.project(marker.getLngLat());
+      const next = loadedMap.unproject([
+        point.x + direction[0] * step,
+        point.y + direction[1] * step,
+      ]);
+      // La mira no sale del mundo: afuera no hay nada que despejar.
+      const [[west, south], [east, north]] = bounds;
+      const lngLat: Position = [
+        Math.min(Math.max(next.lng, west), east),
+        Math.min(Math.max(next.lat, south), north),
+      ];
+      marker.setLngLat(lngLat);
+      // Con el mapa acercado, si la mira sale de la vista, el mapa la sigue.
+      if (!loadedMap.getBounds().contains(lngLat)) {
+        if (prefersReducedMotion()) loadedMap.jumpTo({ center: lngLat });
+        else loadedMap.easeTo({ center: lngLat });
+      }
     };
     loadedMap.on("click", onClick);
     canvas.addEventListener("keydown", onKeyDown);
@@ -211,17 +273,13 @@ export function MapView({
       loadedMap.off("click", onClick);
       canvas.removeEventListener("keydown", onKeyDown);
       canvas.style.cursor = "";
+      marker.remove();
     };
-  }, [loadedMap, installing]);
+  }, [loadedMap, installing, bounds]);
 
   // La tecla A entra o sale del modo de instalación (docs/concepto.md, "Teclado"), salvo con la
-  // ficha abierta, mientras se escribe o con una tecla modificadora. Al entrar, el foco va al mapa:
-  // lo que sigue es moverlo con las flechas.
-  const toggleInstall = useEffectEvent(() => {
-    if (!loadedMap) return;
-    if (!installing) loadedMap.getCanvas().focus();
-    onToggleInstall();
-  });
+  // ficha abierta, mientras se escribe o con una tecla modificadora.
+  const toggleInstall = useEffectEvent(onToggleInstall);
   useEffect(() => {
     if (dossierOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -393,17 +451,6 @@ export function MapView({
             }}
           />
         </>
-      )}
-      {/* La mira del modo de instalación: el centro del mapa, donde Enter instala la antena. Se ve
-          solo con el foco del teclado en el mapa; con el mouse o el dedo se toca cualquier punto. */}
-      {installing && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute top-1/2 left-1/2 hidden size-6 -translate-1/2 group-has-[.maplibregl-canvas:focus-visible]:block"
-        >
-          <span className="absolute top-1/2 left-0 h-px w-full bg-hud" />
-          <span className="absolute top-0 left-1/2 h-full w-px bg-hud" />
-        </div>
       )}
       {!fogDrawn && <MapLoading />}
       {/* Montado siempre, aunque no haya señal: Base UI anima la entrada solo cuando el panel ya
