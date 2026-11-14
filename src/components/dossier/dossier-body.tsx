@@ -25,12 +25,15 @@ interface DossierBodyProps {
   identification: Identification;
   /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
   place: string;
+  /** Si es variocolor: ese sprite, y "Firma variocolor" en lugar de "Firma identificada". */
+  shiny: boolean;
   onRetry: () => void;
 }
 
 export function DossierBody({
   identification,
   place,
+  shiny,
   onRetry,
 }: DossierBodyProps) {
   if (identification.status === "error") {
@@ -42,7 +45,7 @@ export function DossierBody({
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex flex-col gap-5">
-        <Identity detail={detail} />
+        <Identity detail={detail} shiny={shiny} />
         <Threat detail={detail} />
         <Stats detail={detail} />
         <Facts detail={detail} place={place} />
@@ -65,19 +68,22 @@ function Placeholder({ className }: { className: string }) {
   );
 }
 
-function Identity({ detail }: { detail: PokemonDetail | null }) {
+function Identity({
+  detail,
+  shiny,
+}: {
+  detail: PokemonDetail | null;
+  shiny: boolean;
+}) {
+  const sprites = detail && (shiny ? detail.shinySprites : detail.sprites);
   return (
     <div className="flex gap-4">
       {/* El marco mide lo de adentro (96 px en los dos estados) más el borde. Con un tamaño fijo,
           el borde le dejaba al sprite 94 px de ancho en vez de 96 (medido). Una especie sin
           sprite muestra el "?" quieto, para que el marco no quede vacío. */}
       <div className="shrink-0 rounded-md border border-border bg-background">
-        {detail && hasSprite(detail.sprites) ? (
-          <PokemonSprite
-            sprites={detail.sprites}
-            size={96}
-            className="size-24"
-          />
+        {sprites && hasSprite(sprites) ? (
+          <PokemonSprite sprites={sprites} size={96} className="size-24" />
         ) : (
           <span
             aria-hidden
@@ -99,7 +105,7 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
         >
           {detail ? (
             <>
-              Firma identificada
+              {shiny ? "Firma variocolor" : "Firma identificada"}
               <span className="sr-only">: {detail.name}</span>
             </>
           ) : (

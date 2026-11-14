@@ -5,7 +5,7 @@
 // mapa muestra solo esas, el HUD las cuenta y Pelipper dice dónde aparecieron. Y guarda las antenas:
 // el control las instala y el mapa las dibuja.
 import { BellIcon, BellOffIcon, Settings2Icon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
   closeNotices,
@@ -30,6 +30,7 @@ import {
   saveShiftSettings,
   useShiftSettings,
 } from "@/hooks/use-shift-settings";
+import { isShiny } from "@/lib/shiny";
 import type { Position } from "@/lib/world/types";
 
 import { Clock } from "./clock";
@@ -39,6 +40,23 @@ const percent = new Intl.NumberFormat("es-AR", {
   style: "percent",
   maximumFractionDigits: 0,
 });
+
+// La URL no cambia mientras la sala está abierta: no hay a qué suscribirse.
+const subscribeToNothing = () => () => {};
+
+/**
+ * La especie que `?shiny=<id>` fuerza variocolor, para mostrarla en una demo: con la semilla 151
+ * ninguna lo es. En el servidor no hay URL; en el cliente se lee al hidratar.
+ */
+function useForcedShiny() {
+  const search = useSyncExternalStore(
+    subscribeToNothing,
+    () => window.location.search,
+    () => "",
+  );
+  const id = Number(new URLSearchParams(search).get("shiny"));
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
 
 interface MonitoringRoomProps extends Omit<
   MapViewProps,
@@ -52,6 +70,7 @@ interface MonitoringRoomProps extends Omit<
   | "onCoverage"
   | "onIdentify"
   | "active"
+  | "shiny"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -71,6 +90,13 @@ export function MonitoringRoom({
   const [muted, setMuted] = useState(false);
   // Cuántas señales lleva contadas el aviso de Pelipper que sigue abierto.
   const sightings = useRef(0);
+  // Las señales variocolor: las que da la semilla, y la que fuerza la URL.
+  const forcedShiny = useForcedShiny();
+  const shiny: ReadonlySet<number> = new Set(
+    mapProps.spawns
+      .map(({ speciesId }) => speciesId)
+      .filter((id) => id === forcedShiny || isShiny(seed, id)),
+  );
   // Qué parte del mundo despejó el radar (de 0 a 1), y qué especies se identificaron.
   const [coverage, setCoverage] = useState(0);
   const [identified, setIdentified] = useState<ReadonlySet<number>>(
@@ -151,7 +177,8 @@ export function MonitoringRoom({
     });
   };
 
-  // Porygon termina el análisis cuando llega la ficha. Una amenaza alta o crítica es una alerta.
+  // Porygon termina el análisis cuando llega la ficha. Una amenaza alta o crítica es una alerta, y
+  // una señal variocolor, un aviso crítico: Base UI lo anuncia como alerta al lector de pantalla.
   // Con la ficha abierta, el aviso queda detrás de su fondo y no se puede tocar; la región de los
   // avisos no queda inerte ni oculta, así que igual se anuncia (medido el DOM; sin probar con un
   // lector de pantalla).
@@ -161,6 +188,14 @@ export function MonitoringRoom({
     const threat = threatLevel(
       detail.stats.reduce((total, stat) => total + stat.value, 0),
     );
+    if (shiny.has(speciesId)) {
+      notify({
+        member: "porygon",
+        priority: "critico",
+        text: `Anomalía: ${detail.name} variocolor. Nivel de amenaza: ${threat}.`,
+      });
+      return;
+    }
     notify({
       member: "porygon",
       priority:
@@ -368,6 +403,7 @@ export function MonitoringRoom({
         onCoverage={onCoverage}
         active={started}
         onIdentify={onIdentify}
+        shiny={shiny}
       />
       <CrewNotices />
     </>
