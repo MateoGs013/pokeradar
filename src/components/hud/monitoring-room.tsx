@@ -3,7 +3,8 @@
 // La sala de monitoreo: el inicio de turno, el HUD de las esquinas, el control de las antenas, los
 // avisos de la tripulación y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el
 // mapa muestra solo esas, el HUD las cuenta y Pelipper dice dónde aparecieron. Y guarda las antenas:
-// el control las instala y el mapa las dibuja.
+// el control las instala y el mapa las dibuja. También lleva la bitácora del turno, el fin de turno
+// y la señal de un enlace compartido.
 import { BellIcon, BellOffIcon, Settings2Icon } from "lucide-react";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
@@ -35,13 +36,21 @@ import { useNight } from "@/hooks/use-night";
 import { useSearchParam } from "@/hooks/use-search-param";
 import { useWeather } from "@/hooks/use-weather";
 import type { Boost } from "@/lib/boosts";
+import {
+  downloadCsv,
+  type LogEntry,
+  reportFileName,
+  toCsv,
+} from "@/lib/report";
 import { NIGHT_BOOST } from "@/lib/night";
 import { isShiny } from "@/lib/shiny";
 import { CONDITIONS, type Weather } from "@/lib/weather/conditions";
 import type { Position } from "@/lib/world/types";
 
 import { Clock } from "./clock";
+import { ShiftEnd, type ShiftSummary } from "./shift-end";
 import { ShiftForm } from "./shift-form";
+import { ShiftLog } from "./shift-log";
 
 const percent = new Intl.NumberFormat("es-AR", {
   style: "percent",
@@ -53,6 +62,19 @@ const typeList = new Intl.ListFormat("es", { type: "conjunction" });
 /** "lluvia 13 °C". */
 function describeWeather({ condition, temperature }: Weather) {
   return `${CONDITIONS[condition].label.toLowerCase()} ${Math.round(temperature)} °C`;
+}
+
+/**
+ * La señal de un enlace compartido (`?p=25`, docs/concepto.md, "Compartir un avistamiento"), si
+ * existe en este mundo. `invalid` es el número pedido cuando no hay ninguna señal con él.
+ */
+function useSharedSignal(spawns: MapViewProps["spawns"]) {
+  const raw = useSearchParam("p");
+  if (raw === null) return { shared: null, invalid: null };
+  const id = Number(raw);
+  return spawns.some((spawn) => spawn.speciesId === id)
+    ? { shared: id, invalid: null }
+    : { shared: null, invalid: raw };
 }
 
 /**
@@ -122,8 +144,21 @@ export function MonitoringRoom({
   );
   // El turno empieza cuando hay ajustes guardados: la primera vez, al pasar el inicio de turno.
   const { settings, saved, hydrated } = useShiftSettings();
-  const started = hydrated && saved;
+  // Un enlace compartido saltea el inicio de turno: abre la sala con la señal identificada, con los
+  // ajustes de por defecto si no hay guardados.
+  const { shared, invalid } = useSharedSignal(mapProps.spawns);
+  const started = hydrated && (saved || shared !== null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // La bitácora: lo identificado en este turno, en el orden en que llegó cada ficha.
+  const [log, setLog] = useState<readonly LogEntry[]>([]);
+  const [logOpen, setLogOpen] = useState(false);
+  // La señal que se pidió ver desde la bitácora: se abre cuando la bitácora terminó de cerrarse,
+  // para que el foco no vuelva al botón de la bitácora después de entrar en la ficha.
+  const pendingShow = useRef<number | null>(null);
+  // Cuándo empezó el turno, para la duración del resumen.
+  const startedAt = useRef<number | null>(null);
+  const [summary, setSummary] = useState<ShiftSummary | null>(null);
+  const [endOpen, setEndOpen] = useState(false);
   const [antennas, setAntennas] = useState<readonly Station[]>([]);
   // Si se está eligiendo dónde va la próxima antena.
   const [installing, setInstalling] = useState(false);
@@ -202,10 +237,19 @@ export function MonitoringRoom({
   // lector de pantalla).
   const onIdentify: MapViewProps["onIdentify"] = (speciesId, detail) => {
     setIdentified((previous) => new Set(previous).add(speciesId));
-    if (muted) return;
     const threat = threatLevel(
       detail.stats.reduce((total, stat) => total + stat.value, 0),
     );
+    const entry: LogEntry = {
+      speciesId,
+      name: detail.name,
+      time: Date.now(),
+      place: labels.get(speciesId) ?? "",
+      threat,
+      shiny: shiny.has(speciesId),
+    };
+    setLog((previous) => [...previous, entry]);
+    if (muted) return;
     if (shiny.has(speciesId)) {
       notify({
         member: "porygon",
@@ -262,6 +306,73 @@ export function MonitoringRoom({
     nightAnnounced.current = true;
     announceNight();
   }, [started, night]);
+
+  useEffect(() => {
+    if (started && startedAt.current === null) startedAt.current = Date.now();
+  }, [started]);
+
+  // La señal compartida aparece detectada (se ajusta durante el render, como en
+  // use-pokemon-detail.ts) y, cuando su botón existe, se abre su ficha como si se la tocara.
+  const [sharedDetected, setSharedDetected] = useState(false);
+  if (shared !== null && !sharedDetected) {
+    setSharedDetected(true);
+    setDetected((previous) => new Set(previous).add(shared));
+  }
+  const sharedOpened = useRef(false);
+  useEffect(() => {
+    if (!started || shared === null || sharedOpened.current) return;
+    const open = () => {
+      const button = document.querySelector<HTMLButtonElement>(
+        `[data-species-id="${shared}"]`,
+      );
+      if (!button) return false;
+      sharedOpened.current = true;
+      button.click();
+      return true;
+    };
+    if (open()) return;
+    // El botón aparece cuando el mapa cargó: se espera a que esté en la página.
+    const observer = new MutationObserver(() => {
+      if (open()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [started, shared]);
+
+  // Un enlace con una señal que no existe: Rotom lo dice, una vez, y la sala sigue.
+  const invalidAnnounced = useRef(false);
+  const announceInvalid = useEffectEvent((raw: string) =>
+    notify({
+      member: "rotom",
+      priority: "alerta",
+      text: `El enlace pide la señal #${raw}, pero no hay ninguna con ese número en este mundo.`,
+    }),
+  );
+  useEffect(() => {
+    if (!started || invalid === null || invalidAnnounced.current) return;
+    invalidAnnounced.current = true;
+    announceInvalid(invalid);
+  }, [started, invalid]);
+
+  const downloadReport = () =>
+    downloadCsv(toCsv(log), reportFileName(settings.operator, new Date()));
+
+  // El resumen se arma al pedirlo, con la hora de ese momento.
+  const endShift = () => {
+    const now = Date.now();
+    setSummary({
+      operator: settings.operator,
+      startedAt: startedAt.current ?? now,
+      endedAt: now,
+      coverage,
+      detected: detected.size,
+      total: mapProps.spawns.length,
+      antennas: antennas.length,
+      entries: log,
+    });
+    setLogOpen(false);
+    setEndOpen(true);
+  };
 
   const toggleMuted = () => {
     if (!muted) closeNotices();
@@ -419,7 +530,10 @@ export function MonitoringRoom({
           <Settings2Icon aria-hidden />
         </Button>
       </div>
-      <ShiftStart open={hydrated && !saved} initial={settings} />
+      <ShiftStart
+        open={hydrated && !saved && shared === null}
+        initial={settings}
+      />
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
           <DialogTitle>Ajustes del turno</DialogTitle>
@@ -468,8 +582,34 @@ export function MonitoringRoom({
           <span className="whitespace-nowrap">
             Antenas {antennas.length} de {MAX_ANTENNAS}
           </span>
+          <Button onClick={() => setLogOpen(true)}>
+            Bitácora {log.length > 0 && `(${log.length})`}
+          </Button>
         </div>
       </div>
+      <ShiftLog
+        open={logOpen}
+        onOpenChange={setLogOpen}
+        onOpenChangeComplete={(open) => {
+          const id = pendingShow.current;
+          pendingShow.current = null;
+          if (!open && id !== null) openSignal(id);
+        }}
+        entries={log}
+        onShow={(speciesId) => {
+          pendingShow.current = speciesId;
+          setLogOpen(false);
+        }}
+        onDownload={downloadReport}
+        onEnd={endShift}
+      />
+      <ShiftEnd
+        open={endOpen}
+        onOpenChange={setEndOpen}
+        summary={summary}
+        onDownload={downloadReport}
+        onRestart={() => window.location.assign(window.location.pathname)}
+      />
       <p role="status" className="sr-only">
         {announcement}
       </p>
