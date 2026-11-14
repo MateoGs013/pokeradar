@@ -9,6 +9,7 @@ import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useEffectEvent } from "react";
 
 import { cssNumber } from "@/components/map/css-token";
+import { reducedMotion } from "@/lib/motion";
 import type { Position } from "@/lib/world/types";
 
 import { FULL_TURN } from "./fog";
@@ -45,7 +46,6 @@ export function RadarStation({
   const sweepEnd = useEffectEvent(onSweepEnd);
 
   useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     const turn = cssNumber("--radar-turn");
     let total = 0;
     const sweep = (from: number, to: number) => {
@@ -107,7 +107,7 @@ export function RadarStation({
       sweep(swept, to);
       swept = to;
       beam.style.rotate = `${to}rad`;
-      if (to === FULL_TURN || reduce.matches) {
+      if (to === FULL_TURN || reducedMotion()) {
         finish();
         return;
       }

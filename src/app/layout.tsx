@@ -5,7 +5,8 @@ import {
   Martian_Mono,
 } from "next/font/google";
 
-import { HUD_COLORS, SHIFT_STORAGE_KEY } from "@/lib/shift";
+import { REDUCED_MOTION_QUERY } from "@/lib/motion";
+import { HUD_COLORS, MOTION_LEVELS, SHIFT_STORAGE_KEY } from "@/lib/shift";
 
 import "./globals.css";
 
@@ -42,16 +43,20 @@ export const metadata: Metadata = {
 };
 
 /**
- * Aplica el color del HUD guardado antes del primer cuadro: el navegador corre un script del <head>
+ * Aplica el color del HUD guardado y la intensidad visual (lib/motion.ts: la guardada o, si no hay,
+ * la del sistema) antes del primer cuadro: el navegador corre un script del <head>
  * mientras lee el HTML, antes de pintar (node_modules/next/dist/docs, "How to prevent flash before
  * hydration", sección "Themes"). next/script con beforeInteractive no sirve para esto: en el App
  * Router lo corre Next cuando ya cargó su JS. Valida lo mismo que el hook (use-shift-settings.ts):
  * si lo guardado no sirve, queda el verde y se abre el inicio de turno.
  */
-const applyStoredHud = `try {
+const applyStoredHud = `var root = document.documentElement;
+root.dataset.motion = matchMedia(${JSON.stringify(REDUCED_MOTION_QUERY)}).matches ? "reducida" : "completa";
+try {
   var shift = JSON.parse(localStorage.getItem(${JSON.stringify(SHIFT_STORAGE_KEY)}));
   if (shift && typeof shift.operator === "string" && ${JSON.stringify(HUD_COLORS)}.indexOf(shift.hud) >= 0) {
-    document.documentElement.dataset.hud = shift.hud;
+    root.dataset.hud = shift.hud;
+    if (${JSON.stringify(MOTION_LEVELS)}.indexOf(shift.motion) >= 0) root.dataset.motion = shift.motion;
   }
 } catch (error) {}`;
 
@@ -60,7 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="es"
       data-hud="verde"
-      // El script del <head> puede cambiar data-hud antes de hidratar.
+      // El script del <head> puede cambiar data-hud y pone data-motion antes de hidratar.
       suppressHydrationWarning
       className={`dark ${atkinson.variable} ${martianMono.variable} ${doto.variable} h-full antialiased`}
     >

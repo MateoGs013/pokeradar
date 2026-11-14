@@ -37,6 +37,8 @@ export interface PokemonDetail {
   sprites: { animated: string | null; still: string | null };
   /** Los mismos, en su versión variocolor (shiny), para las anomalías. */
   shinySprites: { animated: string | null; still: string | null };
+  /** El grito más nuevo (.ogg), si existe. */
+  cry: string | null;
 }
 
 /**
@@ -122,6 +124,8 @@ export function buildPokemonDetail(
         urlAt(sprites, ["front_shiny"]) ??
         urlAt(sprites, ["other", "official-artwork", "front_shiny"]),
     },
+    // docs/hallazgos-pokeapi.md: los gritos están en `cries.latest`.
+    cry: urlAt(pokemon.cries, ["latest"]),
   };
 }
 

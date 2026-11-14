@@ -35,8 +35,8 @@ export function ShiftStart({ open, initial }: ShiftStartProps) {
       <DialogContent showCloseButton={false}>
         <DialogTitle>Inicio de turno</DialogTitle>
         <DialogDescription>
-          Identificate y elegí el color del HUD. Después se cambian desde los
-          ajustes, arriba a la derecha.
+          Identificate y elegí cómo se ve y cómo suena la sala. Después se
+          cambia desde los ajustes, arriba a la derecha.
         </DialogDescription>
         <ShiftForm
           initial={initial}

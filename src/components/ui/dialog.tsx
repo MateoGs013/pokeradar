@@ -29,7 +29,7 @@ function DialogContent({
       <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-background/60 transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0" />
       <DialogPrimitive.Popup
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-(--spacing(6)))] -translate-1/2 gap-4 rounded-md border border-border bg-card p-4 text-sm text-card-foreground outline-none sm:max-w-sm",
+          "fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-(--spacing(6)))] w-full max-w-[calc(100%-(--spacing(6)))] -translate-1/2 gap-4 overflow-y-auto rounded-md border border-border bg-card p-4 text-sm text-card-foreground outline-none sm:max-w-sm",
           "transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
           className,
         )}

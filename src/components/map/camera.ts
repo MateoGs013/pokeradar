@@ -9,6 +9,7 @@ import {
   PANEL_HEIGHT_PERCENT,
   PANEL_WIDTH,
 } from "@/components/dossier/panel-size";
+import { reducedMotion } from "@/lib/motion";
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position } from "@/lib/world/types";
 
@@ -24,8 +25,9 @@ interface Insets {
 
 const NO_PADDING: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
+/** La intensidad visual de lib/motion.ts: la de los ajustes o, si no se eligió, la del sistema. */
 export function prefersReducedMotion(): boolean {
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return reducedMotion();
 }
 
 /** Lo que tapa la ficha: el costado derecho en escritorio, la parte de abajo en el celular. */

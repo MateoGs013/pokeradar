@@ -82,6 +82,8 @@ export interface PokemonResponse {
   types: { slot: number; type: { name: TypeName } }[];
   stats: { base_stat: number; stat: { name: StatName } }[];
   sprites: Record<string, unknown>;
+  /** Los gritos (`latest` y `legacy`, URLs de .ogg). Puede faltar: se lee como `sprites`. */
+  cries?: unknown;
 }
 
 /** Un texto de PokéAPI en un idioma (`language.name`: "es", "en", …). */

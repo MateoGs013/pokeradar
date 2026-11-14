@@ -10,6 +10,14 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
+ * La intensidad visual (src/lib/motion.ts): motion-safe y motion-reduce no miran
+ * `prefers-reduced-motion`, sino data-motion en <html>, que el script del layout pone antes
+ * del primer cuadro con lo elegido en los ajustes o, si no se eligió, con lo que pide el sistema.
+ */
+@custom-variant motion-safe (&:where([data-motion="completa"] *));
+@custom-variant motion-reduce (&:where([data-motion="reducida"] *));
+
+/*
  * Tokens de diseño del HUD: único lugar donde viven los colores.
  * La app es solo oscura (sala de monitoreo), así que no hay tema claro.
  * El color del HUD se elige con data-hud en <html>: "verde" (por defecto), "ambar" o "cian".
@@ -194,14 +202,13 @@
   }
 }
 
-/* Movimiento reducido: apaga transiciones y animaciones CSS en toda la app. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Movimiento reducido (data-motion, como las variantes de arriba): apaga transiciones y
+   animaciones CSS en toda la app. */
+:root[data-motion="reducida"] *,
+:root[data-motion="reducida"] *::before,
+:root[data-motion="reducida"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
