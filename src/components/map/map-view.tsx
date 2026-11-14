@@ -16,11 +16,14 @@ import {
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DossierPanel } from "@/components/dossier/dossier-panel";
+import { SystemBoot } from "@/components/onboarding/system-boot";
 import { underFog } from "@/components/radar/fog";
 import { Radar, type Station } from "@/components/radar/radar";
-import { SystemBoot } from "@/components/onboarding/system-boot";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
+import type { WeatherState } from "@/hooks/use-weather";
+import type { Boost } from "@/lib/boosts";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
+import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
   BiomeCollection,
   Place,
@@ -75,12 +78,21 @@ export interface MapViewProps {
   onSweepEnd: (station: Station, found: number) => void;
   /** Al terminar cada vuelta: qué parte del mundo está despejada, de 0 a 1. */
   onCoverage: (coverage: number) => void;
-  /** Se identificó por primera vez la especie de una señal. */
-  onIdentify: (speciesId: number) => void;
+  /** Las señales variocolor (lib/shiny.ts). */
+  shiny: ReadonlySet<number>;
+  /** El clima, para la fila Clima de la ficha. */
+  weather: WeatherState;
+  /** Lo que potencia tipos (el clima y la noche): las señales y la ficha los marcan. */
+  boosts: readonly Boost[];
+  /** De noche, el mundo se oscurece (lib/night.ts). */
+  night: boolean;
+  /** Se identificó por primera vez la especie de una señal: llegó su ficha. */
+  onIdentify: (speciesId: number, detail: PokemonDetail) => void;
 }
 
 const BIOMES_SOURCE = "biomas";
 const PLACES_SOURCE = "lugares";
+const NIGHT_LAYER = "noche";
 
 /**
  * Desde qué zoom aparecen los nombres. Con el mundo entero en un celular, el mapa queda tan chico que
@@ -189,6 +201,10 @@ export function MapView({
   onCoverage,
   onIdentify,
   active,
+  shiny,
+  weather,
+  boosts,
+  night,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -290,6 +306,24 @@ export function MapView({
     };
   }, [loadedMap, installing, bounds]);
 
+  // De noche, la capa de la noche sube su opacidad. La primera vez, sin fundido: si el turno empieza
+  // de noche, el mapa ya aparece oscuro. Después, en 1,5 s, salvo con movimiento reducido.
+  const nightApplied = useRef(false);
+  useEffect(() => {
+    if (!loadedMap) return;
+    const fade = nightApplied.current && !prefersReducedMotion();
+    loadedMap.setPaintProperty(NIGHT_LAYER, "background-opacity-transition", {
+      duration: fade ? 1500 : 0,
+      delay: 0,
+    });
+    loadedMap.setPaintProperty(
+      NIGHT_LAYER,
+      "background-opacity",
+      night ? cssNumber("--night-opacity") : 0,
+    );
+    nightApplied.current = true;
+  }, [loadedMap, night]);
+
   // La tecla A entra o sale del modo de instalación (docs/concepto.md, "Teclado"), solo con el foco
   // en el mapa (también en una de sus señales) o en el control de las antenas: un atajo de una
   // letra en toda la página también se dispararía al dictar con la voz (WCAG 2.1.4). Con la ficha
@@ -354,6 +388,16 @@ export function MapView({
             },
           },
           ...biomeLayers(initial.biomes),
+          // La noche: el color del HUD sobre los biomas, debajo de la niebla (que se suma antes de
+          // los nombres) y de los nombres. De día, transparente.
+          {
+            id: NIGHT_LAYER,
+            type: "background",
+            paint: {
+              "background-color": cssToken("--hud-bg"),
+              "background-opacity": 0,
+            },
+          },
           ...placeLayers(),
         ],
       },
@@ -461,6 +505,8 @@ export function MapView({
               dossierOpen ? (selection?.spawn.speciesId ?? null) : null
             }
             identified={identified}
+            shiny={shiny}
+            boosts={boosts}
             onSelect={(next) => {
               setSelection(next);
               setDossierOpen(true);
@@ -477,6 +523,9 @@ export function MapView({
         open={dossierOpen}
         identification={identification}
         place={selection?.place ?? null}
+        shiny={selection ? shiny.has(selection.spawn.speciesId) : false}
+        weather={weather}
+        boosts={boosts}
         onRetry={retry}
         onClose={() => {
           setDossierOpen(false);

@@ -1,6 +1,7 @@
 // El arranque del sistema: el cartel de carga del mapa, contado por Rotom.
 import Image from "next/image";
 
+import { CREW } from "@/components/crew/crew";
 import { MapStatus } from "@/components/map/map-status";
 
 /** Los pasos del arranque, en orden: cada uno es un estado real de la carga. */
@@ -15,11 +16,6 @@ const BOOT_STEPS = {
 
 export type BootStep = keyof typeof BOOT_STEPS;
 
-// Rotom, el que avisa lo del sistema (docs/concepto.md, "La tripulación"). Es el sprite de PokéAPI,
-// como los de la ficha: sin texto alternativo, porque el nombre va escrito al lado.
-const ROTOM_SPRITE =
-  "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/479.png";
-
 /**
  * El arranque del sistema (docs/concepto.md, "Arranque del sistema"): es el cartel de carga,
  * contado por Rotom. Va mientras baja el código del mapa (map-loader.tsx) y sigue hasta que el mapa
@@ -28,10 +24,11 @@ const ROTOM_SPRITE =
  * hay demoras inventadas: cada línea dura lo que dura ese paso.
  */
 export function SystemBoot({ step }: { step: BootStep }) {
+  // Rotom, el que avisa lo del sistema (crew.ts). Sin texto alternativo: el nombre va escrito al lado.
   return (
     <MapStatus>
       <Image
-        src={ROTOM_SPRITE}
+        src={CREW.rotom.sprite}
         alt=""
         width={96}
         height={96}

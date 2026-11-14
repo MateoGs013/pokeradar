@@ -5,13 +5,17 @@
 // lugares vacíos del mismo alto: al llegar los datos, nada se corre. Solo cambia el alto de la
 // descripción, que va al final y no tiene nada abajo.
 import { cn } from "cn";
+import { ChevronsUpIcon } from "lucide-react";
 import { MotionConfig, motion } from "motion/react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Identification } from "@/hooks/use-pokemon-detail";
+import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
+import { type Boost, boostOf } from "@/lib/boosts";
+import { boosts as weatherBoosts, CONDITIONS } from "@/lib/weather/conditions";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
 import { hasSprite, PokemonSprite } from "./pokemon-sprite";
@@ -25,12 +29,19 @@ interface DossierBodyProps {
   identification: Identification;
   /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
   place: string;
+  /** Si es variocolor: ese sprite, y "Firma variocolor" en lugar de "Firma identificada". */
+  shiny: boolean;
+  weather: WeatherState;
+  boosts: readonly Boost[];
   onRetry: () => void;
 }
 
 export function DossierBody({
   identification,
   place,
+  shiny,
+  weather,
+  boosts,
   onRetry,
 }: DossierBodyProps) {
   if (identification.status === "error") {
@@ -42,10 +53,10 @@ export function DossierBody({
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex flex-col gap-5">
-        <Identity detail={detail} />
+        <Identity detail={detail} shiny={shiny} boosts={boosts} />
         <Threat detail={detail} />
         <Stats detail={detail} />
-        <Facts detail={detail} place={place} />
+        <Facts detail={detail} place={place} weather={weather} />
         <Description detail={detail} />
       </div>
     </MotionConfig>
@@ -65,19 +76,24 @@ function Placeholder({ className }: { className: string }) {
   );
 }
 
-function Identity({ detail }: { detail: PokemonDetail | null }) {
+function Identity({
+  detail,
+  shiny,
+  boosts,
+}: {
+  detail: PokemonDetail | null;
+  shiny: boolean;
+  boosts: readonly Boost[];
+}) {
+  const sprites = detail && (shiny ? detail.shinySprites : detail.sprites);
   return (
     <div className="flex gap-4">
       {/* El marco mide lo de adentro (96 px en los dos estados) más el borde. Con un tamaño fijo,
           el borde le dejaba al sprite 94 px de ancho en vez de 96 (medido). Una especie sin
           sprite muestra el "?" quieto, para que el marco no quede vacío. */}
       <div className="shrink-0 rounded-md border border-border bg-background">
-        {detail && hasSprite(detail.sprites) ? (
-          <PokemonSprite
-            sprites={detail.sprites}
-            size={96}
-            className="size-24"
-          />
+        {sprites && hasSprite(sprites) ? (
+          <PokemonSprite sprites={sprites} size={96} className="size-24" />
         ) : (
           <span
             aria-hidden
@@ -99,7 +115,7 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
         >
           {detail ? (
             <>
-              Firma identificada
+              {shiny ? "Firma variocolor" : "Firma identificada"}
               <span className="sr-only">: {detail.name}</span>
             </>
           ) : (
@@ -125,14 +141,30 @@ function Identity({ detail }: { detail: PokemonDetail | null }) {
         )}
         {detail ? (
           <ul aria-label="Tipos" className="flex gap-1.5">
-            {detail.types.map((type) => (
-              <li
-                key={type}
-                className="rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase"
-              >
-                {TYPE_LABELS[type]}
-              </li>
-            ))}
+            {/* Un tipo que el clima o la noche potencian va lleno y con la flecha; el lector de
+                pantalla lo escucha dicho. */}
+            {detail.types.map((type) => {
+              const boost = boostOf(boosts, [type]);
+              return (
+                <li
+                  key={type}
+                  className={cn(
+                    "flex items-center gap-0.5 rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase",
+                    boost && "border-hud bg-hud text-background",
+                  )}
+                >
+                  {TYPE_LABELS[type]}
+                  {boost && (
+                    <>
+                      <ChevronsUpIcon aria-hidden className="size-3" />
+                      <span className="sr-only">
+                        , potenciado por {boost.by}
+                      </span>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <Placeholder className="h-4.5 w-24" />
@@ -231,10 +263,17 @@ function formatNumber(value: number): string {
 function Facts({
   detail,
   place,
+  weather,
 }: {
   detail: PokemonDetail | null;
   place: string;
+  weather: WeatherState;
 }) {
+  // El clima ya se sabe mientras se identifica la señal; con la ficha, se suma si la potencia. Es
+  // corto a propósito: en una línea, la fila no cambia de alto al llegar los datos.
+  const boosted =
+    weather.status === "ready" &&
+    detail?.types.some((type) => weatherBoosts(weather.weather, type));
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
       <dt className="tracking-widest text-muted-foreground uppercase">
@@ -247,6 +286,14 @@ function Facts({
         Ubicación
       </dt>
       <dd>{place.charAt(0).toUpperCase() + place.slice(1)}</dd>
+      <dt className="tracking-widest text-muted-foreground uppercase">Clima</dt>
+      <dd>
+        {weather.status === "ready"
+          ? `${CONDITIONS[weather.weather.condition].label}${boosted ? " · potenciado" : ""}`
+          : weather.status === "error"
+            ? "Sin datos"
+            : "—"}
+      </dd>
     </dl>
   );
 }

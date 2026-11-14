@@ -45,7 +45,7 @@ y el foco vuelve a la señal.
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
 - **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz da
   una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
-  aparecen con un ping, se anuncian al lector de pantalla y el HUD las cuenta ("5 de 40 señales"). Con movimiento
+  aparecen con un ping, Pelipper las avisa y el HUD las cuenta ("5 de 40 señales"). Con movimiento
   reducido, el círculo se despeja de una vez.
 - **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
   mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
@@ -59,6 +59,22 @@ y el foco vuelve a la señal.
   arriba a la derecha, la hora y los ajustes del turno, donde también están la semilla y la huella del mundo. La
   cobertura cuenta el mundo entero, mar incluido, y no solo la isla: después del radar base marca 9 %, y con las cuatro
   antenas en los puntos de las 38 señales, 44 %.
+- **Tripulación:** los avisos los dan Pokémon, con su sprite. Pelipper avisa los avistamientos en un solo aviso que
+  suma las señales mientras sigue abierto, con "Ver señal" para abrir la última; Rotom, la cobertura después de cada
+  vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta); Xatu,
+  el pronóstico del clima, y Noctowl, la guardia nocturna. Van arriba a la derecha y se cierran solos 5 s después del
+  último cambio. F6 lleva el foco a ellos, y la campana los silencia: las detecciones van entonces solo al lector de
+  pantalla.
+- **Variocolor:** cada señal tiene una chance en 64, decidida con la semilla, de ser variocolor (shiny). Identificada,
+  muestra ese sprite en el mapa y en la ficha, y Porygon da un aviso crítico. Con la semilla del mundo no sale ninguna
+  de las 40 (medido), así que `?shiny=<id>` fuerza una para verla: `?shiny=4` es Charmander.
+- **Clima:** el clima real de Viedma (Río Negro), de Open-Meteo, va en el HUD con un enlace a Open-Meteo, como pide su
+  licencia. Xatu lo pronostica al empezar el turno, con los tipos que potencia. Una señal identificada de uno de esos
+  tipos lleva una flecha en su sprite; en la ficha, el tipo va lleno y con la flecha, y la fila Clima dice "potenciado".
+  No cambia qué señales hay. Si Open-Meteo no responde, el HUD dice "clima sin datos" y Xatu no habla.
+- **Día y noche:** con la hora del operador, de 20:00 a 6:59 es de noche: el mapa se oscurece, Noctowl toma la guardia
+  y se potencian Fantasma y Siniestro, con las mismas marcas que el clima. Cambia también con la página abierta, al
+  pasar el minuto. `?noche=1` y `?noche=0` la fuerzan, para verla a cualquier hora.
 
 ## Arquitectura y Stack
 
@@ -84,15 +100,21 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 src/app/                   layout, página (servidor) y estilos globales
 src/components/map/        mapa, señales, cámara, carga y error
 src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
-src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno, antenas y avisos
+src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno y antenas
+src/components/crew/       tripulación: quién avisa y los avisos
 src/components/onboarding/ inicio de turno y arranque del sistema con Rotom
 src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
 src/components/ui/         componentes de shadcn con los tokens del HUD
-src/hooks/                 identificación con caché y cancelación; media queries; ajustes del turno guardados
+src/hooks/                 identificación con caché y cancelación; media queries; ajustes del turno guardados;
+                           la hora, el clima, la noche y los parámetros de la URL
 src/lib/pokeapi/           tipos, guards y cliente tipado de PokéAPI
 src/lib/world/             generación del mundo (ruido, biomas, polígonos)
 src/lib/geo/               encuadre y ubicación de las señales
+src/lib/weather/           el clima de Open-Meteo y los tipos que potencia cada condición
 src/lib/shift.ts           ajustes del turno: nombre en clave y color del HUD
+src/lib/shiny.ts           qué señales son variocolor, con la semilla
+src/lib/night.ts           de qué hora a qué hora es de noche, y los tipos que potencia
+src/lib/boosts.ts          lo que potencia tipos (el clima y la noche)
 docs/                      consigna, concepto, decisiones, hallazgos, errores y flujo
 ```
 
@@ -152,7 +174,7 @@ de arriba y acá queda lo que no entró.
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
-- **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
+- **Eventos del mundo:** los enjambres, si hay tiempo.
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
 - **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo

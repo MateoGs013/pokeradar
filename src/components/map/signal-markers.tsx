@@ -4,12 +4,14 @@
 // <button> de React adentro, montado con un portal. Son decenas, no cientos: como botones del DOM
 // tienen foco, teclado y aria-label sin trabajo extra (docs/decisiones.md, "Señales"). El botón
 // existe recién cuando el radar detectó la señal: antes no se ve ni se alcanza con Tab.
+import { ChevronsUpIcon } from "lucide-react";
 import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
+import { type Boost, boostOf } from "@/lib/boosts";
 import type { Place, Position, Spawn } from "@/lib/world/types";
 
 import { prefersReducedMotion } from "./camera";
@@ -71,6 +73,10 @@ interface SignalMarkersProps {
   selectedId: number | null;
   /** Las especies ya identificadas, por id: esas señales muestran su sprite. */
   identified: ReadonlyMap<number, PokemonDetail>;
+  /** Las señales variocolor (lib/shiny.ts): identificadas, muestran ese sprite. */
+  shiny: ReadonlySet<number>;
+  /** Lo que potencia tipos: una señal identificada de uno de ellos lleva una marca. */
+  boosts: readonly Boost[];
   /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
   detected: ReadonlySet<number>;
   onSelect: (selection: SignalSelection) => void;
@@ -82,6 +88,8 @@ export function SignalMarkers({
   spawns,
   selectedId,
   identified,
+  shiny,
+  boosts,
   detected,
   onSelect,
 }: SignalMarkersProps) {
@@ -130,6 +138,8 @@ export function SignalMarkers({
           label={label}
           selected={spawn.speciesId === selectedId}
           detail={identified.get(spawn.speciesId)}
+          shiny={shiny.has(spawn.speciesId)}
+          boosts={boosts}
           onSelect={onSelect}
           onFocus={() => revealSignal(map, spawn.position)}
         />,
@@ -150,6 +160,9 @@ interface SignalButtonProps {
   selected: boolean;
   /** La ficha de la especie, si ya se identificó. */
   detail: PokemonDetail | undefined;
+  /** Si es variocolor: identificada, muestra ese sprite y lo dice en el aria-label. */
+  shiny: boolean;
+  boosts: readonly Boost[];
   onSelect: (selection: SignalSelection) => void;
   onFocus: () => void;
 }
@@ -169,9 +182,13 @@ function SignalButton({
   label,
   selected,
   detail,
+  shiny,
+  boosts,
   onSelect,
   onFocus,
 }: SignalButtonProps) {
+  const sprites = detail && (shiny ? detail.shinySprites : detail.sprites);
+  const boost = detail && boostOf(boosts, detail.types);
   // El ping suena una vez, cuando el botón aparece, y después se saca: si quedara, volvería a sonar
   // al pasar de movimiento reducido a sin preferencia con la página abierta. Se saca al terminar o
   // si se cancela: activar el movimiento reducido a mitad del ping lo corta sin animationend. Con
@@ -184,11 +201,13 @@ function SignalButton({
       type="button"
       aria-label={
         detail
-          ? `${detail.name} en ${label}`
+          ? `${detail.name}${shiny ? " variocolor" : ""}${boost ? `, potenciado por ${boost.by},` : ""} en ${label}`
           : `Señal sin identificar en ${label}`
       }
       aria-haspopup="dialog"
       aria-expanded={selected}
+      // Para encontrar el botón de una señal desde afuera del mapa: el aviso de Pelipper lo toca.
+      data-species-id={spawn.speciesId}
       onClick={(event) =>
         onSelect({ spawn, place, button: event.currentTarget })
       }
@@ -210,14 +229,14 @@ function SignalButton({
           className="pointer-events-none absolute inset-0 rounded-full border-2 border-hud opacity-0 motion-safe:animate-deteccion"
         />
       )}
-      {detail && hasSprite(detail.sprites) ? (
+      {sprites && hasSprite(sprites) ? (
         // La señal se transforma en el sprite (docs/concepto.md, "Señales e identificación"); sin
         // sprite, sigue siendo el punto, con el nombre en el aria-label. Mide
         // 40 px, el doble que el botón, y no recibe eventos de puntero: el área para tocar sigue
         // siendo el botón de 20 px, el que cuenta para WCAG 2.5.8. max-w-none: el estilo base de
         // Tailwind (max-width: 100%) la dejaba en 20 px, el ancho del botón (medido).
         <PokemonSprite
-          sprites={detail.sprites}
+          sprites={sprites}
           size={40}
           className="pointer-events-none absolute size-10 max-w-none motion-safe:animate-in motion-safe:duration-300 motion-safe:zoom-in-50 motion-safe:fade-in"
         />
@@ -233,6 +252,14 @@ function SignalButton({
           />
           <span aria-hidden className="relative size-2.5 rounded-full bg-hud" />
         </>
+      )}
+      {/* La marca de lo que la potencia (el clima o la noche), en la esquina del sprite, que
+          sobresale 10 px del botón. */}
+      {boost && (
+        <ChevronsUpIcon
+          aria-hidden
+          className="pointer-events-none absolute -top-3 -right-3 size-3.5 rounded-sm bg-background text-hud"
+        />
       )}
     </button>
   );

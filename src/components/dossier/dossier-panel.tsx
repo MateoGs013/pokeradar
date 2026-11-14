@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/sheet";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import type { Identification } from "@/hooks/use-pokemon-detail";
+import type { WeatherState } from "@/hooks/use-weather";
+import type { Boost } from "@/lib/boosts";
 
 import { DossierBody } from "./dossier-body";
 import {
@@ -35,6 +37,12 @@ interface DossierPanelProps {
   identification: Identification | null;
   /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
   place: string | null;
+  /** Si la señal es variocolor (lib/shiny.ts). */
+  shiny: boolean;
+  /** El clima: la ficha dice si potencia a la especie. */
+  weather: WeatherState;
+  /** Lo que potencia tipos (el clima y la noche): la ficha marca los de la especie. */
+  boosts: readonly Boost[];
   onRetry: () => void;
   /** Se pidió cerrar: Esc, la cruz, tocar afuera o, en el celular, deslizar hacia abajo. */
   onClose: () => void;
@@ -51,6 +59,9 @@ export function DossierPanel({
   open,
   identification,
   place,
+  shiny,
+  weather,
+  boosts,
   onRetry,
   onClose,
   onClosed,
@@ -70,6 +81,9 @@ export function DossierPanel({
     <DossierBody
       identification={identification}
       place={place}
+      shiny={shiny}
+      weather={weather}
+      boosts={boosts}
       onRetry={onRetry}
     />
   );

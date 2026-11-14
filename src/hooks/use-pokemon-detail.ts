@@ -13,11 +13,11 @@ export type Identification =
  * Identifica la especie `speciesId`, o nada si es `null` (la ficha está cerrada). Solo se guardan
  * las fichas que llegaron bien: una falla no queda guardada, y abrir de nuevo la señal o tocar
  * Reintentar vuelve a pedir. `identified` trae todas las guardadas: el mapa muestra el sprite en
- * esas señales. `onIdentify` avisa cada especie que se identificó por primera vez.
+ * esas señales. `onIdentify` avisa cada especie que se identificó por primera vez, con su ficha.
  */
 export function usePokemonDetail(
   speciesId: number | null,
-  onIdentify: (speciesId: number) => void,
+  onIdentify: (speciesId: number, detail: PokemonDetail) => void,
 ) {
   const identify = useEffectEvent(onIdentify);
   const [identified, setIdentified] = useState<
@@ -42,7 +42,7 @@ export function usePokemonDetail(
     fetchPokemonDetail(speciesId, controller.signal).then(
       (result) => {
         setIdentified((current) => new Map(current).set(speciesId, result));
-        identify(speciesId);
+        identify(speciesId, result);
       },
       () => {
         // Cortado a propósito (se cerró la ficha o cambió la señal, o Strict Mode desmontó el
