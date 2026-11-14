@@ -76,6 +76,16 @@
   );
   /* Lo que tarda el haz del radar en dar su vuelta, en ms: el radar lo lee con getComputedStyle. */
   --radar-turn: 4000;
+  /*
+   * La retícula de una estación de radar (station.tsx): una línea de 1 px en cada tercio del radio,
+   * tenue para no tapar el terreno despejado. Está en :root, donde data-hud cambia el acento, así
+   * que sigue al color del HUD elegido.
+   */
+  --radar-rings: repeating-radial-gradient(
+    circle closest-side,
+    transparent 0 calc(100% / 3 - 1px),
+    color-mix(in srgb, var(--hud-accent) 15%, transparent) 0 calc(100% / 3)
+  );
 
   /* Tokens que leen los componentes de shadcn, conectados al HUD. */
   --background: var(--hud-bg);

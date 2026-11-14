@@ -58,14 +58,17 @@ export function RadarStation({
       detect(found.map(({ speciesId }) => speciesId));
     };
 
-    // El alcance es un aro fijo del tamaño del círculo; el haz, un degradé cónico adentro, que da
-    // la vuelta y se desvanece. Con movimiento reducido el haz no se ve. El Marker centra el aro
-    // en la estación, y su tamaño se recalcula al cambiar el zoom.
+    // El alcance es un aro fijo del tamaño del círculo, con anillos tenues en cada tercio del radio
+    // (--radar-rings, globals.css), como la retícula de un radar; el haz, un degradé cónico
+    // adentro, que da la vuelta y se desvanece. Con movimiento reducido el haz no se ve; los
+    // anillos están quietos y quedan. El Marker centra el aro en la estación, y su tamaño se
+    // recalcula al cambiar el zoom.
     const beam = document.createElement("div");
     beam.className =
       "absolute inset-0 rounded-full bg-conic from-transparent from-75% to-hud/35 transition-opacity duration-700 motion-reduce:hidden";
     const element = document.createElement("div");
-    element.className = "pointer-events-none rounded-full border border-hud/40";
+    element.className =
+      "pointer-events-none rounded-full border border-hud/40 bg-(image:--radar-rings)";
     element.append(beam);
     if (mark) {
       const post = document.createElement("div");
