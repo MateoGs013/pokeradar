@@ -76,6 +76,8 @@ export interface MapViewProps {
   onSweepEnd: (station: Station, found: number) => void;
   /** Al terminar cada vuelta: qué parte del mundo está despejada, de 0 a 1. */
   onCoverage: (coverage: number) => void;
+  /** Las señales variocolor (lib/shiny.ts). */
+  shiny: ReadonlySet<number>;
   /** Se identificó por primera vez la especie de una señal: llegó su ficha. */
   onIdentify: (speciesId: number, detail: PokemonDetail) => void;
 }
@@ -190,6 +192,7 @@ export function MapView({
   onCoverage,
   onIdentify,
   active,
+  shiny,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -462,6 +465,7 @@ export function MapView({
               dossierOpen ? (selection?.spawn.speciesId ?? null) : null
             }
             identified={identified}
+            shiny={shiny}
             onSelect={(next) => {
               setSelection(next);
               setDossierOpen(true);
@@ -478,6 +482,7 @@ export function MapView({
         open={dossierOpen}
         identification={identification}
         place={selection?.place ?? null}
+        shiny={selection ? shiny.has(selection.spawn.speciesId) : false}
         onRetry={retry}
         onClose={() => {
           setDossierOpen(false);

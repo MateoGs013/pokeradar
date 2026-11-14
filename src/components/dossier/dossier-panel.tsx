@@ -35,6 +35,8 @@ interface DossierPanelProps {
   identification: Identification | null;
   /** Dónde se detectó la señal: "el bosque, al noreste de Monte Brasa". */
   place: string | null;
+  /** Si la señal es variocolor (lib/shiny.ts). */
+  shiny: boolean;
   onRetry: () => void;
   /** Se pidió cerrar: Esc, la cruz, tocar afuera o, en el celular, deslizar hacia abajo. */
   onClose: () => void;
@@ -51,6 +53,7 @@ export function DossierPanel({
   open,
   identification,
   place,
+  shiny,
   onRetry,
   onClose,
   onClosed,
@@ -70,6 +73,7 @@ export function DossierPanel({
     <DossierBody
       identification={identification}
       place={place}
+      shiny={shiny}
       onRetry={onRetry}
     />
   );

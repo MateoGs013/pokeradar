@@ -35,6 +35,8 @@ export interface PokemonDetail {
   description: string | null;
   /** El sprite animado (GIF) y uno quieto, para movimiento reducido. Cualquiera puede faltar. */
   sprites: { animated: string | null; still: string | null };
+  /** Los mismos, en su versión variocolor (shiny), para las anomalías. */
+  shinySprites: { animated: string | null; still: string | null };
 }
 
 /**
@@ -105,6 +107,20 @@ export function buildPokemonDetail(
       still:
         urlAt(sprites, ["front_default"]) ??
         urlAt(sprites, ["other", "official-artwork", "front_default"]),
+    },
+    // Las mismas rutas con `front_shiny` (docs/hallazgos-pokeapi.md, "Shiny").
+    shinySprites: {
+      animated:
+        urlAt(sprites, [
+          "versions",
+          "generation-v",
+          "black-white",
+          "animated",
+          "front_shiny",
+        ]) ?? urlAt(sprites, ["other", "showdown", "front_shiny"]),
+      still:
+        urlAt(sprites, ["front_shiny"]) ??
+        urlAt(sprites, ["other", "official-artwork", "front_shiny"]),
     },
   };
 }
