@@ -211,7 +211,8 @@ export function MonitoringRoom({
   const [antennas, setAntennas] = useState<readonly Station[]>([]);
   // Si se está eligiendo dónde va la próxima antena.
   const [installing, setInstalling] = useState(false);
-  // Lo último que pasó con las antenas, a la vista: el resultado de su vuelta o un punto inválido.
+  // Lo último que pasó con el radar, a la vista: el resultado de una vuelta (la del radar base dice
+  // también cómo seguir), la antena instalada o un punto inválido.
   const [radarStatus, setRadarStatus] = useState("");
   // Dónde se dibuja el mundo (docs/concepto.md, "El mapa híbrido"): `?modo=real` lo lleva al mapa
   // real de Río Negro, con el radar base en Viedma. La URL se lee en el cliente: en el servidor es
@@ -442,18 +443,23 @@ export function MonitoringRoom({
   };
 
   // Lo que dice una estación al terminar su vuelta: si no detectó nada, el estado vacío, también al
-  // lector de pantalla; si detectó, ya se anunció cada señal y solo queda a la vista el total.
+  // lector de pantalla; si detectó, ya se anunció cada señal y solo queda a la vista el total. El
+  // radar base suma qué sigue: después de su vuelta quedan casi todas las señales ocultas, y nada
+  // decía que las antenas despejan el resto.
   const onSweepEnd = ({ id, kind }: Station, found: number) => {
     const name = kind === "base" ? "Radar base" : `Antena ${id}`;
     if (found === 0) {
       const empty = `${name}: ninguna señal en alcance`;
       setRadarStatus(empty);
       announce(empty);
-    } else if (kind === "antenna") {
-      setRadarStatus(
-        `${name}: ${found} ${found === 1 ? "señal detectada" : "señales detectadas"}`,
-      );
+      return;
     }
+    const total = `${name}: ${found} ${found === 1 ? "señal detectada" : "señales detectadas"}`;
+    setRadarStatus(
+      kind === "base"
+        ? `${total}. Instalá antenas para despejar el resto.`
+        : total,
+    );
   };
 
   // El punto elegido tiene que estar dentro del mundo: afuera no hay nada que despejar.
@@ -566,33 +572,42 @@ export function MonitoringRoom({
   // El HUD va antes que el mapa para que el encabezado sea lo primero que lee un lector de pantalla;
   // z-10 lo deja dibujado encima del mapa, que viene después. Lleva fondo porque al mover el mapa
   // puede quedar cualquier bioma debajo, y sin él el texto apagado no se lee bien sobre los más
-  // claros. Arriba a la izquierda, el turno; arriba a la derecha, la hora y los ajustes. El de la
+  // claros; y el borde de las otras superficies (avisos, diálogos), para leerse como una caja y no
+  // como texto suelto. Arriba a la izquierda, el turno; arriba a la derecha, la hora y los ajustes. El de la
   // izquierda corta la línea antes que el de la derecha y, desde md, cuando la ficha va al costado,
   // antes del panel (más un margen igual al de la izquierda), en vez de quedar tapado. Las 37
-  // unidades (148 px) son los 12 px de margen de cada lado, los 114 px de la esquina derecha (hora y
-  // dos botones, medidos) y 10 px de aire.
+  // unidades (148 px) son los 12 px de margen de cada lado, los 116 px de la esquina derecha (hora y
+  // dos botones con su borde, medidos) y 8 px de aire.
   // El aviso existe desde el HTML del servidor, vacío: un lector de pantalla anuncia los cambios de
   // una región viva que ya estaba, no siempre los de una que aparece con el texto puesto.
   return (
     <>
-      <div className="pointer-events-none absolute top-3 left-3 z-10 max-w-[calc(100%-(--spacing(37)))] bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
-        {/* Cada dato en un span sin cortes: si no entra en una línea, corta en un " · " y
-            no entre un nombre y su valor. */}
-        <h1 className="inline tracking-widest text-hud uppercase">PokéRadar</h1>{" "}
-        · <span className="whitespace-nowrap">{settings.operator}</span> ·{" "}
+      <div className="pointer-events-none absolute top-3 left-3 z-10 max-w-[calc(100%-(--spacing(37)))] rounded-md border border-border bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+        {/* Cada dato en un span sin cortes, con su " ·" adentro: si no entra en una línea, corta
+            después del punto, no entre un nombre y su valor, y ninguna línea empieza con "·". El
+            del título va en un div en línea porque un <h1> no puede ir dentro de un span. Los
+            valores van claros y las palabras, apagadas. */}
+        <div className="inline whitespace-nowrap">
+          <h1 className="inline tracking-widest text-hud uppercase">
+            PokéRadar
+          </h1>{" "}
+          ·
+        </div>{" "}
+        <span className="whitespace-nowrap">{settings.operator} ·</span>{" "}
         <span className="whitespace-nowrap">
-          cobertura {percent.format(coverage)}
+          cobertura{" "}
+          <span className="text-foreground">{percent.format(coverage)}</span> ·
         </span>{" "}
-        ·{" "}
         <span className="whitespace-nowrap">
-          {detected.size} de {mapProps.spawns.length} señales
+          <span className="text-foreground">
+            {detected.size} de {mapProps.spawns.length}
+          </span>{" "}
+          señales ·
         </span>{" "}
-        ·{" "}
         <span className="whitespace-nowrap">
-          {identified.size}{" "}
-          {identified.size === 1 ? "identificada" : "identificadas"}
+          <span className="text-foreground">{identified.size}</span>{" "}
+          {identified.size === 1 ? "identificada" : "identificadas"} ·
         </span>{" "}
-        ·{" "}
         {/* Los datos de Open-Meteo van con un enlace a ellos al lado (CC BY 4.0,
             open-meteo.com/en/licence). El HUD no recibe el puntero: el enlace sí. */}
         <span className="whitespace-nowrap">
@@ -616,7 +631,7 @@ export function MonitoringRoom({
           )}
         </span>
       </div>
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-background/80 pl-1.5 font-mono text-xs text-muted-foreground font-stretch-condensed">
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-md border border-border bg-background/80 pl-1.5 font-mono text-xs text-muted-foreground font-stretch-condensed">
         <Clock />
         <Button
           variant="ghost"
@@ -663,14 +678,15 @@ export function MonitoringRoom({
       </Dialog>
       {/* El control de las antenas, abajo a la izquierda. El botón alterna el modo de instalación
           (aria-pressed); con las cuatro instaladas queda deshabilitado, y el contador dice por qué.
-          Arriba, a la vista, lo último que pasó y, en el modo, qué hacer: el panel está anclado
+          Arriba, a la vista, lo último que pasó (después de la vuelta del radar base, también
+          que las antenas despejan el resto) y, en el modo, qué hacer: el panel está anclado
           abajo y crece hacia arriba, así que el botón no se mueve cuando esas líneas aparecen o se
           van. El fondo es opaco: con el del HUD (al 80 %), el pulso de una señal debajo bajaba
           el contraste del texto (medido). Con `data-antenna-control`, el mapa sabe que la tecla A
           vale también con el foco acá (map-view.tsx). */}
       <div
         data-antenna-control
-        className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-(--spacing(6)))] flex-col items-start gap-1.5 bg-background px-1.5 py-1 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]"
+        className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-(--spacing(6)))] flex-col items-start gap-1.5 rounded-md border border-border bg-background px-1.5 py-1 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]"
       >
         {radarStatus && <p>{radarStatus}</p>}
         {installing && (
@@ -724,7 +740,10 @@ export function MonitoringRoom({
             Instalar antena
           </Button>
           <span className="whitespace-nowrap">
-            Antenas {antennas.length} de {MAX_ANTENNAS}
+            Antenas{" "}
+            <span className="text-foreground">
+              {antennas.length} de {MAX_ANTENNAS}
+            </span>
           </span>
           <Button onClick={() => setLogOpen(true)}>
             Bitácora {log.length > 0 && `(${log.length})`}
