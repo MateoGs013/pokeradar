@@ -3,7 +3,7 @@
 // Los avisos de la tripulación (docs/concepto.md, "La tripulación"): cada uno con el sprite de quien
 // avisa, su nombre y una prioridad. Van arriba a la derecha, debajo de la hora: abajo están el
 // control de las antenas y, en el celular, la ficha. Un aviso se cierra solo a los 5 s (Base UI lo
-// pausa con el mouse o el foco encima), con su botón, o deslizándolo.
+// pausa con el mouse o el foco encima), con su botón o, según Base UI, deslizándolo (sin probar).
 import Image from "next/image";
 
 import {

@@ -6,6 +6,10 @@
 // hay valores sueltos. Base UI se encarga de la región viva (los de prioridad alta se anuncian como
 // alerta), del tiempo de cada aviso, de pausarlo con el mouse o el foco encima, y de F6 para llegar
 // con teclado. Con movimiento reducido, la regla de globals.css apaga el fundido.
+//
+// El foco se ve con el contorno de focus-visible y sin `outline-none`: en Tailwind 4, `outline-none`
+// deja `--tw-outline-style: none`, y `outline-2` toma el estilo de esa variable (medido: el contorno
+// calculado daba `none` con el foco en la región y en un aviso).
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import { cn } from "cn";
 import { XIcon } from "lucide-react";
@@ -26,7 +30,10 @@ function ToastViewport({
     <ToastPrimitive.Viewport
       data-slot="toast-viewport"
       aria-label="Avisos de la tripulación"
-      className={cn("flex flex-col gap-2 outline-none", className)}
+      className={cn(
+        "flex flex-col gap-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+        className,
+      )}
       {...props}
     />
   );
@@ -44,7 +51,7 @@ function Toast({
     <ToastPrimitive.Root
       data-slot="toast"
       className={cn(
-        "rounded-md border border-border bg-card text-card-foreground transition-opacity duration-150 outline-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-ending-style:opacity-0 data-limited:hidden data-starting-style:opacity-0",
+        "rounded-md border border-border bg-card text-card-foreground transition-opacity duration-150 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-ending-style:opacity-0 data-limited:hidden data-starting-style:opacity-0",
         className,
       )}
       {...props}

@@ -43,6 +43,8 @@ interface DossierPanelProps {
   shiny: boolean;
   /** El clima: la ficha dice si potencia a la especie. */
   weather: WeatherState;
+  /** De noche, el cielo despejado no potencia. */
+  night: boolean;
   /** Lo que potencia tipos (el clima y la noche): la ficha marca los de la especie. */
   boosts: readonly Boost[];
   onRetry: () => void;
@@ -64,6 +66,7 @@ export function DossierPanel({
   place,
   shiny,
   weather,
+  night,
   boosts,
   onRetry,
   onClose,
@@ -86,6 +89,7 @@ export function DossierPanel({
       place={place}
       shiny={shiny}
       weather={weather}
+      night={night}
       boosts={boosts}
       onRetry={onRetry}
     />

@@ -52,7 +52,11 @@ import { REDUCED_MOTION_QUERY, systemMotion } from "@/lib/motion";
 import { NIGHT_BOOST } from "@/lib/night";
 import { playCry, playPing } from "@/lib/sound/sounds";
 import { isShiny } from "@/lib/shiny";
-import { CONDITIONS, type Weather } from "@/lib/weather/conditions";
+import {
+  CONDITIONS,
+  type Weather,
+  weatherBoost,
+} from "@/lib/weather/conditions";
 import type { Position } from "@/lib/world/types";
 
 import { Clock } from "./clock";
@@ -71,6 +75,17 @@ const typeList = new Intl.ListFormat("es", { type: "conjunction" });
 /** "lluvia 13 °C". */
 function describeWeather({ condition, temperature }: Weather) {
   return `${CONDITIONS[condition].label.toLowerCase()} ${Math.round(temperature)} °C`;
+}
+
+/** Noctowl, cuando cae la noche. */
+function announceNight() {
+  const types = NIGHT_BOOST.types.map((type) => TYPE_LABELS[type]);
+  notify({
+    id: "noctowl",
+    member: "noctowl",
+    priority: "informativo",
+    text: `Cae la noche: Noctowl toma la guardia. Se potencian los tipos ${typeList.format(types)}.`,
+  });
 }
 
 // Los atajos, como los lista el diálogo de ajustes (la tecla ? lo abre).
@@ -163,7 +178,8 @@ export function MonitoringRoom({
     () => new Set(),
   );
   const [announcement, setAnnouncement] = useState("");
-  // Con los avisos silenciados, lo que diría la tripulación va solo al lector de pantalla.
+  // Con los avisos silenciados, las detecciones van solo al lector de pantalla y el resto de la
+  // tripulación calla; Xatu y Noctowl, si no habían hablado, hablan al reactivarlos.
   const [muted, setMuted] = useState(false);
   // Cuántas señales lleva contadas el aviso de Pelipper que sigue abierto.
   const sightings = useRef(0);
@@ -176,12 +192,13 @@ export function MonitoringRoom({
   );
   const weather = useWeather();
   const night = useNight();
-  // Lo que potencia tipos ahora: el clima, si llegó, y la noche.
+  // Lo que potencia tipos ahora: el clima, si llegó (de noche, el despejado no), y la noche.
   const boosts: Boost[] = [];
-  if (weather.status === "ready") {
-    const { by, boosted } = CONDITIONS[weather.weather.condition];
-    boosts.push({ by, types: boosted });
-  }
+  const sky =
+    weather.status === "ready"
+      ? weatherBoost(weather.weather, night === true)
+      : null;
+  if (sky) boosts.push(sky);
   if (night) boosts.push(NIGHT_BOOST);
   // Qué parte del mundo despejó el radar (de 0 a 1), y qué especies se identificaron.
   const [coverage, setCoverage] = useState(0);
@@ -329,46 +346,39 @@ export function MonitoringRoom({
     });
   };
 
-  // Xatu da el pronóstico una vez, cuando el turno empezó y el clima ya llegó. Si Open-Meteo falla,
-  // no dice nada: el HUD muestra que no hay datos.
+  // Xatu da el pronóstico una vez, cuando el turno empezó y el clima ya llegó; con los avisos
+  // silenciados, espera a que se reactiven. Si Open-Meteo falla, no dice nada: el HUD muestra que
+  // no hay datos.
   const forecastGiven = useRef(false);
   const forecast = useEffectEvent((current: Weather) => {
-    if (muted) return;
-    const types = CONDITIONS[current.condition].boosted.map(
-      (type) => TYPE_LABELS[type],
-    );
+    const boost = weatherBoost(current, night === true);
+    const types = boost?.types.map((type) => TYPE_LABELS[type]);
     notify({
       id: "xatu",
       member: "xatu",
       priority: "informativo",
-      text: `Pronóstico: ${describeWeather(current)}. Potencia a los tipos ${typeList.format(types)}.`,
+      text: types
+        ? `Pronóstico: ${describeWeather(current)}. Potencia a los tipos ${typeList.format(types)}.`
+        : `Pronóstico: ${describeWeather(current)}. De noche, sin sol, no potencia ningún tipo.`,
     });
   });
   useEffect(() => {
-    if (!started || weather.status !== "ready" || forecastGiven.current) return;
+    if (!started || muted || weather.status !== "ready") return;
+    if (forecastGiven.current) return;
     forecastGiven.current = true;
     forecast(weather.weather);
-  }, [started, weather]);
+  }, [started, muted, weather]);
 
   // Noctowl toma la guardia cuando cae la noche, también si el turno empieza de noche. Una vez por
-  // noche: si amanece y vuelve a anochecer con la página abierta, avisa de nuevo.
+  // noche: si amanece y vuelve a anochecer con la página abierta, avisa de nuevo. Con los avisos
+  // silenciados, avisa al reactivarlos si sigue siendo de noche.
   const nightAnnounced = useRef(false);
-  const announceNight = useEffectEvent(() => {
-    if (muted) return;
-    const types = NIGHT_BOOST.types.map((type) => TYPE_LABELS[type]);
-    notify({
-      id: "noctowl",
-      member: "noctowl",
-      priority: "informativo",
-      text: `Cae la noche: Noctowl toma la guardia. Se potencian los tipos ${typeList.format(types)}.`,
-    });
-  });
   useEffect(() => {
     if (!night) nightAnnounced.current = false;
-    if (!started || !night || nightAnnounced.current) return;
+    if (!started || muted || !night || nightAnnounced.current) return;
     nightAnnounced.current = true;
     announceNight();
-  }, [started, night]);
+  }, [started, muted, night]);
 
   useEffect(() => {
     if (started && startedAt.current === null) startedAt.current = Date.now();
@@ -524,11 +534,17 @@ export function MonitoringRoom({
 
   // Esc sale del modo de instalación sin instalar. Con la ficha o los ajustes del turno abiertos (un
   // clic en una señal abre la ficha también en el modo), ese Esc es del diálogo: lo cierra y el modo
-  // sigue.
+  // sigue. Lo mismo con el foco en un aviso: Base UI lo cierra con ese Esc.
   useEffect(() => {
     if (!installing) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[data-slot="toast"]')
+      ) {
+        return;
+      }
       // Los avisos también tienen role="dialog" (ui/toast.tsx): no cuentan.
       if (document.querySelector('[role="dialog"]:not([data-slot="toast"])')) {
         return;
