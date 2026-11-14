@@ -26,11 +26,11 @@ distinta, ubicada en su hábitat.
 
 **Qué hay en `v0.1.0` (el MVP de la consigna):**
 
-| Requisito                                              | Cómo lo cumplí                                                                                                                                                                                                               |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mapa interactivo con marcadores propios y cámara suave | MapLibre GL JS con el mundo generado como única fuente (sin tiles externos); 40 señales con pulso de radar que se transforman en el sprite animado al identificarlas; `flyTo` con padding para que la ficha no tape la señal |
-| Datos reales y panel de detalle                        | Dos pedidos a PokéAPI (`/pokemon` y `/pokemon-species`), validados; ficha al costado en desktop y abajo en mobile; skeleton del tamaño final y error con reintento                                                           |
-| Animaciones con propósito                              | Pulso de las señales, "Analizando firma…" que se descifra, entrada de la ficha, barras de estadísticas que crecen, entrada del sprite; todo apagado con `prefers-reduced-motion` (la cámara usa `jumpTo`)                    |
+| Requisito                                              | Cómo lo cumplí                                                                                                                                                                                                                                                   |
+| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mapa interactivo con marcadores propios y cámara suave | MapLibre GL JS con el mundo generado como única fuente (sin tiles externos); 40 señales con pulso de radar que se transforman en el sprite animado al identificarlas; `flyTo` con padding para que la ficha no tape la señal                                     |
+| Datos reales y panel de detalle                        | Dos pedidos a PokéAPI (`/pokemon` y `/pokemon-species`), validados; ficha al costado en desktop y abajo en mobile; skeleton del tamaño final y error con reintento                                                                                               |
+| Animaciones con propósito                              | Pulso de las señales, "Analizando firma…" que se descifra, entrada de la ficha, barras de estadísticas que crecen, entrada del sprite; todo apagado con movimiento reducido, el de `prefers-reduced-motion` o el elegido en los ajustes (la cámara usa `jumpTo`) |
 
 Accesibilidad: cada señal es un `<button>` con `aria-label` ("Señal sin identificar en el volcán de Monte Brasa", y
 después "Shuppet en la ciudad de Cruz del Viento"), foco visible, Tab entre señales de norte a sur, Esc cierra la ficha
@@ -83,6 +83,14 @@ y el foco vuelve a la señal.
 - **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=25`), y el botón del enlace la copia. Ese
   enlace abre la sala con la señal identificada y saltea el inicio de turno. Un número que no está en el mundo lo
   avisa Rotom.
+- **Intensidad visual:** en el inicio de turno y en los ajustes, "Completa" o "Reducida". Sin elegir, sigue a
+  `prefers-reduced-motion`; elegida, gana. Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de
+  las señales, el texto que se descifra, el sprite animado y las transiciones, y la cámara salta en lugar de volar.
+- **Sonido:** apagado por defecto; se prende en el inicio de turno o en los ajustes. Un ping de radar hecho con Web
+  Audio, sin archivos, en cada detección, y el grito del Pokémon (`cries.latest` de PokéAPI) al identificarlo. La
+  campana del HUD silencia también el sonido.
+- **Atajos de teclado:** A instala una antena, B abre la bitácora, M silencia y ? abre los ajustes, que listan los
+  atajos. Valen con el foco en el mapa o en el panel de abajo, para no dispararse al dictar con la voz (WCAG 2.1.4).
 
 ## Arquitectura y Stack
 
@@ -124,6 +132,8 @@ src/lib/shiny.ts           qué señales son variocolor, con la semilla
 src/lib/night.ts           de qué hora a qué hora es de noche, y los tipos que potencia
 src/lib/boosts.ts          lo que potencia tipos (el clima y la noche)
 src/lib/report.ts          la bitácora como informe CSV
+src/lib/motion.ts          la intensidad visual: data-motion en <html>
+src/lib/sound/             el ping del radar (Web Audio) y el grito de cada Pokémon
 docs/                      consigna, concepto, decisiones, hallazgos, errores y flujo
 ```
 
@@ -187,8 +197,8 @@ En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/
 - **Geocercas:** dibujar un área y que avise lo que se detecta adentro.
 - **Compartir las antenas por URL:** hoy el enlace lleva solo la señal.
 - **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
-- **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo
-  de `prefers-reduced-motion`.
+- **Atajos R, G y /** del concepto: el barrido manual, las geocercas y la búsqueda. El radar barre una sola vez y las
+  geocercas todavía no están.
 
 Con una semana más, además del plan:
 
