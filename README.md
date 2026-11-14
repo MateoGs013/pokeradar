@@ -79,10 +79,10 @@ y el foco vuelve a la señal.
   a lo más viejo, con hora, amenaza y lugar; "Ver" abre la ficha de esa señal. El informe se baja como CSV (con BOM,
   para que Excel lea los acentos). La bitácora vive en memoria: recargar la página empieza otra.
 - **Fin de turno:** un resumen con la duración, la cobertura, las señales detectadas e identificadas, las anomalías
-  (variocolor), la amenaza más alta y las antenas. "Empezar otro turno" vuelve a cubrir el mundo.
-- **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=25`), y el botón del enlace la copia. Ese
-  enlace abre la sala con la señal identificada y saltea el inicio de turno. Un número que no está en el mundo lo
-  avisa Rotom.
+  (variocolor), la amenaza más alta y las antenas. "Empezar otro turno" vuelve a cubrir el mundo, en la misma zona.
+- **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=25`; en el mapa real, `?modo=real&p=25`), y
+  el botón del enlace la copia. Ese enlace abre la sala con la señal identificada y saltea el inicio de turno. Un número
+  que no está en el mundo lo avisa Rotom.
 - **Intensidad visual:** en el inicio de turno y en los ajustes, "Completa" o "Reducida". Sin elegir, sigue a
   `prefers-reduced-motion`; elegida, gana. Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de
   las señales, el texto que se descifra, el sprite animado y las transiciones, y la cámara salta en lugar de volar.
@@ -91,6 +91,11 @@ y el foco vuelve a la señal.
   campana del HUD silencia también el sonido.
 - **Atajos de teclado:** A instala una antena, B abre la bitácora, M silencia y ? abre los ajustes, que listan los
   atajos. Valen con el foco en el mapa o en el panel de abajo, para no dispararse al dictar con la voz (WCAG 2.1.4).
+- **Mapa real (modo híbrido):** `?modo=real` lleva el mismo mundo (señales, radar, niebla y antenas) a un mapa real,
+  con el radar base en Viedma (Río Negro). El mapa son las teselas vectoriales de OpenFreeMap, sin clave, con los
+  colores del HUD. Los biomas inventados no se dibujan, y cada señal se ubica por la distancia y el rumbo desde el radar
+  base: "la zona de Viedma, a 16 km al norte". Se entra y se sale con el enlace del inicio de turno o de los ajustes,
+  que empieza otro turno. La atribución del mapa va en el panel de abajo.
 
 ## Arquitectura y Stack
 
@@ -114,7 +119,7 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 
 ```
 src/app/                   layout, página (servidor) y estilos globales
-src/components/map/        mapa, señales, cámara, carga y error
+src/components/map/        mapa, señales, cámara, carga y error; el marco y el estilo del mapa real
 src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
 src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno, antenas, bitácora y fin de turno
 src/components/crew/       tripulación: quién avisa y los avisos
@@ -196,7 +201,9 @@ En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/
 - **Eventos del mundo:** los enjambres, si hay tiempo.
 - **Geocercas:** dibujar un área y que avise lo que se detecta adentro.
 - **Compartir las antenas por URL:** hoy el enlace lleva solo la señal.
-- **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
+- **La ubicación del operador en el mapa real:** hoy el radar base va siempre a Viedma; el concepto pide la del
+  usuario, con permiso.
+- **Un estilo de respaldo para el mapa real:** si OpenFreeMap no responde, el mapa queda sin fondo (sin probar).
 - **Atajos R, G y /** del concepto: el barrido manual, las geocercas y la búsqueda. El radar barre una sola vez y las
   geocercas todavía no están.
 
