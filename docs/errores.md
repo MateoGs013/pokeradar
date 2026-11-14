@@ -39,6 +39,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-27 | 2026-11-13 | IA       | map        | Un commit decía que las flechas movían el mapa para ubicar la antena; se midió acercado y en frío no se movía       |
 | E-28 | 2026-11-14 | IA       | radar      | Dos comentarios del radar quedaron viejos; el de la doble corrida escondía un aviso falso con movimiento reducido   |
 | E-29 | 2026-11-14 | IA       | onboarding | El inicio de turno y el arranque quedaron en hud/ y map/; CLAUDE.md los pone en src/components/onboarding/          |
+| E-30 | 2026-11-14 | IA       | hud        | El PR #10 decía que el color guardado estaba desde el primer cuadro; con la red lenta, 4,7 s en verde               |
 
 ## Formato de cada entrada
 
@@ -501,3 +502,27 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Arreglo:** "refactor(onboarding): mover el inicio de turno y el arranque a su carpeta", en la misma rama y antes del
   push: `shift-start.tsx` y `system-boot.tsx` en `src/components/onboarding/`, sin cambios de comportamiento.
 - **Prevención:** ninguna nueva: la estructura ya está en `CLAUDE.md`, y la búsqueda de E-28 lo encontró antes del PR.
+
+### E-30 · 2026-11-14 02:40 · IA · hud
+
+- **Síntoma:** la descripción del PR #10 decía que un script `beforeInteractive` del layout aplicaba el color del HUD
+  guardado "antes de pintar", y que al recargar el color estaba "desde el primer cuadro". Con la red lenta (unos
+  400 kbit/s y 300 ms de latencia, a 390 px), el HUD salía en verde 541 cuadros, unos 4,7 s, con ámbar o cian guardado.
+  En el mismo PR quedaron viejos:
+  - en `decisiones.md`, "el rótulo llega a "38 de 40"" en la fila "Antenas", y "La cobertura para el HUD puede salir
+    de `fog.cleared`" en la fila "Niebla";
+  - en `monitoring-room.tsx`, el comentario del Esc del modo de antenas, que hablaba solo de la ficha cuando el selector
+    también frena con los ajustes abiertos.
+- **Causa:** en el App Router, `next/script` con `beforeInteractive` y el código adentro lo corre Next cuando ya cargó
+  su JS (`node_modules/next/dist/client/script.js` y `app-bootstrap.js`), no el navegador al leer el HTML. Claude midió
+  "0 cuadros de 400" con el servidor local y sin limitar la red, que no es el caso peor. Los docs viejos: la búsqueda
+  de E-28 incluyó "rótulo" en `decisiones.md` y encontró la fila "Antenas", pero la salida se cortó a 200 caracteres
+  (`cut -c1-200`), y esa fila es una sola línea de miles. "Cobertura" y el Esc no se buscaron.
+- **Detección:** /pr-review del PR #10 (subagente), deducido del código de Next. Claude lo confirmó midiendo el build
+  anterior con la red lenta.
+- **Arreglo:** PR #10, "fix(hud): aplicar el color guardado desde el head": un `<script>` nativo en el `<head>`, como
+  la guía de Next "How to prevent flash before hydration". Con la misma red, 0 cuadros en otro color. Los docs y el
+  comentario, en "docs(docs): arreglar lo que encontró la review del PR #10".
+- **Prevención:** en `CLAUDE.md`, la regla de E-28 pide que la búsqueda muestre el texto alrededor de cada coincidencia,
+  no el principio de la línea. Para la red lenta, ninguna nueva: la regla de E-21 ya pide medir el caso peor, y no se
+  aplicó a la red.

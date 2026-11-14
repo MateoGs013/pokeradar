@@ -87,7 +87,9 @@ Las carpetas se crean cuando tienen su primer archivo real. Reglas por carpeta e
   escribirlo; si no, dice "sin probar". La medición es del estado del commit que la afirma, y con el caso peor: el
   texto más largo y el ancho más chico, 320 px (E-21).
 - Al cambiar un comportamiento, en el mismo paso se buscan (grep por el nombre de lo que cambió) y se releen los
-  comentarios y docs que lo describen o lo resumen (E-23, E-28).
+  comentarios y docs que lo describen o lo resumen (E-23, E-28). La búsqueda muestra el texto alrededor de cada
+  coincidencia (`grep -o ".{0,80}patrón.{0,80}"`), no el principio de la línea: las filas de `decisiones.md` son
+  líneas de miles de caracteres (E-30).
 - El MVP de la consigna va antes que cualquier extra del concepto.
 - Los comandos que se le pasan a Mateo para el `!` corren en Git Bash: los flags de Windows van con doble barra
   (`taskkill //PID 123 //F`) o se pasan como comando de PowerShell.
