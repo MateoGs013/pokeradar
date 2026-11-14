@@ -4,12 +4,14 @@
 // <button> de React adentro, montado con un portal. Son decenas, no cientos: como botones del DOM
 // tienen foco, teclado y aria-label sin trabajo extra (docs/decisiones.md, "Señales"). El botón
 // existe recién cuando el radar detectó la señal: antes no se ve ni se alcanza con Tab.
+import { ChevronsUpIcon } from "lucide-react";
 import { type Map as MapLibreMap, Marker } from "maplibre-gl";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
+import { boosts, CONDITIONS, type Weather } from "@/lib/weather/conditions";
 import type { Place, Position, Spawn } from "@/lib/world/types";
 
 import { prefersReducedMotion } from "./camera";
@@ -73,6 +75,8 @@ interface SignalMarkersProps {
   identified: ReadonlyMap<number, PokemonDetail>;
   /** Las señales variocolor (lib/shiny.ts): identificadas, muestran ese sprite. */
   shiny: ReadonlySet<number>;
+  /** El clima, si llegó: una señal identificada de un tipo que potencia lleva una marca. */
+  weather: Weather | null;
   /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
   detected: ReadonlySet<number>;
   onSelect: (selection: SignalSelection) => void;
@@ -85,6 +89,7 @@ export function SignalMarkers({
   selectedId,
   identified,
   shiny,
+  weather,
   detected,
   onSelect,
 }: SignalMarkersProps) {
@@ -134,6 +139,7 @@ export function SignalMarkers({
           selected={spawn.speciesId === selectedId}
           detail={identified.get(spawn.speciesId)}
           shiny={shiny.has(spawn.speciesId)}
+          weather={weather}
           onSelect={onSelect}
           onFocus={() => revealSignal(map, spawn.position)}
         />,
@@ -156,6 +162,7 @@ interface SignalButtonProps {
   detail: PokemonDetail | undefined;
   /** Si es variocolor: identificada, muestra ese sprite y lo dice en el aria-label. */
   shiny: boolean;
+  weather: Weather | null;
   onSelect: (selection: SignalSelection) => void;
   onFocus: () => void;
 }
@@ -176,10 +183,13 @@ function SignalButton({
   selected,
   detail,
   shiny,
+  weather,
   onSelect,
   onFocus,
 }: SignalButtonProps) {
   const sprites = detail && (shiny ? detail.shinySprites : detail.sprites);
+  const boosted =
+    weather !== null && detail?.types.some((type) => boosts(weather, type));
   // El ping suena una vez, cuando el botón aparece, y después se saca: si quedara, volvería a sonar
   // al pasar de movimiento reducido a sin preferencia con la página abierta. Se saca al terminar o
   // si se cancela: activar el movimiento reducido a mitad del ping lo corta sin animationend. Con
@@ -192,7 +202,7 @@ function SignalButton({
       type="button"
       aria-label={
         detail
-          ? `${detail.name}${shiny ? " variocolor" : ""} en ${label}`
+          ? `${detail.name}${shiny ? " variocolor" : ""}${boosted ? `, potenciado por ${CONDITIONS[weather.condition].by},` : ""} en ${label}`
           : `Señal sin identificar en ${label}`
       }
       aria-haspopup="dialog"
@@ -243,6 +253,13 @@ function SignalButton({
           />
           <span aria-hidden className="relative size-2.5 rounded-full bg-hud" />
         </>
+      )}
+      {/* La marca del clima, en la esquina del sprite (que sobresale 10 px del botón). */}
+      {boosted && (
+        <ChevronsUpIcon
+          aria-hidden
+          className="pointer-events-none absolute -top-3 -right-3 size-3.5 rounded-sm bg-background text-hud"
+        />
       )}
     </button>
   );

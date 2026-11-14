@@ -11,6 +11,8 @@ export const CREW = {
   porygon: { name: "Porygon", sprite: `${SPRITES}/137.png` },
   /** Los avistamientos: las señales que detecta el radar. */
   pelipper: { name: "Pelipper", sprite: `${SPRITES}/279.png` },
+  /** El pronóstico: el clima y los tipos que potencia. */
+  xatu: { name: "Xatu", sprite: `${SPRITES}/178.png` },
 } as const;
 
 export type CrewMember = keyof typeof CREW;
