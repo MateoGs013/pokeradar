@@ -6,6 +6,43 @@ identificar cada una con datos reales de PokéAPI.
 - **Producción:** https://pokeradar-nine.vercel.app
 - **Consigna:** [docs/consigna.md](docs/consigna.md) · **Concepto completo:** [docs/concepto.md](docs/concepto.md)
 
+<p>
+  <img src="docs/img/sala-1440.png" alt="La sala de monitoreo en desktop después de la primera vuelta del radar: la isla bajo la niebla, el círculo despejado alrededor de Campo Garza con sus señales, el HUD en las esquinas y el panel de las antenas abajo" width="100%">
+</p>
+<p>
+  <img src="docs/img/mapa-real-1440.png" alt="El modo híbrido sobre el mapa real de Viedma, con la niebla, el radar base, las señales y una ficha abierta al costado" width="68%">
+  <img src="docs/img/ficha-390.png" alt="La ficha de inteligencia de una señal en el teléfono, abierta desde abajo, con el sprite, los tipos, las estadísticas base y el nivel de amenaza" width="19.6%">
+</p>
+
+## Cómo correrlo
+
+Con Node 24, el que usa la CI (el proyecto no fija otro), y pnpm 10.34.1, el del campo `packageManager` de
+`package.json`:
+
+```bash
+pnpm install     # dependencias
+pnpm dev         # servidor de desarrollo, en http://localhost:3000
+pnpm build       # build de producción
+pnpm start       # sirve el build
+pnpm lint        # ESLint
+pnpm typecheck   # next typegen && tsc --noEmit
+```
+
+No hacen falta claves ni `.env`: el código no lee variables de entorno, y PokéAPI, Open-Meteo y OpenFreeMap son
+públicas y sin clave. Sí hace falta red: el dataset de especies se pide a PokéAPI en el servidor, en el build (o al
+abrir la página con `pnpm dev`).
+
+**Para probarlo rápido**, estas direcciones, relativas a la app:
+
+- `/`: la primera vez, el inicio de turno; después, la sala. El radar base da su vuelta y detecta 5 de las 40 señales.
+- `/?p=4`: la sala con la ficha de Charmander abierta y la señal identificada, sin pasar por el inicio de turno.
+- `/?noche=1`: la noche a cualquier hora (`?noche=0` la apaga).
+- `/?modo=real`: el mapa real, con el radar base en Viedma.
+- `/?modo=real&p=279`: el mapa real con la ficha de Pelipper.
+
+Con el foco en el mapa: A instala una antena (flechas y Enter la ubican con teclado), B abre la bitácora, M silencia y
+? abre los ajustes con la lista de atajos.
+
 ## Concepto y Narrativa
 
 Sos el operador de turno de un centro de monitoreo. En el mapa aparecen señales sin identificar; al tocar una, la cámara
@@ -20,11 +57,12 @@ Para quien lo usa, la metáfora hace de instrucciones: una señal que pulsa se t
 un error es una señal que se perdió y se puede volver a buscar. Cada estado dice qué está pasando con palabras de la
 historia, en lugar de un spinner o un mensaje genérico.
 
-El mundo no es un mapa real: es una isla generada con ruido y semilla (151), con nueve biomas, uno por cada hábitat de
-PokéAPI (el mar, la cueva, la ciudad; el volcán es el de las especies raras). Cada una de las 40 señales es una especie
-distinta, ubicada en su hábitat.
+En el modo por defecto, el mundo no es un mapa real: es una isla generada con ruido y semilla (151), con nueve biomas,
+uno por cada hábitat de PokéAPI (el mar, la cueva, la ciudad; el volcán es el de las especies raras). Cada una de las
+40 señales es una especie distinta, ubicada en su hábitat. El modo híbrido (`?modo=real`) lleva ese mismo mundo al
+mapa real de Río Negro.
 
-**Qué hay en `v0.1.0` (el MVP de la consigna):**
+**El MVP de la consigna:**
 
 | Requisito                                              | Cómo lo cumplí                                                                                                                                                                                                                                                                                                     |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -36,7 +74,7 @@ Accesibilidad: cada señal es un `<button>` con `aria-label` ("Señal sin identi
 después "Shuppet en la ciudad de Cruz del Viento"), foco visible, Tab entre señales de norte a sur, Esc cierra la ficha
 y el foco vuelve a la señal.
 
-**Después de `v0.1.0`:**
+**Lo que se suma al MVP:**
 
 - **Tipografía propia:** Martian Mono para el sistema y los datos, Atkinson Hyperlegible Next para leer y Doto, de
   matriz de puntos, solo para el nombre identificado y "Señal perdida".
@@ -45,20 +83,24 @@ y el foco vuelve a la señal.
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
 - **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz da
   una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
-  aparecen con un ping, Pelipper las avisa y el HUD las cuenta ("5 de 40 señales"). Con movimiento
-  reducido, el círculo se despeja de una vez.
+  aparecen con un ping, Pelipper las avisa y el HUD las cuenta ("5 de 40 señales"). Al terminar la vuelta, el panel
+  de abajo dice cuántas detectó y cómo seguir: "Radar base: 5 señales detectadas. Instalá antenas para despejar el
+  resto." Con movimiento reducido, el círculo se despeja de una vez.
 - **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
   mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
   una mira y Enter la instala ahí. Cada antena da su vuelta, y el panel dice cuántas señales detectó o que no había
   ninguna en alcance. Esc cancela. La A vale con el foco en el mapa o en el panel de las antenas. Con las cuatro se
   llega como mucho a 38 de las 40 señales: cualquier combinación deja al menos dos afuera.
-- **Inicio de turno y arranque:** la primera vez, el operador elige un nombre en clave y el color del HUD (verde,
-  ámbar o cian), con "Saltar" siempre visible; mientras tanto el mapa carga por detrás y el radar espera. La carga la
-  cuenta Rotom con sus pasos reales: "Calibrando radar…", "Conectando satélites…", "Cobertura: 0%".
-- **HUD de esquinas:** arriba a la izquierda, el operador, la cobertura, las señales detectadas y las identificadas;
-  arriba a la derecha, la hora y los ajustes del turno, donde también están la semilla y la huella del mundo. La
-  cobertura cuenta el mundo entero, mar incluido, y no solo la isla: después del radar base marca 9 %, y con las cuatro
-  antenas en los puntos de las 38 señales, 44 %.
+- **Inicio de turno y arranque:** la primera vez, el operador elige un nombre en clave, el color del HUD (verde,
+  ámbar o cian), la intensidad visual y el sonido, con "Saltar" siempre visible; mientras tanto el mapa carga por
+  detrás y el radar espera. La carga la cuenta Rotom con sus pasos reales: "Calibrando radar…", "Conectando
+  satélites…", "Cobertura: 0%".
+- **HUD de esquinas:** arriba a la izquierda, el operador, la cobertura, las señales detectadas, las identificadas y
+  el clima; arriba a la derecha, la hora, la campana y los ajustes del turno (nombre, color, intensidad visual,
+  sonido, los atajos y el cambio de zona), donde también están la semilla y la huella del mundo. Cada esquina va en
+  una caja con borde, como el panel de abajo, con los valores en claro y las palabras apagadas. La cobertura cuenta
+  el mundo entero, mar incluido, y no solo la isla: después del radar base marca 9 %, y con las cuatro antenas en los
+  puntos de las 38 señales, 44 %.
 - **Tripulación:** los avisos los dan Pokémon, con su sprite. Pelipper avisa los avistamientos en un solo aviso que
   suma las señales mientras sigue abierto, con "Ver señal" para abrir la última; Rotom, la cobertura después de cada
   vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta); Xatu,
@@ -67,7 +109,8 @@ y el foco vuelve a la señal.
   pantalla.
 - **Variocolor:** cada señal tiene una chance en 64, decidida con la semilla, de ser variocolor (shiny). Identificada,
   muestra ese sprite en el mapa y en la ficha, y Porygon da un aviso crítico. Con la semilla del mundo no sale ninguna
-  de las 40 (medido), así que `?shiny=<id>` fuerza una para verla: `?shiny=4` es Charmander.
+  de las 40 (medido), así que `?shiny=<id>` fuerza una para verla: `?p=4&shiny=4` abre Charmander variocolor, ya
+  identificado.
 - **Clima:** el clima real de Viedma (Río Negro), de Open-Meteo, va en el HUD con un enlace a Open-Meteo, como pide su
   licencia. Xatu lo pronostica al empezar el turno, con los tipos que potencia. Una señal identificada de uno de esos
   tipos lleva una flecha en su sprite; en la ficha, el tipo va lleno y con la flecha, y la fila Clima dice "potenciado".
@@ -80,9 +123,9 @@ y el foco vuelve a la señal.
   para que Excel lea los acentos). La bitácora vive en memoria: recargar la página empieza otra.
 - **Fin de turno:** un resumen con la duración, la cobertura, las señales detectadas e identificadas, las anomalías
   (variocolor), la amenaza más alta y las antenas. "Empezar otro turno" vuelve a cubrir el mundo, en la misma zona.
-- **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=25`; en el mapa real, `?modo=real&p=25`), y
-  el botón del enlace la copia. Ese enlace abre la sala con la señal identificada y saltea el inicio de turno. Un número
-  que no está en el mundo lo avisa Rotom.
+- **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=4`, Charmander; en el mapa real,
+  `?modo=real&p=279`, Pelipper), y el botón del enlace la copia. Ese enlace abre la sala con la señal identificada y
+  saltea el inicio de turno. Un número que no está en el mundo lo avisa Rotom.
 - **Intensidad visual:** en el inicio de turno y en los ajustes, "Completa" o "Reducida". Sin elegir, sigue a
   `prefers-reduced-motion`; elegida, gana. Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de
   las señales, el texto que se descifra, el sprite animado y las transiciones, y la cámara salta en lugar de volar.
@@ -99,14 +142,16 @@ y el foco vuelve a la señal.
 
 ## Arquitectura y Stack
 
-| Pieza             | Elección                                                              | Por qué                                                                                                                                                                                      |
-| ----------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Framework         | Next.js 16.4 (App Router, Turbopack), React 19.3, TypeScript estricto | Lo pide la consigna                                                                                                                                                                          |
-| Mapa              | `maplibre-gl` 6.18, directo en un Client Component                    | Capas, cámara y marcadores contra la API de MapLibre, sin envoltorios                                                                                                                        |
-| Mundo             | `simplex-noise` + `d3-contour`, calculado una vez en el build         | Página estática; al navegador viajan solo los polígonos y las señales                                                                                                                        |
-| Estilos           | Tailwind 4 con tokens en `src/app/globals.css`                        | Un solo lugar para colores, tipografía y radios                                                                                                                                              |
-| Paneles y botones | shadcn sobre Base UI (Sheet, Drawer, Button), reestilados             | Foco, Esc y teclado resueltos; el aspecto es del HUD                                                                                                                                         |
-| Animación         | `motion` 14.13 (el nombre actual de Framer Motion) y `tw-animate-css` | `motion` para las barras; transiciones de Tailwind para el panel, `tw-animate-css` para el sprite, CSS para el pulso y el ping de detección, y `requestAnimationFrame` para el haz del radar |
+| Pieza             | Elección                                                                 | Por qué                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Framework         | Next.js 16.4 (App Router, Turbopack), React 19.3, TypeScript estricto    | Lo pide la consigna                                                                                                                                                                          |
+| Mapa              | `maplibre-gl` 6.18, directo en un Client Component                       | Capas, cámara y marcadores contra la API de MapLibre, sin envoltorios                                                                                                                        |
+| Mundo             | `simplex-noise` + `d3-contour`, calculado una vez en el build            | Página estática; al navegador viajan solo los polígonos y las señales                                                                                                                        |
+| Estilos           | Tailwind 4 con tokens en `src/app/globals.css`                           | Un solo lugar para colores, tipografía y radios                                                                                                                                              |
+| Paneles y botones | shadcn sobre Base UI (Sheet, Drawer, Dialog, Toast, Button), reestilados | Foco, Esc, teclado y la región viva de los avisos resueltos; el aspecto es del HUD                                                                                                           |
+| Íconos            | `lucide-react` 1.72                                                      | Los de los componentes de shadcn y los de la sala, como la campana y los ajustes del HUD                                                                                                     |
+| Datos externos    | PokéAPI, Open-Meteo y OpenFreeMap, sin clave                             | Las especies y las fichas; el clima de Viedma; las teselas del mapa real. Ninguno pide registro ni `.env`                                                                                    |
+| Animación         | `motion` 14.13 (el nombre actual de Framer Motion) y `tw-animate-css`    | `motion` para las barras; transiciones de Tailwind para el panel, `tw-animate-css` para el sprite, CSS para el pulso y el ping de detección, y `requestAnimationFrame` para el haz del radar |
 
 Las decisiones, con sus alternativas y versiones, están en [docs/decisiones.md](docs/decisiones.md). Lo que aprendí de
 PokéAPI, en [docs/hallazgos-pokeapi.md](docs/hallazgos-pokeapi.md).
@@ -115,24 +160,31 @@ PokéAPI, en [docs/hallazgos-pokeapi.md](docs/hallazgos-pokeapi.md).
 caché sin vencimiento) y ubica las señales. Lo que no debe llegar al navegador lleva `import "server-only"`. El mapa se
 carga con `dynamic(..., { ssr: false })`, el tip de la consigna, que no dice dónde va: la documentación de Next 16.4
 dice que `ssr: false` da error en un Server Component, así que vive en un Client Component que envuelve al mapa
-([docs/decisiones.md](docs/decisiones.md), sección 3). La ficha pide los datos desde el navegador, al identificar.
+([docs/decisiones.md](docs/decisiones.md), sección 3). Desde el navegador se piden la ficha (a PokéAPI, al
+identificar), el clima (a Open-Meteo, una vez al abrir la sala) y, en el mapa real, el estilo y las teselas de
+OpenFreeMap.
 
 ```
 src/app/                   layout, página (servidor) y estilos globales
-src/components/map/        mapa, señales, cámara, carga y error; el marco y el estilo del mapa real
-src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
-src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno, antenas, bitácora y fin de turno
+src/components/map/        mapa, señales, cámara, carga y error, nombres de los lugares; el marco y el estilo del
+                           mapa real
+src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar, la red que reparte
+                           las señales y la detección
+src/components/hud/        sala de monitoreo: HUD de esquinas, hora, ajustes del turno, antenas, bitácora, fin de
+                           turno y cambio de zona
 src/components/crew/       tripulación: quién avisa y los avisos
 src/components/onboarding/ inicio de turno y arranque del sistema con Rotom
-src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
-src/components/ui/         componentes de shadcn con los tokens del HUD
+src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto, nivel de amenaza y nombres
+                           de tipos y estadísticas
+src/components/ui/         componentes de shadcn con los tokens del HUD: Button, Dialog, Drawer, Sheet y Toast
 src/hooks/                 identificación con caché y cancelación; media queries; ajustes del turno guardados;
                            la hora, el clima, la noche y los parámetros de la URL
 src/lib/pokeapi/           tipos, guards y cliente tipado de PokéAPI
-src/lib/world/             generación del mundo (ruido, biomas, polígonos)
-src/lib/geo/               encuadre y ubicación de las señales
+src/lib/world/             generación del mundo (ruido, biomas, polígonos, agua, lugares y nombres)
+src/lib/geo/               random con semilla, encuadre y ubicación de las señales
 src/lib/weather/           el clima de Open-Meteo y los tipos que potencia cada condición
-src/lib/shift.ts           ajustes del turno: nombre en clave y color del HUD
+src/lib/shift.ts           ajustes del turno: nombre en clave, color del HUD, sonido e intensidad visual
+src/lib/utils.ts           el cn que espera el CLI de shadcn (components.json); el código lo importa del paquete cn
 src/lib/shiny.ts           qué señales son variocolor, con la semilla
 src/lib/night.ts           de qué hora a qué hora es de noche, y los tipos que potencia
 src/lib/boosts.ts          lo que potencia tipos (el clima y la noche)
@@ -191,24 +243,31 @@ encontró 13; yo, 2; y la propia IA, otras 15: midiendo, mirando capturas o rele
 
 ## Próximos Pasos
 
-Este README describe `v0.1.0` y lo que se sumó después. El plan sigue hasta el cierre del sábado 14/11
-([docs/decisiones.md](docs/decisiones.md), sección 8): al cerrar `v1.0.0`, lo que se haya hecho pasa a las secciones
-de arriba y acá queda lo que no entró.
-
-En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
+Lo que quedó afuera de la entrega, en el orden en que lo haría. Primero, el resto del concepto
+([docs/concepto.md](docs/concepto.md)):
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
-- **Eventos del mundo:** los enjambres, si hay tiempo.
+- **Eventos del mundo:** los enjambres.
 - **Geocercas:** dibujar un área y que avise lo que se detecta adentro.
 - **Compartir las antenas por URL:** hoy el enlace lleva solo la señal.
 - **La ubicación del operador en el mapa real:** hoy el radar base va siempre a Viedma; el concepto pide la del
   usuario, con permiso.
+- **El clima que cambie las señales, y el de la ciudad del operador:** hoy el clima solo marca los tipos que potencia
+  (no cambia qué señales hay) y es siempre el de Viedma.
+- **Recordar el silencio:** al recargar, la campana vuelve a estar prendida; los ajustes del turno se guardan en el
+  navegador, pero el silencio vive en memoria.
+- **Atajos R, G y /** del concepto: el barrido manual, las geocercas y la búsqueda. El radar barre una sola vez, y no
+  hay geocercas ni búsqueda.
+
+Después, lo que la entrega resuelve a medias:
+
 - **Un estilo de respaldo para el mapa real:** si el estilo de OpenFreeMap no carga, la sala muestra "No se pudo cargar
   el mapa"; si fallan solo las teselas, sigue sin el fondo.
-- **Atajos R, G y /** del concepto: el barrido manual, las geocercas y la búsqueda. El radar barre una sola vez y las
-  geocercas todavía no están.
+- **Señales del mapa real según el terreno:** el modo híbrido lleva cada señal a la misma posición que tiene en el
+  mundo generado, así que una especie de mar puede caer en tierra.
+- **Una bitácora que sobreviva a la recarga:** hoy vive en memoria, y recargar la página empieza otra.
 
-Con una semana más, además del plan:
+Fuera del concepto, lo que mejoraría:
 
 - **Calidad:** pruebas con lector de pantalla y en Safari, Firefox y teléfonos reales, que hoy faltan; pruebas
   automatizadas de las interacciones del mapa.
