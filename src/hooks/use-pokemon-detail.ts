@@ -1,6 +1,6 @@
 // La identificación de una señal: pide la ficha de la especie y la guarda, para que abrir otra vez
 // la misma señal no repita los pedidos.
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 
 import { fetchPokemonDetail, type PokemonDetail } from "@/lib/pokeapi/detail";
 
@@ -13,9 +13,13 @@ export type Identification =
  * Identifica la especie `speciesId`, o nada si es `null` (la ficha está cerrada). Solo se guardan
  * las fichas que llegaron bien: una falla no queda guardada, y abrir de nuevo la señal o tocar
  * Reintentar vuelve a pedir. `identified` trae todas las guardadas: el mapa muestra el sprite en
- * esas señales.
+ * esas señales. `onIdentify` avisa cada especie que se identificó por primera vez.
  */
-export function usePokemonDetail(speciesId: number | null) {
+export function usePokemonDetail(
+  speciesId: number | null,
+  onIdentify: (speciesId: number) => void,
+) {
+  const identify = useEffectEvent(onIdentify);
   const [identified, setIdentified] = useState<
     ReadonlyMap<number, PokemonDetail>
   >(() => new Map());
@@ -36,8 +40,10 @@ export function usePokemonDetail(speciesId: number | null) {
     if (speciesId === null || detail || failed) return;
     const controller = new AbortController();
     fetchPokemonDetail(speciesId, controller.signal).then(
-      (result) =>
-        setIdentified((current) => new Map(current).set(speciesId, result)),
+      (result) => {
+        setIdentified((current) => new Map(current).set(speciesId, result));
+        identify(speciesId);
+      },
       () => {
         // Cortado a propósito (se cerró la ficha o cambió la señal, o Strict Mode desmontó el
         // efecto en desarrollo): no es una falla. El corte por tiempo de detail.ts sí lo es, y

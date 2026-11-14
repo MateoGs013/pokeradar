@@ -60,6 +60,13 @@ export class RadarNetwork {
     if (source && this.sweeping > 0) source.play();
   }
 
+  /** Qué parte del mundo despejaron las estaciones, de 0 a 1: celdas despejadas sobre el total. */
+  coverage(): number {
+    let cleared = 0;
+    for (const cell of this.fog.cleared) cleared += cell;
+    return cleared / this.fog.cleared.length;
+  }
+
   /** Una estación empieza a barrer: el mapa copia el canvas en cada cuadro. */
   startSweep() {
     this.sweeping++;

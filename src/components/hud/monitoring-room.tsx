@@ -1,9 +1,10 @@
 "use client";
 
-// La sala de monitoreo: el rótulo de la esquina, el control de las antenas, el aviso de las
+// La sala de monitoreo: el HUD de las esquinas, el control de las antenas, el aviso de las
 // detecciones y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el mapa
-// muestra solo esas, el rótulo las cuenta y el aviso dice dónde aparecieron. Y guarda las antenas:
+// muestra solo esas, el HUD las cuenta y el aviso dice dónde aparecieron. Y guarda las antenas:
 // el control las instala y el mapa las dibuja.
+import { Settings2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { MapLoader } from "@/components/map/map-loader";
@@ -12,7 +13,25 @@ import { northToSouth, signalPlaces } from "@/components/map/places";
 import { MAX_ANTENNAS } from "@/components/radar/network";
 import type { Station } from "@/components/radar/radar";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  saveShiftSettings,
+  useShiftSettings,
+} from "@/hooks/use-shift-settings";
 import type { Position } from "@/lib/world/types";
+
+import { Clock } from "./clock";
+import { ShiftForm } from "./shift-form";
+
+const percent = new Intl.NumberFormat("es-AR", {
+  style: "percent",
+  maximumFractionDigits: 0,
+});
 
 interface MonitoringRoomProps extends Omit<
   MapViewProps,
@@ -23,6 +42,8 @@ interface MonitoringRoomProps extends Omit<
   | "detected"
   | "onDetect"
   | "onSweepEnd"
+  | "onCoverage"
+  | "onIdentify"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -38,6 +59,13 @@ export function MonitoringRoom({
     () => new Set(),
   );
   const [announcement, setAnnouncement] = useState("");
+  // Qué parte del mundo despejó el radar (de 0 a 1), y qué especies se identificaron.
+  const [coverage, setCoverage] = useState(0);
+  const [identified, setIdentified] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const { settings } = useShiftSettings();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [antennas, setAntennas] = useState<readonly Station[]>([]);
   // Si se está eligiendo dónde va la próxima antena.
   const [installing, setInstalling] = useState(false);
@@ -123,6 +151,12 @@ export function MonitoringRoom({
     setInstalling(true);
   };
 
+  // El color del HUD va en <html>: los tokens de globals.css cambian según data-hud, también los de
+  // lo que se abre en un portal, como la ficha.
+  useEffect(() => {
+    document.documentElement.dataset.hud = settings.hud;
+  }, [settings.hud]);
+
   // Esc sale del modo de instalación sin instalar. Con la ficha abierta (un clic en una señal la
   // abre también en el modo), ese Esc es de la ficha: la cierra y el modo sigue.
   useEffect(() => {
@@ -139,25 +173,63 @@ export function MonitoringRoom({
 
   const full = antennas.length >= MAX_ANTENNAS;
 
-  // El rótulo va antes que el mapa para que el encabezado sea lo primero que lee un lector de
-  // pantalla; z-10 lo deja dibujado encima del mapa, que viene después. Lleva fondo porque al
-  // mover el mapa puede quedar cualquier bioma debajo, y sin él el texto apagado no se lee bien
-  // sobre los más claros. Desde md, cuando la ficha va al costado, el rótulo corta la línea antes
-  // del panel (más un margen igual al de la izquierda) en vez de quedar tapado.
+  // El HUD va antes que el mapa para que el encabezado sea lo primero que lee un lector de pantalla;
+  // z-10 lo deja dibujado encima del mapa, que viene después. Lleva fondo porque al mover el mapa
+  // puede quedar cualquier bioma debajo, y sin él el texto apagado no se lee bien sobre los más
+  // claros. Arriba a la izquierda, el turno; arriba a la derecha, la hora y los ajustes. El de la
+  // izquierda corta la línea antes que el de la derecha y, desde md, cuando la ficha va al costado,
+  // antes del panel (más un margen igual al de la izquierda), en vez de quedar tapado.
   // El aviso existe desde el HTML del servidor, vacío: un lector de pantalla anuncia los cambios de
   // una región viva que ya estaba, no siempre los de una que aparece con el texto puesto.
   return (
     <>
-      <div className="pointer-events-none absolute top-3 left-3 z-10 bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+      <div className="pointer-events-none absolute top-3 left-3 z-10 max-w-[calc(100%-(--spacing(28)))] bg-background/80 px-1.5 py-0.5 font-mono text-xs text-balance text-muted-foreground font-stretch-condensed md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
         {/* Cada dato en un span sin cortes: si no entra en una línea, corta en un " · " y
             no entre un nombre y su valor. */}
         <h1 className="inline tracking-widest text-hud uppercase">PokéRadar</h1>{" "}
-        · <span className="whitespace-nowrap">semilla {seed}</span> ·{" "}
-        <span className="whitespace-nowrap">huella {hash}</span> ·{" "}
+        · <span className="whitespace-nowrap">{settings.operator}</span> ·{" "}
+        <span className="whitespace-nowrap">
+          cobertura {percent.format(coverage)}
+        </span>{" "}
+        ·{" "}
         <span className="whitespace-nowrap">
           {detected.size} de {mapProps.spawns.length} señales
+        </span>{" "}
+        ·{" "}
+        <span className="whitespace-nowrap">
+          {identified.size}{" "}
+          {identified.size === 1 ? "identificada" : "identificadas"}
         </span>
       </div>
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-background/80 pl-1.5 font-mono text-xs text-muted-foreground font-stretch-condensed">
+        <Clock />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Ajustes del turno"
+          onClick={() => setSettingsOpen(true)}
+        >
+          <Settings2Icon aria-hidden />
+        </Button>
+      </div>
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent>
+          <DialogTitle>Ajustes del turno</DialogTitle>
+          <DialogDescription>Se guardan en este navegador.</DialogDescription>
+          <ShiftForm
+            initial={settings}
+            submitLabel="Guardar"
+            onSubmit={(next) => {
+              saveShiftSettings(next);
+              setSettingsOpen(false);
+            }}
+          />
+          {/* La huella del mundo: si coincide entre local y producción, el mundo es el mismo. */}
+          <p className="font-mono text-xs text-muted-foreground">
+            Mundo: semilla {seed} · huella {hash}
+          </p>
+        </DialogContent>
+      </Dialog>
       {/* El control de las antenas, abajo a la izquierda. El botón alterna el modo de instalación
           (aria-pressed); con las cuatro instaladas queda deshabilitado, y el contador dice por qué.
           Arriba, a la vista, lo último que pasó y, en el modo, qué hacer: el panel está anclado
@@ -202,6 +274,10 @@ export function MonitoringRoom({
         detected={detected}
         onDetect={onDetect}
         onSweepEnd={onSweepEnd}
+        onCoverage={setCoverage}
+        onIdentify={(id) =>
+          setIdentified((previous) => new Set(previous).add(id))
+        }
       />
     </>
   );
