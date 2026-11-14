@@ -86,12 +86,15 @@ export function focusSignal(
     zoom: Math.max(keepZoom, worldZoom + FOCUS_ZOOM_STEP),
     padding,
   };
-  if (animate && !prefersReducedMotion()) map.flyTo(camera);
+  // `essential`: la decisión es nuestra. Sin él, MapLibre mira solo `prefers-reduced-motion` y no la
+  // intensidad elegida en los ajustes.
+  if (animate && !prefersReducedMotion())
+    map.flyTo({ ...camera, essential: true });
   else map.jumpTo(camera);
 }
 
 /** Al cerrar la ficha, el mapa vuelve a usar toda la pantalla: se saca el padding. */
 export function releaseFocus(map: MapLibreMap) {
   if (prefersReducedMotion()) map.jumpTo({ padding: NO_PADDING });
-  else map.easeTo({ padding: NO_PADDING });
+  else map.easeTo({ padding: NO_PADDING, essential: true });
 }

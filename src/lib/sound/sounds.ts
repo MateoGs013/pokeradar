@@ -10,8 +10,13 @@ let context: AudioContext | null = null;
  */
 export function playPing() {
   context ??= new AudioContext();
-  // Un contexto creado antes de que la persona toque la página arranca suspendido.
-  if (context.state === "suspended") void context.resume();
+  // Un contexto creado antes de que la persona toque la página arranca suspendido, y su reloj no
+  // corre: los tonos pedidos ahí sonarían todos juntos al primer toque (medido: 5 tonos pedidos con
+  // el contexto suspendido al recargar). Se pide que arranque y ese ping no suena.
+  if (context.state !== "running") {
+    void context.resume();
+    return;
+  }
   const now = context.currentTime;
   const tone = context.createOscillator();
   tone.type = "sine";
