@@ -40,6 +40,8 @@ interface RadarProps {
   onDetect: (ids: number[]) => void;
   /** Avisa que una estación terminó su vuelta y cuántas señales detectó en total. */
   onSweepEnd: (station: Station, found: number) => void;
+  /** Avisa, al terminar cada vuelta, qué parte del mundo está despejada (de 0 a 1). */
+  onCoverage: (coverage: number) => void;
   /** Avisa que el mapa ya dibujó un cuadro con la niebla: recién ahí se puede sacar el cartel. */
   onFogDrawn: () => void;
 }
@@ -52,6 +54,7 @@ export function Radar({
   spawns,
   onDetect,
   onSweepEnd,
+  onCoverage,
   onFogDrawn,
 }: RadarProps) {
   const fogDrawn = useEffectEvent(onFogDrawn);
@@ -119,7 +122,10 @@ export function Radar({
       position={station.position}
       mark={station.kind === "antenna"}
       onDetect={onDetect}
-      onSweepEnd={(found) => onSweepEnd(station, found)}
+      onSweepEnd={(found) => {
+        onSweepEnd(station, found);
+        onCoverage(network.coverage());
+      }}
     />
   ));
 }

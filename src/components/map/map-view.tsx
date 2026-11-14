@@ -68,6 +68,10 @@ export interface MapViewProps {
   onDetect: (ids: number[]) => void;
   /** Una estación terminó su vuelta, con cuántas señales detectó. */
   onSweepEnd: (station: Station, found: number) => void;
+  /** Al terminar cada vuelta: qué parte del mundo está despejada, de 0 a 1. */
+  onCoverage: (coverage: number) => void;
+  /** Se identificó por primera vez la especie de una señal. */
+  onIdentify: (speciesId: number) => void;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -177,6 +181,8 @@ export function MapView({
   detected,
   onDetect,
   onSweepEnd,
+  onCoverage,
+  onIdentify,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -194,6 +200,7 @@ export function MapView({
   const [dossierOpen, setDossierOpen] = useState(false);
   const { identification, identified, retry } = usePokemonDetail(
     selection?.spawn.speciesId ?? null,
+    onIdentify,
   );
   // Dónde está la cámara mientras la ficha está abierta. Lo lee el redimensionado, que encuadra el
   // mundo otra vez y después vuelve a la señal.
@@ -435,6 +442,7 @@ export function MapView({
             spawns={spawns}
             onDetect={onDetect}
             onSweepEnd={onSweepEnd}
+            onCoverage={onCoverage}
             onFogDrawn={() => setFogDrawn(true)}
           />
           <SignalMarkers
