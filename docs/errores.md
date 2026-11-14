@@ -8,36 +8,37 @@ Para agregar una entrada se puede usar `/registrar-error`.
 
 ## Índice
 
-| Id   | Fecha      | Origen   | Área    | Resumen                                                                                                             |
-| ---- | ---------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
-| E-01 | 2026-11-12 | IA       | docs    | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible                        |
-| E-02 | 2026-11-12 | IA       | docs    | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                                         |
-| E-03 | 2026-11-12 | IA       | data    | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset                             |
-| E-04 | 2026-11-12 | IA       | world   | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil               |
-| E-05 | 2026-11-12 | IA       | world   | Afirmó un borde de mar garantizado en 10 celdas sin medirlo; quedaban 71 celdas de tierra                           |
-| E-06 | 2026-11-12 | IA       | docs    | Al agregar una tabla en decisiones.md, mudó la fila de tw-animate-css a la tabla equivocada                         |
-| E-07 | 2026-11-12 | librería | map     | Con Turbopack, MapLibre v6 se queda sin la URL de su worker y el worker pide la página                              |
-| E-08 | 2026-11-12 | IA       | map     | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
-| E-09 | 2026-11-12 | IA       | docs    | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
-| E-10 | 2026-11-12 | IA       | map     | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
-| E-11 | 2026-11-12 | IA       | map     | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
-| E-12 | 2026-11-12 | IA       | docs    | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
-| E-13 | 2026-11-12 | IA       | map     | Afirmó sin medir que en pantallas extremas el mapa carga; con el tope de ±180°, desde 30:1 de ancho no cargaba      |
-| E-14 | 2026-11-12 | IA       | map     | El arreglo del cartel de carga dejó el canvas enfocable con Tab debajo del cartel; se probó sin teclado             |
-| E-15 | 2026-11-12 | IA       | map     | Dos comentarios del PR #3 afirmaban comportamientos sin medirlos, y la cuenta de E-11 dejaba afuera a E-03 y E-09   |
-| E-16 | 2026-11-12 | IA       | map     | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
-| E-17 | 2026-11-13 | librería | map     | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
-| E-18 | 2026-11-13 | IA       | dossier | Los comentarios decían que la ficha entraba deslizándose; aparecía de golpe, y el PR daba 600 ms en vez de 300      |
-| E-19 | 2026-11-13 | IA       | docs    | El README resumía errores.md sin releerlo, y la entrada del plan contradecía la tabla que cambiaba                  |
-| E-20 | 2026-11-13 | IA       | docs    | 16 hashes de E-11 a E-19 eran los de las ramas; el merge con --rebase los reescribe y no están en main              |
-| E-21 | 2026-11-13 | IA       | ui      | Commits del PR #7 con mediciones de otro estado de la rama, y saltos de la ficha medidos sin el texto más largo     |
-| E-22 | 2026-11-13 | IA       | docs    | Ejemplos de etiquetas de señales escritos de memoria en el README, comentarios y un commit; ninguna señal los tenía |
-| E-23 | 2026-11-13 | IA       | map     | Un comentario describía la regla vieja de `labelAnchor`, y el contraste de los nombres se afirmaba con una cuenta   |
-| E-24 | 2026-11-13 | IA       | radar   | Un commit daba parejo el borde de la niebla, medido en puntos sueltos; quedaba una línea sin niebla                 |
-| E-25 | 2026-11-13 | IA       | map     | Un commit sostenía WCAG 1.4.3 con una cuenta, y el fondo del cartel se midió en un clon, no en el real              |
-| E-26 | 2026-11-13 | IA       | radar   | Las antenas dejaron el aro y el haz de los radares debajo del mapa; se miró el orden del DOM, no una captura        |
-| E-27 | 2026-11-13 | IA       | map     | Un commit decía que las flechas movían el mapa para ubicar la antena; se midió acercado y en frío no se movía       |
-| E-28 | 2026-11-14 | IA       | radar   | Dos comentarios del radar quedaron viejos; el de la doble corrida escondía un aviso falso con movimiento reducido   |
+| Id   | Fecha      | Origen   | Área       | Resumen                                                                                                             |
+| ---- | ---------- | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| E-01 | 2026-11-12 | IA       | docs       | Dimensionó el alcance con las "3 a 4 horas" de la consigna en vez del tiempo real disponible                        |
+| E-02 | 2026-11-12 | IA       | docs       | Pasó un comando de taskkill con flags `/X`, que Git Bash convierte en rutas                                         |
+| E-03 | 2026-11-12 | IA       | data       | Un comentario daba un motivo falso para descartar las formas alternativas en el dataset                             |
+| E-04 | 2026-11-12 | IA       | world      | Intentó liberar el borde del mapa endureciendo la caída, sin ver que el mar está fijado por percentil               |
+| E-05 | 2026-11-12 | IA       | world      | Afirmó un borde de mar garantizado en 10 celdas sin medirlo; quedaban 71 celdas de tierra                           |
+| E-06 | 2026-11-12 | IA       | docs       | Al agregar una tabla en decisiones.md, mudó la fila de tw-animate-css a la tabla equivocada                         |
+| E-07 | 2026-11-12 | librería | map        | Con Turbopack, MapLibre v6 se queda sin la URL de su worker y el worker pide la página                              |
+| E-08 | 2026-11-12 | IA       | map        | Puso la posición en el div del mapa, donde el CSS de MapLibre le gana a Tailwind; antes culpó al `<main>` sin medir |
+| E-09 | 2026-11-12 | IA       | docs       | Escribió E-07 y E-08 de memoria: hora inventada, origen equivocado y una causa sin medir                            |
+| E-10 | 2026-11-12 | IA       | map        | Afirmó en un comentario que las señales cumplían WCAG 2.5.8 sin leer el criterio ni medir; quedaban a 23,3 px       |
+| E-11 | 2026-11-12 | IA       | map        | La descripción del PR #3 decía que sin WebGL solo faltaba el mapa, sin probarlo; se caía la página entera           |
+| E-12 | 2026-11-12 | IA       | docs       | Dio un motivo falso para la prevención de E-11: una regla general de medir antes de afirmar que no existe           |
+| E-13 | 2026-11-12 | IA       | map        | Afirmó sin medir que en pantallas extremas el mapa carga; con el tope de ±180°, desde 30:1 de ancho no cargaba      |
+| E-14 | 2026-11-12 | IA       | map        | El arreglo del cartel de carga dejó el canvas enfocable con Tab debajo del cartel; se probó sin teclado             |
+| E-15 | 2026-11-12 | IA       | map        | Dos comentarios del PR #3 afirmaban comportamientos sin medirlos, y la cuenta de E-11 dejaba afuera a E-03 y E-09   |
+| E-16 | 2026-11-12 | IA       | map        | El rótulo sobre el mapa quedó sin fondo y por debajo de 4,5:1 en cuatro biomas, y la página perdió su `<h1>`        |
+| E-17 | 2026-11-13 | librería | map        | Con la ficha abierta, flyTo y jumpTo recortaban el destino con el padding viejo; la señal quedaba bajo el panel     |
+| E-18 | 2026-11-13 | IA       | dossier    | Los comentarios decían que la ficha entraba deslizándose; aparecía de golpe, y el PR daba 600 ms en vez de 300      |
+| E-19 | 2026-11-13 | IA       | docs       | El README resumía errores.md sin releerlo, y la entrada del plan contradecía la tabla que cambiaba                  |
+| E-20 | 2026-11-13 | IA       | docs       | 16 hashes de E-11 a E-19 eran los de las ramas; el merge con --rebase los reescribe y no están en main              |
+| E-21 | 2026-11-13 | IA       | ui         | Commits del PR #7 con mediciones de otro estado de la rama, y saltos de la ficha medidos sin el texto más largo     |
+| E-22 | 2026-11-13 | IA       | docs       | Ejemplos de etiquetas de señales escritos de memoria en el README, comentarios y un commit; ninguna señal los tenía |
+| E-23 | 2026-11-13 | IA       | map        | Un comentario describía la regla vieja de `labelAnchor`, y el contraste de los nombres se afirmaba con una cuenta   |
+| E-24 | 2026-11-13 | IA       | radar      | Un commit daba parejo el borde de la niebla, medido en puntos sueltos; quedaba una línea sin niebla                 |
+| E-25 | 2026-11-13 | IA       | map        | Un commit sostenía WCAG 1.4.3 con una cuenta, y el fondo del cartel se midió en un clon, no en el real              |
+| E-26 | 2026-11-13 | IA       | radar      | Las antenas dejaron el aro y el haz de los radares debajo del mapa; se miró el orden del DOM, no una captura        |
+| E-27 | 2026-11-13 | IA       | map        | Un commit decía que las flechas movían el mapa para ubicar la antena; se midió acercado y en frío no se movía       |
+| E-28 | 2026-11-14 | IA       | radar      | Dos comentarios del radar quedaron viejos; el de la doble corrida escondía un aviso falso con movimiento reducido   |
+| E-29 | 2026-11-14 | IA       | onboarding | El inicio de turno y el arranque quedaron en hud/ y map/; CLAUDE.md los pone en src/components/onboarding/          |
 
 ## Formato de cada entrada
 
@@ -486,3 +487,17 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Prevención:** en `CLAUDE.md`, al cambiar un comportamiento se buscan en el mismo paso los comentarios y docs que lo
   describen, por el nombre de lo que cambió. Es la segunda vez: en E-23 se actualizó un comentario y no el que lo
   resumía.
+
+### E-29 · 2026-11-14 01:45 · IA · onboarding
+
+- **Síntoma:** en la rama del bloque 3, antes del push, "feat(onboarding): agregar el inicio de turno y el arranque con
+  Rotom" dejó el diálogo del inicio de turno en `src/components/hud/monitoring-room.tsx` y el cartel de Rotom en
+  `src/components/map/map-status.tsx`. La estructura de `CLAUDE.md` los pone en `src/components/onboarding/`, y el
+  commit usaba ese scope.
+- **Causa:** Claude escribió cada parte junto al componente que la usaba y no contrastó la estructura objetivo de
+  `CLAUDE.md` antes de crear los archivos.
+- **Detección:** Claude, al buscar con grep los docs que nombraban el inicio de turno para actualizarlos (la regla de
+  E-28): apareció la línea de `CLAUDE.md`.
+- **Arreglo:** "refactor(onboarding): mover el inicio de turno y el arranque a su carpeta", en la misma rama y antes del
+  push: `shift-start.tsx` y `system-boot.tsx` en `src/components/onboarding/`, sin cambios de comportamiento.
+- **Prevención:** ninguna nueva: la estructura ya está en `CLAUDE.md`, y la búsqueda de E-28 lo encontró antes del PR.
