@@ -1,6 +1,7 @@
 "use client";
 
-// El mapa: MapLibre con el mundo generado como única fuente, sin tiles externos.
+// El mapa: MapLibre. En el modo mundo, el mundo generado es la única fuente y no hay teselas; en el
+// modo real, el estilo y las teselas son de OpenFreeMap (real-style.ts).
 // Se carga solo en el navegador (ver map-loader.tsx): MapLibre necesita `window` y WebGL.
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -182,9 +183,22 @@ function placeLayers(): SymbolLayerSpecification[] {
   ];
 }
 
-/** Límite del mapa: el mundo agrandado a la proporción actual del contenedor. */
-function worldLimit(world: Bounds, container: HTMLElement): Bounds {
-  return expandToAspect(world, container.clientWidth / container.clientHeight);
+/**
+ * Límite del mapa: el mundo (`bounds`, en coordenadas del mundo) agrandado a la proporción actual del
+ * contenedor y después pasado al mapa. Se agranda antes de convertir porque `expandToAspect` cuenta
+ * la proporción en grados, que solo vale cerca del ecuador, como el mundo inventado: con los límites
+ * ya en el mapa real, a la latitud de Viedma el límite salía angosto y el mundo quedaba cortado en
+ * una pantalla apaisada. El marco estira la longitud justo para que el mundo conserve su forma.
+ */
+function worldLimit(
+  frame: Frame,
+  bounds: Bounds,
+  container: HTMLElement,
+): Bounds {
+  return mapBounds(
+    frame,
+    expandToAspect(bounds, container.clientWidth / container.clientHeight),
+  );
 }
 
 /**
@@ -273,12 +287,16 @@ export function MapView({
   weather,
   boosts,
   night,
-  frame,
+  frame: initialFrame,
 }: MapViewProps) {
+  // El marco con el que se creó el mapa. No cambia mientras la página vive, porque cambiar de zona
+  // recarga (zone-link.tsx); en el estado y no en la prop, para no contar con la identidad del
+  // useMemo que lo arma.
+  const [frame] = useState(initialFrame);
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
-  const initialRef = useRef({ biomes, bounds, places, spawns, frame });
+  const initialRef = useRef({ biomes, bounds, places, spawns });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Si el mapa ya dibujó la niebla: hasta entonces sigue el cartel de carga.
@@ -330,15 +348,19 @@ export function MapView({
       span.className = line;
       aim.append(span);
     }
+    // La mira se guarda en coordenadas del mundo y el Marker recibe su conversión: en el modo real,
+    // ida y vuelta por el marco no da exacto, y una mira frenada en el borde volvía un pelo afuera
+    // del mundo, donde la antena no se instala.
+    let aimed: Position = frame.fromMap(loadedMap.getCenter().toArray());
     const marker = new Marker({ element: aim })
-      .setLngLat(loadedMap.getCenter())
+      .setLngLat(frame.toMap(aimed))
       .addTo(loadedMap);
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       if (event.key === "Enter") {
         event.preventDefault();
-        install(frame.fromMap(marker.getLngLat().toArray()));
+        install(aimed);
         return;
       }
       const direction = AIM_DIRECTIONS[event.key];
@@ -358,10 +380,11 @@ export function MapView({
       );
       // La mira no sale del mundo: afuera no hay nada que despejar.
       const [[west, south], [east, north]] = bounds;
-      const lngLat = frame.toMap([
+      aimed = [
         Math.min(Math.max(lng, west), east),
         Math.min(Math.max(lat, south), north),
-      ]);
+      ];
+      const lngLat = frame.toMap(aimed);
       marker.setLngLat(lngLat);
       // Con el mapa acercado, si la mira sale de la vista, el mapa la sigue.
       if (!loadedMap.getBounds().contains(lngLat)) {
@@ -440,7 +463,6 @@ export function MapView({
     const container = containerRef.current;
     if (!container) return;
     const initial = initialRef.current;
-    const { frame } = initial;
     // El mundo en coordenadas del mapa: para encuadrarlo y para el límite.
     const world = mapBounds(frame, initial.bounds);
     const nightLayer: BackgroundLayerSpecification = {
@@ -471,7 +493,7 @@ export function MapView({
       bounds: world,
       // Si el límite fuera el mundo tal cual, en una pantalla angosta MapLibre acercaría el mapa
       // para no mostrar nada afuera, y la isla quedaría cortada a los costados.
-      maxBounds: worldLimit(world, container),
+      maxBounds: worldLimit(frame, initial.bounds, container),
       maxZoom: MAX_ZOOM + frame.zoomOffset,
       // El canvas de MapLibre ya es una región con nombre (role="region", y tabindex="0" para
       // moverlo con las flechas). `locale` traduce ese nombre, que por defecto es "Map".
@@ -500,7 +522,7 @@ export function MapView({
     const onResize = () => {
       // El zoom de antes, para que volver a la señal no lo baje al del mundo entero.
       const zoom = map.getZoom();
-      map.setMaxBounds(worldLimit(world, container));
+      map.setMaxBounds(worldLimit(frame, initial.bounds, container));
       map.fitBounds(world, { animate: false, absolutePadding: true });
       const focus = focusRef.current;
       if (focus) {
@@ -518,9 +540,13 @@ export function MapView({
         map.addImage(id, cityDot());
     });
     // Antes de `load`, un error deja el mapa sin dibujar: por ejemplo, si no baja el worker (como
-    // en E-07). Después de `load` se deja de escuchar, y MapLibre los muestra en la consola.
-    const onError = ({ error }: MapErrorEvent) =>
-      setFailure(new Error(error.message));
+    // en E-07), o en el modo real, si no baja el estilo (sin estilo no hay `load`). Una tesela del
+    // mapa real que falla, no: el error trae su `tile`, y el radar, la niebla y las señales no
+    // dependen de ella. Después de `load` se deja de escuchar, y MapLibre los muestra en la consola.
+    const onError = (event: MapErrorEvent) => {
+      if (frame.mode === "real" && "tile" in event) return;
+      setFailure(new Error(event.error.message));
+    };
     map.on("error", onError);
     const onLoad = () => {
       map.off("error", onError);
@@ -536,7 +562,8 @@ export function MapView({
       setLoadedMap(null);
       setFogDrawn(false);
     };
-  }, []);
+    // `frame` sale del estado y no cambia nunca: el mapa se sigue creando una sola vez.
+  }, [frame]);
 
   // React lleva al error boundary (map-error.tsx) lo que se lanza al renderizar o en un efecto,
   // como el GPUInitializationError del constructor, pero no lo que llega en un evento: por eso

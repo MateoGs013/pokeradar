@@ -41,9 +41,12 @@ function recolor(layer: LayerSpecification): LayerSpecification {
       };
     case "fill": {
       const token = fillToken(layer.id);
-      return token
-        ? { ...layer, paint: { ...layer.paint, "fill-color": cssToken(token) } }
-        : layer;
+      if (!token) return layer;
+      // Con un patrón, MapLibre ignora el color: el bosque del estilo (`landcover_wood`) pide la
+      // imagen "wood-pattern", y se saca para que se pinte con el token.
+      const paint = { ...layer.paint, "fill-color": cssToken(token) };
+      delete paint["fill-pattern"];
+      return { ...layer, paint };
     }
     case "line":
       return {
@@ -120,8 +123,10 @@ function outsideLayer(world: Bounds): {
 }
 
 /**
- * El estilo de OpenFreeMap con los colores del HUD, `night` (la capa de la noche) antes de los
- * nombres, como en el mundo generado, y afuera del mundo, la niebla fija, encima de todo.
+ * El estilo de OpenFreeMap con los colores del HUD, `night` (la capa de la noche) después de la
+ * última capa que no es de nombres, y afuera del mundo, la niebla fija, encima de todo. La noche no
+ * va antes del primer nombre: el estilo intercala los nombres del agua entre los rellenos y las
+ * rutas, y las rutas, los límites y los edificios quedaban encima de la noche, sin oscurecer.
  */
 export function hudStyle(
   style: StyleSpecification,
@@ -129,8 +134,10 @@ export function hudStyle(
   world: Bounds,
 ): StyleSpecification {
   const layers = style.layers.map(recolor);
-  const firstSymbol = layers.findIndex((layer) => layer.type === "symbol");
-  layers.splice(firstSymbol === -1 ? layers.length : firstSymbol, 0, night);
+  const lastNotSymbol = layers
+    .map((layer) => layer.type !== "symbol")
+    .lastIndexOf(true);
+  layers.splice(lastNotSymbol + 1, 0, night);
   const outside = outsideLayer(world);
   return {
     ...style,

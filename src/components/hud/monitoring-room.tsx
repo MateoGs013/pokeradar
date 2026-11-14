@@ -679,24 +679,10 @@ export function MonitoringRoom({
             <span className="whitespace-nowrap">Esc cancela.</span>
           </p>
         )}
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <Button
-            aria-pressed={installing}
-            disabled={full}
-            onClick={toggleInstall}
-            className="aria-pressed:bg-hud/15"
-          >
-            Instalar antena
-          </Button>
-          <span className="whitespace-nowrap">
-            Antenas {antennas.length} de {MAX_ANTENNAS}
-          </span>
-          <Button onClick={() => setLogOpen(true)}>
-            Bitácora {log.length > 0 && `(${log.length})`}
-          </Button>
-        </div>
         {/* Los datos del mapa real piden atribución: el texto y los enlaces del TileJSON de
-            OpenFreeMap (tiles.openfreemap.org/planet, campo "attribution"). */}
+            OpenFreeMap (tiles.openfreemap.org/planet, campo "attribution"). Va arriba de los
+            botones, como las líneas de estado: el servidor no conoce el modo y el párrafo aparece
+            al hidratar; como el panel crece hacia arriba, debajo de los botones los hacía saltar. */}
         {frame.mode === "real" && (
           <p>
             Mapa:{" "}
@@ -728,6 +714,22 @@ export function MonitoringRoom({
             </a>
           </p>
         )}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <Button
+            aria-pressed={installing}
+            disabled={full}
+            onClick={toggleInstall}
+            className="aria-pressed:bg-hud/15"
+          >
+            Instalar antena
+          </Button>
+          <span className="whitespace-nowrap">
+            Antenas {antennas.length} de {MAX_ANTENNAS}
+          </span>
+          <Button onClick={() => setLogOpen(true)}>
+            Bitácora {log.length > 0 && `(${log.length})`}
+          </Button>
+        </div>
       </div>
       <ShiftLog
         open={logOpen}
