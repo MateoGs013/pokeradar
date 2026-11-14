@@ -71,9 +71,11 @@ export function RadarStation({
       element.append(post);
     }
     const marker = new Marker({ element }).setLngLat(position).addTo(map);
-    // Marker lo agrega al final del contenedor, encima de lo que ya estaba. Al principio queda
-    // debajo de las señales, también en una antena que se instala con las señales ya puestas.
-    map.getCanvasContainer().prepend(element);
+    // Marker lo agrega al final del contenedor, encima de las señales. El contenedor también tiene
+    // el canvas del mapa, primero: justo después del canvas, el aro queda encima del mapa y debajo
+    // de las señales, también en una antena que se instala con las señales ya puestas. Al
+    // principio del contenedor, el mapa lo tapaba (E-26).
+    map.getCanvas().after(element);
     const resize = () => {
       const center = map.project(position);
       const edge = map.project([position[0] + RADAR_RADIUS, position[1]]);
