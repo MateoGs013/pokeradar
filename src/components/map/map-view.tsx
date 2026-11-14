@@ -423,9 +423,14 @@ export function MapView({
   // La URL dice qué señal tiene la ficha abierta (`?p=25`): copiada de la barra de direcciones,
   // abre la sala con esa señal identificada. Al cerrar la ficha, se saca. replaceState y no
   // pushState: abrir y cerrar fichas no llena el historial del botón Atrás. Next integra los dos al
-  // router (docs de Next, "Linking and Navigating", "Native History API").
+  // router (docs de Next, "Linking and Navigating", "Native History API"). Hasta que se abre la
+  // primera ficha, la URL queda como llegó: con `?p=25`, el mapa se monta antes de abrir esa ficha,
+  // y sacarlo ahí perdía el enlace si se recargaba en ese momento.
   const openId = dossierOpen ? (selection?.spawn.speciesId ?? null) : null;
+  const dossierShown = useRef(false);
   useEffect(() => {
+    if (openId !== null) dossierShown.current = true;
+    if (!dossierShown.current) return;
     const params = new URLSearchParams(window.location.search);
     if (openId === null) params.delete("p");
     else params.set("p", String(openId));
@@ -594,6 +599,7 @@ export function MapView({
                 : []
             }
             spawns={spawns}
+            detected={detected}
             onDetect={onDetect}
             onSweepEnd={onSweepEnd}
             onCoverage={onCoverage}

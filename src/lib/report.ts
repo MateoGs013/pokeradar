@@ -1,5 +1,6 @@
 // La bitácora del turno y su informe (docs/concepto.md, "Herramientas del operador"): lo identificado,
 // con hora, lugar y nivel de amenaza, y el mismo listado como CSV para abrir en una planilla.
+import type { ThreatLevel } from "@/lib/threat";
 
 export interface LogEntry {
   speciesId: number;
@@ -8,8 +9,8 @@ export interface LogEntry {
   time: number;
   /** Dónde está la señal: "la montaña, al sudeste de Monte Brasa". */
   place: string;
-  /** El nivel de amenaza de la ficha: "Bajo", "Medio", "Alto" o "Crítico". */
-  threat: string;
+  /** El nivel de amenaza de la ficha (lib/threat.ts). */
+  threat: ThreatLevel;
   shiny: boolean;
 }
 
@@ -45,14 +46,14 @@ export function toCsv(entries: readonly LogEntry[]): string {
       entry.place,
     ]),
   ];
-  return `﻿${rows.map((row) => row.map(field).join(",")).join("\r\n")}\r\n`;
+  return `\ufeff${rows.map((row) => row.map(field).join(",")).join("\r\n")}\r\n`;
 }
 
 /** "pokeradar-operador-07-2026-11-14-0457.csv": el nombre en clave sin acentos ni espacios. */
 export function reportFileName(operator: string, date: Date): string {
   const slug = operator
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");

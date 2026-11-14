@@ -14,7 +14,6 @@ import {
   notify,
 } from "@/components/crew/crew-notices";
 import { TYPE_LABELS } from "@/components/dossier/labels";
-import { threatLevel } from "@/components/dossier/threat";
 import {
   modeSearch,
   realFrame,
@@ -52,6 +51,7 @@ import { REDUCED_MOTION_QUERY, systemMotion } from "@/lib/motion";
 import { NIGHT_BOOST } from "@/lib/night";
 import { playCry, playPing } from "@/lib/sound/sounds";
 import { isShiny } from "@/lib/shiny";
+import { threatLevel } from "@/lib/threat";
 import {
   CONDITIONS,
   type Weather,
@@ -124,14 +124,18 @@ function Shortcuts() {
   );
 }
 
+/** Un número de especie en la URL: solo dígitos, sin ceros adelante y con cinco como mucho. */
+const SPECIES_ID = /^[1-9]\d{0,4}$/;
+
 /**
  * La señal de un enlace compartido (`?p=25`, docs/concepto.md, "Compartir un avistamiento"), si
- * existe en este mundo. `invalid` es el número pedido cuando no hay ninguna señal con él.
+ * existe en este mundo. `invalid` es lo pedido cuando no hay ninguna señal con eso. `Number` solo
+ * no alcanza: también acepta "", "0x4" y "4.0".
  */
 function useSharedSignal(spawns: MapViewProps["spawns"]) {
   const raw = useSearchParam("p");
   if (raw === null) return { shared: null, invalid: null };
-  const id = Number(raw);
+  const id = SPECIES_ID.test(raw) ? Number(raw) : null;
   return spawns.some((spawn) => spawn.speciesId === id)
     ? { shared: id, invalid: null }
     : { shared: null, invalid: raw };
@@ -256,7 +260,7 @@ export function MonitoringRoom({
   // Un aviso para el lector de pantalla. Si es igual al anterior, el texto de la región viva no
   // cambiaría y no se volvería a anunciar: se alterna un espacio duro al final, que no se lee.
   const announce = (text: string) =>
-    setAnnouncement((previous) => (previous === text ? `${text} ` : text));
+    setAnnouncement((previous) => (previous === text ? `${text}\u00a0` : text));
 
   // Abrir una señal desde un aviso es lo mismo que tocarla en el mapa: se abre la ficha, la cámara
   // vuela hasta ella y, al cerrar, el foco vuelve a su botón.
@@ -412,13 +416,16 @@ export function MonitoringRoom({
     return () => observer.disconnect();
   }, [started, shared]);
 
-  // Un enlace con una señal que no existe: Rotom lo dice, una vez, y la sala sigue.
+  // Un enlace con una señal que no existe: Rotom lo dice, una vez, y la sala sigue. Repite el número
+  // pedido; cualquier otra cosa no la repite.
   const invalidAnnounced = useRef(false);
   const announceInvalid = useEffectEvent((raw: string) =>
     notify({
       member: "rotom",
       priority: "alerta",
-      text: `El enlace pide la señal #${raw}, pero no hay ninguna con ese número en este mundo.`,
+      text: SPECIES_ID.test(raw)
+        ? `El enlace pide la señal #${raw}, pero no hay ninguna con ese número en este mundo.`
+        : "El enlace pide una señal que no existe en este mundo.",
     }),
   );
   useEffect(() => {
@@ -698,8 +705,9 @@ export function MonitoringRoom({
           que las antenas despejan el resto) y, en el modo, qué hacer: el panel está anclado
           abajo y crece hacia arriba, así que el botón no se mueve cuando esas líneas aparecen o se
           van. El fondo es opaco: con el del HUD (al 80 %), el pulso de una señal debajo bajaba
-          el contraste del texto (medido). Con `data-antenna-control`, el mapa sabe que la tecla A
-          vale también con el foco acá (map-view.tsx). */}
+          el contraste del texto (medido). Con `data-antenna-control`, la tecla A (map-view.tsx) y
+          los atajos de la sala (B, M y ?) valen también con el foco en este panel, también en el
+          botón de la bitácora. */}
       <div
         data-antenna-control
         className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-(--spacing(6)))] flex-col items-start gap-1.5 rounded-md border border-border bg-background px-1.5 py-1 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]"

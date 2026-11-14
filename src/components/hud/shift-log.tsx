@@ -71,7 +71,7 @@ export function ShiftLog({
                     )}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Amenaza {entry.threat.toLowerCase()} ·{" "}
+                    Nivel de amenaza {entry.threat.toLowerCase()} ·{" "}
                     {entry.place.charAt(0).toUpperCase() + entry.place.slice(1)}
                   </p>
                 </div>
