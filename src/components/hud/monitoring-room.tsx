@@ -18,6 +18,7 @@ interface MonitoringRoomProps extends Omit<
   MapViewProps,
   | "antennas"
   | "installing"
+  | "onToggleInstall"
   | "onInstall"
   | "detected"
   | "onDetect"
@@ -98,11 +99,32 @@ export function MonitoringRoom({
     setAnnouncement(installed);
   };
 
+  // Entra o sale del modo de instalación, desde el botón o con la tecla A. Al entrar, el resultado
+  // de la antena anterior ya no hace falta, y el lector de pantalla recibe cómo seguir.
+  const toggleInstall = () => {
+    if (installing) {
+      setInstalling(false);
+      setAnnouncement("Instalación cancelada");
+      return;
+    }
+    if (antennas.length >= MAX_ANTENNAS) {
+      setAnnouncement(`Las ${MAX_ANTENNAS} antenas ya están instaladas`);
+      return;
+    }
+    setRadarStatus("");
+    setAnnouncement(
+      "Instalando una antena: tocá el mapa donde va, o desde el mapa movelo con las flechas y apretá Enter para instalarla en la mira. Esc cancela.",
+    );
+    setInstalling(true);
+  };
+
   // Esc sale del modo de instalación sin instalar.
   useEffect(() => {
     if (!installing) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setInstalling(false);
+      if (event.key !== "Escape") return;
+      setInstalling(false);
+      setAnnouncement("Instalación cancelada");
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
@@ -138,11 +160,7 @@ export function MonitoringRoom({
           <Button
             aria-pressed={installing}
             disabled={full}
-            onClick={() => {
-              // Al entrar al modo, el resultado de la antena anterior ya no hace falta.
-              if (!installing) setRadarStatus("");
-              setInstalling(!installing);
-            }}
+            onClick={toggleInstall}
             className="aria-pressed:bg-hud/15"
           >
             Instalar antena
@@ -152,7 +170,9 @@ export function MonitoringRoom({
           </span>
         </div>
         {radarStatus && <p>{radarStatus}</p>}
-        {installing && <p>Tocá el mapa donde va la antena</p>}
+        {installing && (
+          <p>Tocá el mapa donde va la antena. Con teclado: flechas y Enter.</p>
+        )}
       </div>
       <p role="status" className="sr-only">
         {announcement}
@@ -161,6 +181,7 @@ export function MonitoringRoom({
         {...mapProps}
         antennas={antennas}
         installing={installing}
+        onToggleInstall={toggleInstall}
         onInstall={onInstall}
         detected={detected}
         onDetect={onDetect}

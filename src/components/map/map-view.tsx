@@ -57,6 +57,8 @@ export interface MapViewProps {
   antennas: readonly Station[];
   /** Si se está eligiendo dónde instalar una antena: un clic en el mapa la ubica. */
   installing: boolean;
+  /** Entrar o salir del modo de instalación: la tecla A. */
+  onToggleInstall: () => void;
   /** Se eligió un punto del mapa para la antena. */
   onInstall: (position: Position) => void;
   /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
@@ -155,6 +157,7 @@ export function MapView({
   radarBase,
   antennas,
   installing,
+  onToggleInstall,
   onInstall,
   detected,
   onDetect,
@@ -184,6 +187,8 @@ export function MapView({
   // Con el modo de instalación, un clic en el mapa elige el lugar de la antena. MapLibre no emite
   // `click` si el puntero se movió (un arrastre), así que mover el mapa no instala nada. Un clic en
   // una señal también le llega al mapa: ese abre la ficha y no instala.
+  // Con teclado, el foco en el mapa: las flechas lo mueven (MapLibre) y Enter instala en la mira,
+  // que marca el centro.
   const install = useEffectEvent(onInstall);
   useEffect(() => {
     if (!loadedMap || !installing) return;
@@ -195,12 +200,45 @@ export function MapView({
         return;
       install(lngLat.toArray());
     };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      install(loadedMap.getCenter().toArray());
+    };
     loadedMap.on("click", onClick);
+    canvas.addEventListener("keydown", onKeyDown);
     return () => {
       loadedMap.off("click", onClick);
+      canvas.removeEventListener("keydown", onKeyDown);
       canvas.style.cursor = "";
     };
   }, [loadedMap, installing]);
+
+  // La tecla A entra o sale del modo de instalación (docs/concepto.md, "Teclado"), salvo con la
+  // ficha abierta, mientras se escribe o con una tecla modificadora. Al entrar, el foco va al mapa:
+  // lo que sigue es moverlo con las flechas.
+  const toggleInstall = useEffectEvent(() => {
+    if (!loadedMap) return;
+    if (!installing) loadedMap.getCanvas().focus();
+    onToggleInstall();
+  });
+  useEffect(() => {
+    if (dossierOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "a" || event.repeat) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest("input, textarea, select, [role='dialog']"))
+      )
+        return;
+      toggleInstall();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [dossierOpen]);
 
   // Crea el mapa una sola vez y lo destruye al desmontar.
   useEffect(() => {
@@ -320,7 +358,7 @@ export function MapView({
   // pintaba un cuadro con la isla descubierta (medido). MapLibre le pone tabindex al canvas al
   // crearlo, y sin `inert` el Tab dejaba el foco ahí, escondido debajo del cartel.
   return (
-    <div className="absolute inset-0">
+    <div className="group absolute inset-0">
       <div ref={containerRef} inert={!fogDrawn} className="h-full w-full" />
       {loadedMap && (
         <>
@@ -355,6 +393,17 @@ export function MapView({
             }}
           />
         </>
+      )}
+      {/* La mira del modo de instalación: el centro del mapa, donde Enter instala la antena. Se ve
+          solo con el foco del teclado en el mapa; con el mouse o el dedo se toca cualquier punto. */}
+      {installing && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-1/2 left-1/2 hidden size-6 -translate-1/2 group-has-[.maplibregl-canvas:focus-visible]:block"
+        >
+          <span className="absolute top-1/2 left-0 h-px w-full bg-hud" />
+          <span className="absolute top-0 left-1/2 h-full w-px bg-hud" />
+        </div>
       )}
       {!fogDrawn && <MapLoading />}
       {/* Montado siempre, aunque no haya señal: Base UI anima la entrada solo cuando el panel ya
