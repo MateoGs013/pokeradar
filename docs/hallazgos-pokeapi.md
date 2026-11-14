@@ -78,6 +78,12 @@ Responde **sin API key**. Pedido:
 → HTTP 200 con `current.temperature_2m`, `current.weather_code` (código WMO), `current.is_day`, `precipitation` y
 `snowfall`. `timezone=auto` devolvió `America/Argentina/Salta` (GMT-3) para esas coordenadas.
 
+Comprobado al sumar el clima (14/11): con `current=weather_code,temperature_2m`, `current` trae además `time` e
+`interval` (900 s), y `current_units` las unidades (`°C`, `wmo code`). Con un `Origin` en el pedido responde
+`access-control-allow-origin: *`, y cuenta los pedidos en `x-ratelimit-limit: 600` por ventana de 60 s. Los datos son
+CC BY 4.0, con un enlace a Open-Meteo junto a donde se muestran (open-meteo.com/en/licence); el uso gratis es solo no
+comercial (open-meteo.com/en/terms).
+
 ## Confirmado al armar la ficha (13/11, pedidos reales)
 
 Las 386 especies, pedidas con `fetchPokemonDetail` (`src/lib/pokeapi/detail.ts`: `/pokemon/{id}` y
