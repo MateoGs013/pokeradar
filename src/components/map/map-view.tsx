@@ -29,7 +29,7 @@ import type {
 
 import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
-import { MapLoading } from "./map-status";
+import { SystemBoot } from "@/components/onboarding/system-boot";
 import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
@@ -470,7 +470,7 @@ export function MapView({
           />
         </>
       )}
-      {!fogDrawn && <MapLoading step={loadedMap ? "coverage" : "connecting"} />}
+      {!fogDrawn && <SystemBoot step={loadedMap ? "coverage" : "connecting"} />}
       {/* Montado siempre, aunque no haya señal: Base UI anima la entrada solo cuando el panel ya
           existía cerrado y pasa a abierto (useTransitionStatus, animateInitialOpen). */}
       <DossierPanel

@@ -8,6 +8,7 @@ import { Settings2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { MapLoader } from "@/components/map/map-loader";
+import { ShiftStart } from "@/components/onboarding/shift-start";
 import type { MapViewProps } from "@/components/map/map-view";
 import { northToSouth, signalPlaces } from "@/components/map/places";
 import { MAX_ANTENNAS } from "@/components/radar/network";
@@ -23,7 +24,6 @@ import {
   saveShiftSettings,
   useShiftSettings,
 } from "@/hooks/use-shift-settings";
-import { DEFAULT_SETTINGS } from "@/lib/shift";
 import type { Position } from "@/lib/world/types";
 
 import { Clock } from "./clock";
@@ -216,38 +216,7 @@ export function MonitoringRoom({
           <Settings2Icon aria-hidden />
         </Button>
       </div>
-      {/* El inicio de turno, solo la primera vez (docs/concepto.md, "Onboarding"). Mientras está
-          abierto, el mapa y la niebla cargan por detrás, y el radar espera. "Saltar" y Esc guardan
-          los ajustes de por defecto; tocar afuera no lo cierra. La zona de operaciones se suma con
-          el modo híbrido (bloque 6), y el sonido y la intensidad visual, en el bloque 7. */}
-      <Dialog
-        open={hydrated && !saved}
-        onOpenChange={(open) => {
-          if (!open) saveShiftSettings(DEFAULT_SETTINGS);
-        }}
-        disablePointerDismissal
-      >
-        <DialogContent showCloseButton={false}>
-          <DialogTitle>Inicio de turno</DialogTitle>
-          <DialogDescription>
-            Identificate y elegí el color del HUD. Después se cambian desde los
-            ajustes, arriba a la derecha.
-          </DialogDescription>
-          <ShiftForm
-            initial={settings}
-            submitLabel="Iniciar turno"
-            onSubmit={saveShiftSettings}
-          >
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => saveShiftSettings(DEFAULT_SETTINGS)}
-            >
-              Saltar
-            </Button>
-          </ShiftForm>
-        </DialogContent>
-      </Dialog>
+      <ShiftStart open={hydrated && !saved} initial={settings} />
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
           <DialogTitle>Ajustes del turno</DialogTitle>
