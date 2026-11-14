@@ -106,15 +106,17 @@ y el foco vuelve a la señal.
   vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta); Xatu,
   el pronóstico del clima, y Noctowl, la guardia nocturna. Van arriba a la derecha y se cierran solos 5 s después del
   último cambio. F6 lleva el foco a ellos, y la campana los silencia: las detecciones van entonces solo al lector de
-  pantalla.
+  pantalla, y Xatu y Noctowl, si no habían hablado, hablan al reactivarlos. Chatot, el sexto tripulante del concepto,
+  quedó afuera.
 - **Variocolor:** cada señal tiene una chance en 64, decidida con la semilla, de ser variocolor (shiny). Identificada,
   muestra ese sprite en el mapa y en la ficha, y Porygon da un aviso crítico. Con la semilla del mundo no sale ninguna
   de las 40 (medido), así que `?shiny=<id>` fuerza una para verla: `?p=4&shiny=4` abre Charmander variocolor, ya
   identificado.
 - **Clima:** el clima real de Viedma (Río Negro), de Open-Meteo, va en el HUD con un enlace a Open-Meteo, como pide su
-  licencia. Xatu lo pronostica al empezar el turno, con los tipos que potencia. Una señal identificada de uno de esos
-  tipos lleva una flecha en su sprite; en la ficha, el tipo va lleno y con la flecha, y la fila Clima dice "potenciado".
-  No cambia qué señales hay. Si Open-Meteo no responde, el HUD dice "clima sin datos" y Xatu no habla.
+  licencia. Xatu lo pronostica al empezar el turno, con los tipos que potencia; de noche, el cielo despejado no
+  potencia nada, porque no hay sol. Una señal identificada de uno de esos tipos lleva una flecha en su sprite; en la
+  ficha, el tipo va lleno y con la flecha, y la fila Clima dice "potenciado". No cambia qué señales hay. Si Open-Meteo
+  no responde, el HUD dice "clima sin datos" y Xatu no habla.
 - **Día y noche:** con la hora del operador, de 20:00 a 6:59 es de noche: el mapa se oscurece, Noctowl toma la guardia
   y se potencian Fantasma y Siniestro, con las mismas marcas que el clima. Cambia también con la página abierta, al
   pasar el minuto. `?noche=1` y `?noche=0` la fuerzan, para verla a cualquier hora.
