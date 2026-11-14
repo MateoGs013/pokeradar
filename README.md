@@ -26,11 +26,11 @@ distinta, ubicada en su hábitat.
 
 **Qué hay en `v0.1.0` (el MVP de la consigna):**
 
-| Requisito                                              | Cómo lo cumplí                                                                                                                                                                                                                                                   |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mapa interactivo con marcadores propios y cámara suave | MapLibre GL JS con el mundo generado como única fuente (sin tiles externos); 40 señales con pulso de radar que se transforman en el sprite animado al identificarlas; `flyTo` con padding para que la ficha no tape la señal                                     |
-| Datos reales y panel de detalle                        | Dos pedidos a PokéAPI (`/pokemon` y `/pokemon-species`), validados; ficha al costado en desktop y abajo en mobile; skeleton del tamaño final y error con reintento                                                                                               |
-| Animaciones con propósito                              | Pulso de las señales, "Analizando firma…" que se descifra, entrada de la ficha, barras de estadísticas que crecen, entrada del sprite; todo apagado con movimiento reducido, el de `prefers-reduced-motion` o el elegido en los ajustes (la cámara usa `jumpTo`) |
+| Requisito                                              | Cómo lo cumplí                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Mapa interactivo con marcadores propios y cámara suave | MapLibre GL JS con el mundo generado como única fuente (sin tiles externos) en el modo por defecto; el modo híbrido (`?modo=real`) usa las teselas de OpenFreeMap; 40 señales con pulso de radar que se transforman en el sprite animado al identificarlas; `flyTo` con padding para que la ficha no tape la señal |
+| Datos reales y panel de detalle                        | Dos pedidos a PokéAPI (`/pokemon` y `/pokemon-species`), validados; ficha al costado en desktop y abajo en mobile; skeleton del tamaño final y error con reintento                                                                                                                                                 |
+| Animaciones con propósito                              | Pulso de las señales, "Analizando firma…" que se descifra, entrada de la ficha, barras de estadísticas que crecen, entrada del sprite; todo apagado con movimiento reducido, el de `prefers-reduced-motion` o el elegido en los ajustes (la cámara usa `jumpTo`)                                                   |
 
 Accesibilidad: cada señal es un `<button>` con `aria-label` ("Señal sin identificar en el volcán de Monte Brasa", y
 después "Shuppet en la ciudad de Cruz del Viento"), foco visible, Tab entre señales de norte a sur, Esc cierra la ficha
@@ -203,7 +203,8 @@ En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/
 - **Compartir las antenas por URL:** hoy el enlace lleva solo la señal.
 - **La ubicación del operador en el mapa real:** hoy el radar base va siempre a Viedma; el concepto pide la del
   usuario, con permiso.
-- **Un estilo de respaldo para el mapa real:** si OpenFreeMap no responde, el mapa queda sin fondo (sin probar).
+- **Un estilo de respaldo para el mapa real:** si el estilo de OpenFreeMap no carga, la sala muestra "No se pudo cargar
+  el mapa"; si fallan solo las teselas, sigue sin el fondo.
 - **Atajos R, G y /** del concepto: el barrido manual, las geocercas y la búsqueda. El radar barre una sola vez y las
   geocercas todavía no están.
 
