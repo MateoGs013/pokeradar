@@ -1,7 +1,7 @@
 "use client";
 
-// La sala de monitoreo: el HUD de las esquinas, el control de las antenas, el aviso de las
-// detecciones y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el mapa
+// La sala de monitoreo: el inicio de turno, el HUD de las esquinas, el control de las antenas, el
+// aviso de las detecciones y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el mapa
 // muestra solo esas, el HUD las cuenta y el aviso dice dónde aparecieron. Y guarda las antenas:
 // el control las instala y el mapa las dibuja.
 import { Settings2Icon } from "lucide-react";
@@ -23,6 +23,7 @@ import {
   saveShiftSettings,
   useShiftSettings,
 } from "@/hooks/use-shift-settings";
+import { DEFAULT_SETTINGS } from "@/lib/shift";
 import type { Position } from "@/lib/world/types";
 
 import { Clock } from "./clock";
@@ -44,6 +45,7 @@ interface MonitoringRoomProps extends Omit<
   | "onSweepEnd"
   | "onCoverage"
   | "onIdentify"
+  | "active"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -64,7 +66,9 @@ export function MonitoringRoom({
   const [identified, setIdentified] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
-  const { settings } = useShiftSettings();
+  // El turno empieza cuando hay ajustes guardados: la primera vez, al pasar el inicio de turno.
+  const { settings, saved, hydrated } = useShiftSettings();
+  const started = hydrated && saved;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [antennas, setAntennas] = useState<readonly Station[]>([]);
   // Si se está eligiendo dónde va la próxima antena.
@@ -212,6 +216,38 @@ export function MonitoringRoom({
           <Settings2Icon aria-hidden />
         </Button>
       </div>
+      {/* El inicio de turno, solo la primera vez (docs/concepto.md, "Onboarding"). Mientras está
+          abierto, el mapa y la niebla cargan por detrás, y el radar espera. "Saltar" y Esc guardan
+          los ajustes de por defecto; tocar afuera no lo cierra. La zona de operaciones se suma con
+          el modo híbrido (bloque 6), y el sonido y la intensidad visual, en el bloque 7. */}
+      <Dialog
+        open={hydrated && !saved}
+        onOpenChange={(open) => {
+          if (!open) saveShiftSettings(DEFAULT_SETTINGS);
+        }}
+        disablePointerDismissal
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogTitle>Inicio de turno</DialogTitle>
+          <DialogDescription>
+            Identificate y elegí el color del HUD. Después se cambian desde los
+            ajustes, arriba a la derecha.
+          </DialogDescription>
+          <ShiftForm
+            initial={settings}
+            submitLabel="Iniciar turno"
+            onSubmit={saveShiftSettings}
+          >
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => saveShiftSettings(DEFAULT_SETTINGS)}
+            >
+              Saltar
+            </Button>
+          </ShiftForm>
+        </DialogContent>
+      </Dialog>
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
           <DialogTitle>Ajustes del turno</DialogTitle>
@@ -234,7 +270,7 @@ export function MonitoringRoom({
           (aria-pressed); con las cuatro instaladas queda deshabilitado, y el contador dice por qué.
           Arriba, a la vista, lo último que pasó y, en el modo, qué hacer: el panel está anclado
           abajo y crece hacia arriba, así que el botón no se mueve cuando esas líneas aparecen o se
-          van. El fondo es opaco: con el del rótulo (al 80 %), el pulso de una señal debajo bajaba
+          van. El fondo es opaco: con el del HUD (al 80 %), el pulso de una señal debajo bajaba
           el contraste del texto (medido). Con `data-antenna-control`, el mapa sabe que la tecla A
           vale también con el foco acá (map-view.tsx). */}
       <div
@@ -275,6 +311,7 @@ export function MonitoringRoom({
         onDetect={onDetect}
         onSweepEnd={onSweepEnd}
         onCoverage={setCoverage}
+        active={started}
         onIdentify={(id) =>
           setIdentified((previous) => new Set(previous).add(id))
         }

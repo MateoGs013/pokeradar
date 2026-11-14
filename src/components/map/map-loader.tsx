@@ -12,7 +12,7 @@ import type { MapViewProps } from "./map-view";
 
 const MapView = dynamic(() => import("./map-view").then((mod) => mod.MapView), {
   ssr: false,
-  loading: () => <MapLoading />,
+  loading: () => <MapLoading step="calibrating" />,
 });
 
 export function MapLoader(props: MapViewProps) {

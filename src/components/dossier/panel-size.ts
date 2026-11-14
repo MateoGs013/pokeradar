@@ -6,7 +6,7 @@ export const PANEL_DESKTOP_QUERY = "(min-width: 48rem)";
 
 /**
  * Ancho del panel al costado, en píxeles. page.tsx lo pasa al CSS como `--panel-width`, para que
- * el rótulo de la esquina no quede debajo del panel.
+ * el HUD de arriba a la izquierda no quede debajo del panel.
  */
 export const PANEL_WIDTH = 360;
 
