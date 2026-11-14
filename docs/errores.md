@@ -37,6 +37,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-25 | 2026-11-13 | IA       | map     | Un commit sostenía WCAG 1.4.3 con una cuenta, y el fondo del cartel se midió en un clon, no en el real              |
 | E-26 | 2026-11-13 | IA       | radar   | Las antenas dejaron el aro y el haz de los radares debajo del mapa; se miró el orden del DOM, no una captura        |
 | E-27 | 2026-11-13 | IA       | map     | Un commit decía que las flechas movían el mapa para ubicar la antena; se midió acercado y en frío no se movía       |
+| E-28 | 2026-11-14 | IA       | radar   | Dos comentarios del radar quedaron viejos; el de la doble corrida escondía un aviso falso con movimiento reducido   |
 
 ## Formato de cada entrada
 
@@ -464,3 +465,24 @@ Para agregar una entrada se puede usar `/registrar-error`.
   por el mundo y no el mapa; Enter instala donde está. El mensaje del commit del teclado se reescribió antes del push.
 - **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de medir el caso peor (E-21) ya lo cubría, y el caso peor era
   la carga en frío, sin acercar; no se aplicó.
+
+### E-28 · 2026-11-14 00:19 · IA · radar
+
+- **Síntoma:** en el PR #9, dos comentarios ya no describían el código.
+  - `map-view.tsx` decía que el haz queda debajo de las señales porque el Marker del radar se agrega primero. Desde el
+    arreglo de E-26, el orden lo pone `station.tsx`.
+  - `station.tsx` decía que en desarrollo la limpieza del modo estricto corta el barrido y la vuelta empieza de nuevo.
+    Con movimiento reducido no había barrido que cortar: la estación despejaba y detectaba al montarse, y la segunda
+    corrida no encontraba señales. En `next dev`, con movimiento reducido, aparecían 5 señales y el panel decía "Radar
+    base: ninguna señal en alcance". En el build no pasaba: el efecto corre una sola vez.
+- **Causa:** Claude cambió dónde va el aro (E-26) sin releer el comentario que explicaba el orden viejo. El de la doble
+  corrida lo escribió en "refactor(radar): separar la niebla de las estaciones que la despejan" sin probar el caso
+  con movimiento reducido, que terminaba sin esperar un cuadro.
+- **Detección:** `/pr-review` del PR #9, segunda vuelta (subagente), encontró los dos comentarios. Claude, al medir lo que
+  decía el de la doble corrida, encontró el aviso falso.
+- **Arreglo:** PR #9, "fix(radar): esperar el primer cuadro también con movimiento reducido" (la estación espera el
+  primer cuadro y la limpieza corta esa corrida: en `next dev` avisa "5 señales detectadas") y "fix(map): corregir el
+  comentario sobre el orden del haz".
+- **Prevención:** en `CLAUDE.md`, al cambiar un comportamiento se buscan en el mismo paso los comentarios y docs que lo
+  describen, por el nombre de lo que cambió. Es la segunda vez: en E-23 se actualizó un comentario y no el que lo
+  resumía.

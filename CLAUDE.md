@@ -86,6 +86,8 @@ Las carpetas se crean cuando tienen su primer archivo real. Reglas por carpeta e
 - Lo que un comentario, un mensaje de commit o la descripción de un PR afirma del comportamiento se prueba antes de
   escribirlo; si no, dice "sin probar". La medición es del estado del commit que la afirma, y con el caso peor: el
   texto más largo y el ancho más chico, 320 px (E-21).
+- Al cambiar un comportamiento, en el mismo paso se buscan (grep por el nombre de lo que cambió) y se releen los
+  comentarios y docs que lo describen o lo resumen (E-23, E-28).
 - El MVP de la consigna va antes que cualquier extra del concepto.
 - Los comandos que se le pasan a Mateo para el `!` corren en Git Bash: los flags de Windows van con doble barra
   (`taskkill //PID 123 //F`) o se pasan como comando de PowerShell.
