@@ -20,8 +20,9 @@ const FOG_SOURCE = "niebla";
 
 /** Una estación de radar: el radar base o una antena. */
 export interface Station {
-  /** Fijo mientras la estación vive: es la key de React. */
+  /** Fijo mientras la estación vive: es la key de React. El radar base es el 0; las antenas, 1 a 4. */
   id: number;
+  kind: "base" | "antenna";
   position: Position;
 }
 
@@ -37,6 +38,8 @@ interface RadarProps {
   spawns: readonly Spawn[];
   /** Avisa qué señales acaba de detectar una estación (por speciesId). */
   onDetect: (ids: number[]) => void;
+  /** Avisa que una estación terminó su vuelta y cuántas señales detectó en total. */
+  onSweepEnd: (station: Station, found: number) => void;
   /** Avisa que el mapa ya dibujó un cuadro con la niebla: recién ahí se puede sacar el cartel. */
   onFogDrawn: () => void;
 }
@@ -48,6 +51,7 @@ export function Radar({
   stations,
   spawns,
   onDetect,
+  onSweepEnd,
   onFogDrawn,
 }: RadarProps) {
   const fogDrawn = useEffectEvent(onFogDrawn);
@@ -107,13 +111,15 @@ export function Radar({
     };
   }, [map, network]);
 
-  return stations.map(({ id, position }) => (
+  return stations.map((station) => (
     <RadarStation
-      key={id}
+      key={station.id}
       map={map}
       network={network}
-      position={position}
+      position={station.position}
+      mark={station.kind === "antenna"}
       onDetect={onDetect}
+      onSweepEnd={(found) => onSweepEnd(station, found)}
     />
   ));
 }

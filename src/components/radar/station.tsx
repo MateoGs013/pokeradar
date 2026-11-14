@@ -19,8 +19,12 @@ interface RadarStationProps {
   network: RadarNetwork;
   /** Dónde está la estación. */
   position: Position;
+  /** Si lleva la marca del puesto en el centro: las antenas sí; el radar base está en una ciudad. */
+  mark: boolean;
   /** Avisa qué señales acaba de detectar (por speciesId). */
   onDetect: (ids: number[]) => void;
+  /** Avisa que terminó la vuelta y cuántas señales detectó en total. */
+  onSweepEnd: (found: number) => void;
 }
 
 /**
@@ -31,17 +35,24 @@ export function RadarStation({
   map,
   network,
   position,
+  mark,
   onDetect,
+  onSweepEnd,
 }: RadarStationProps) {
-  // El aviso usa siempre el onDetect más reciente sin que el efecto, y el barrido, vuelvan a empezar.
+  // Los avisos usan siempre las funciones más recientes sin que el efecto, y el barrido, vuelvan a
+  // empezar.
   const detect = useEffectEvent(onDetect);
+  const sweepEnd = useEffectEvent(onSweepEnd);
 
   useEffect(() => {
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
     const turn = cssNumber("--radar-turn");
+    let total = 0;
     const sweep = (from: number, to: number) => {
       const found = network.sweep(position, from, to);
-      if (found.length > 0) detect(found.map(({ speciesId }) => speciesId));
+      if (found.length === 0) return;
+      total += found.length;
+      detect(found.map(({ speciesId }) => speciesId));
     };
 
     // El alcance es un aro fijo del tamaño del círculo; el haz, un degradé cónico adentro, que da
@@ -53,7 +64,16 @@ export function RadarStation({
     const element = document.createElement("div");
     element.className = "pointer-events-none rounded-full border border-hud/40";
     element.append(beam);
+    if (mark) {
+      const post = document.createElement("div");
+      post.className =
+        "absolute top-1/2 left-1/2 size-2 -translate-1/2 rotate-45 bg-hud";
+      element.append(post);
+    }
     const marker = new Marker({ element }).setLngLat(position).addTo(map);
+    // Marker lo agrega al final del contenedor, encima de lo que ya estaba. Al principio queda
+    // debajo de las señales, también en una antena que se instala con las señales ya puestas.
+    map.getCanvasContainer().prepend(element);
     const resize = () => {
       const center = map.project(position);
       const edge = map.project([position[0] + RADAR_RADIUS, position[1]]);
@@ -75,6 +95,7 @@ export function RadarStation({
       network.endSweep();
       beam.style.opacity = "0";
       frame = 0;
+      sweepEnd(total);
     };
     const tick = (now: number) => {
       start ??= now;
@@ -104,7 +125,7 @@ export function RadarStation({
       map.off("resize", resize);
       marker.remove();
     };
-  }, [map, network, position]);
+  }, [map, network, position, mark]);
 
   return null;
 }
