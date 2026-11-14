@@ -7,12 +7,12 @@
 import dynamic from "next/dynamic";
 
 import { MapErrorBoundary } from "./map-error";
-import { MapLoading } from "./map-status";
+import { SystemBoot } from "@/components/onboarding/system-boot";
 import type { MapViewProps } from "./map-view";
 
 const MapView = dynamic(() => import("./map-view").then((mod) => mod.MapView), {
   ssr: false,
-  loading: () => <MapLoading step="calibrating" />,
+  loading: () => <SystemBoot step="calibrating" />,
 });
 
 export function MapLoader(props: MapViewProps) {
