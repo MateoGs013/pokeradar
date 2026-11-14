@@ -45,7 +45,7 @@ y el foco vuelve a la señal.
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
 - **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz da
   una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
-  aparecen con un ping, se anuncian al lector de pantalla y el HUD las cuenta ("5 de 40 señales"). Con movimiento
+  aparecen con un ping, Pelipper las avisa y el HUD las cuenta ("5 de 40 señales"). Con movimiento
   reducido, el círculo se despeja de una vez.
 - **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
   mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
@@ -59,6 +59,11 @@ y el foco vuelve a la señal.
   arriba a la derecha, la hora y los ajustes del turno, donde también están la semilla y la huella del mundo. La
   cobertura cuenta el mundo entero, mar incluido, y no solo la isla: después del radar base marca 9 %, y con las cuatro
   antenas en los puntos de las 38 señales, 44 %.
+- **Tripulación:** los avisos los dan Pokémon, con su sprite. Pelipper avisa los avistamientos en un solo aviso que
+  suma las señales mientras sigue abierto, con "Ver señal" para abrir la última; Rotom, la cobertura después de cada
+  vuelta; Porygon, el análisis de cada señal identificada, con su nivel de amenaza (alto o crítico es una alerta). Van
+  arriba a la derecha y se cierran solos 5 s después del último cambio. F6 lleva el foco a ellos, y la campana los
+  silencia: las detecciones van entonces solo al lector de pantalla.
 
 ## Arquitectura y Stack
 
@@ -84,7 +89,8 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 src/app/                   layout, página (servidor) y estilos globales
 src/components/map/        mapa, señales, cámara, carga y error
 src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
-src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno, antenas y avisos
+src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno y antenas
+src/components/crew/       tripulación: quién avisa y los avisos
 src/components/onboarding/ inicio de turno y arranque del sistema con Rotom
 src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
 src/components/ui/         componentes de shadcn con los tokens del HUD
@@ -152,7 +158,8 @@ de arriba y acá queda lo que no entró.
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
-- **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
+- **Eventos del mundo:** shiny, día y noche, y el clima con Open-Meteo, que se muestra sin cambiar las señales. Los
+  enjambres, si hay tiempo.
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
 - **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo
