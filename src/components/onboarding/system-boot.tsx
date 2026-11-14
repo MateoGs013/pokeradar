@@ -36,7 +36,7 @@ export function SystemBoot({ step }: { step: BootStep }) {
         width={96}
         height={96}
         unoptimized
-        priority
+        preload
         className="[image-rendering:pixelated]"
       />
       <p role="status">

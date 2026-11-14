@@ -8,9 +8,9 @@ import { Settings2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { MapLoader } from "@/components/map/map-loader";
-import { ShiftStart } from "@/components/onboarding/shift-start";
 import type { MapViewProps } from "@/components/map/map-view";
 import { northToSouth, signalPlaces } from "@/components/map/places";
+import { ShiftStart } from "@/components/onboarding/shift-start";
 import { MAX_ANTENNAS } from "@/components/radar/network";
 import type { Station } from "@/components/radar/radar";
 import { Button } from "@/components/ui/button";
@@ -161,8 +161,9 @@ export function MonitoringRoom({
     document.documentElement.dataset.hud = settings.hud;
   }, [settings.hud]);
 
-  // Esc sale del modo de instalación sin instalar. Con la ficha abierta (un clic en una señal la
-  // abre también en el modo), ese Esc es de la ficha: la cierra y el modo sigue.
+  // Esc sale del modo de instalación sin instalar. Con la ficha o los ajustes del turno abiertos (un
+  // clic en una señal abre la ficha también en el modo), ese Esc es del diálogo: lo cierra y el modo
+  // sigue.
   useEffect(() => {
     if (!installing) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -182,7 +183,9 @@ export function MonitoringRoom({
   // puede quedar cualquier bioma debajo, y sin él el texto apagado no se lee bien sobre los más
   // claros. Arriba a la izquierda, el turno; arriba a la derecha, la hora y los ajustes. El de la
   // izquierda corta la línea antes que el de la derecha y, desde md, cuando la ficha va al costado,
-  // antes del panel (más un margen igual al de la izquierda), en vez de quedar tapado.
+  // antes del panel (más un margen igual al de la izquierda), en vez de quedar tapado. Las 28
+  // unidades (112 px) son los 12 px de margen de cada lado, los 78 px de la esquina derecha (hora y
+  // botón, medidos) y 10 px de aire.
   // El aviso existe desde el HTML del servidor, vacío: un lector de pantalla anuncia los cambios de
   // una región viva que ya estaba, no siempre los de una que aparece con el texto puesto.
   return (

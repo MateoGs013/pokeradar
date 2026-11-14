@@ -18,6 +18,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 import { DossierPanel } from "@/components/dossier/dossier-panel";
 import { underFog } from "@/components/radar/fog";
 import { Radar, type Station } from "@/components/radar/radar";
+import { SystemBoot } from "@/components/onboarding/system-boot";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type {
@@ -29,7 +30,6 @@ import type {
 
 import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
-import { SystemBoot } from "@/components/onboarding/system-boot";
 import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
