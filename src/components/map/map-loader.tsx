@@ -6,8 +6,9 @@
 // boundary muestra un mensaje en su lugar (map-error.tsx).
 import dynamic from "next/dynamic";
 
-import { MapErrorBoundary } from "./map-error";
 import { SystemBoot } from "@/components/onboarding/system-boot";
+
+import { MapErrorBoundary } from "./map-error";
 import type { MapViewProps } from "./map-view";
 
 const MapView = dynamic(() => import("./map-view").then((mod) => mod.MapView), {

@@ -3,7 +3,8 @@
 // Dialog de shadcn (base Base UI), recortado a lo que usan los ajustes del turno y el inicio de
 // turno, y con el aspecto del HUD: superficie del HUD con borde, sin esquinas redondeadas grandes.
 // Base UI se encarga del foco (queda adentro y vuelve al cerrar), de Esc y de aria-modal. Con
-// movimiento reducido, la regla de globals.css apaga el fundido.
+// movimiento reducido, la regla de globals.css apaga el fundido (medido: el popup pasa de 0 a 1 de
+// opacidad sin valores en el medio; sin movimiento reducido tarda unos 170 ms).
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "cn";
 import { XIcon } from "lucide-react";

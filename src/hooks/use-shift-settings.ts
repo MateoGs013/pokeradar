@@ -41,7 +41,8 @@ function subscribe(listener: () => void) {
   };
 }
 
-// Lo último guardado, si el navegador no dejó escribir en localStorage.
+// Lo último guardado, si el navegador no dejó escribir en localStorage. Gana sobre lo que haya en
+// localStorage: si escribir falla y había algo de antes, lo nuevo vale igual hasta recargar.
 let fallback: string | null = null;
 
 // El texto guardado, tal cual: dos lecturas iguales dan el mismo string, y useSyncExternalStore
@@ -58,6 +59,7 @@ function read(): string | null {
 export function saveShiftSettings(settings: ShiftSettings) {
   try {
     localStorage.setItem(SHIFT_STORAGE_KEY, JSON.stringify(settings));
+    fallback = null;
   } catch {
     fallback = JSON.stringify(settings);
   }
@@ -76,7 +78,7 @@ const noSubscription = () => () => {};
 export function useShiftSettings() {
   const raw = useSyncExternalStore(
     subscribe,
-    () => read() ?? fallback,
+    () => fallback ?? read(),
     () => null,
   );
   const hydrated = useSyncExternalStore(
