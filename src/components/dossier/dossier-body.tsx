@@ -14,7 +14,8 @@ import type { Identification } from "@/hooks/use-pokemon-detail";
 import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
-import { boosts, CONDITIONS, type Weather } from "@/lib/weather/conditions";
+import { type Boost, boostOf } from "@/lib/boosts";
+import { boosts as weatherBoosts, CONDITIONS } from "@/lib/weather/conditions";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
 import { hasSprite, PokemonSprite } from "./pokemon-sprite";
@@ -31,6 +32,7 @@ interface DossierBodyProps {
   /** Si es variocolor: ese sprite, y "Firma variocolor" en lugar de "Firma identificada". */
   shiny: boolean;
   weather: WeatherState;
+  boosts: readonly Boost[];
   onRetry: () => void;
 }
 
@@ -39,6 +41,7 @@ export function DossierBody({
   place,
   shiny,
   weather,
+  boosts,
   onRetry,
 }: DossierBodyProps) {
   if (identification.status === "error") {
@@ -46,12 +49,11 @@ export function DossierBody({
   }
   const detail =
     identification.status === "ready" ? identification.detail : null;
-  const ready = weather.status === "ready" ? weather.weather : null;
   // Con movimiento reducido, motion no anima transform: las barras aparecen ya llenas.
   return (
     <MotionConfig reducedMotion="user">
       <div className="flex flex-col gap-5">
-        <Identity detail={detail} shiny={shiny} weather={ready} />
+        <Identity detail={detail} shiny={shiny} boosts={boosts} />
         <Threat detail={detail} />
         <Stats detail={detail} />
         <Facts detail={detail} place={place} weather={weather} />
@@ -77,11 +79,11 @@ function Placeholder({ className }: { className: string }) {
 function Identity({
   detail,
   shiny,
-  weather,
+  boosts,
 }: {
   detail: PokemonDetail | null;
   shiny: boolean;
-  weather: Weather | null;
+  boosts: readonly Boost[];
 }) {
   const sprites = detail && (shiny ? detail.shinySprites : detail.sprites);
   return (
@@ -139,27 +141,30 @@ function Identity({
         )}
         {detail ? (
           <ul aria-label="Tipos" className="flex gap-1.5">
-            {/* Un tipo que el clima potencia va lleno y con la flecha; el lector de pantalla lo
-                escucha dicho. */}
-            {detail.types.map((type) => (
-              <li
-                key={type}
-                className={cn(
-                  "flex items-center gap-0.5 rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase",
-                  boosts(weather, type) && "border-hud bg-hud text-background",
-                )}
-              >
-                {TYPE_LABELS[type]}
-                {weather && boosts(weather, type) && (
-                  <>
-                    <ChevronsUpIcon aria-hidden className="size-3" />
-                    <span className="sr-only">
-                      , potenciado por {CONDITIONS[weather.condition].by}
-                    </span>
-                  </>
-                )}
-              </li>
-            ))}
+            {/* Un tipo que el clima o la noche potencian va lleno y con la flecha; el lector de
+                pantalla lo escucha dicho. */}
+            {detail.types.map((type) => {
+              const boost = boostOf(boosts, [type]);
+              return (
+                <li
+                  key={type}
+                  className={cn(
+                    "flex items-center gap-0.5 rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase",
+                    boost && "border-hud bg-hud text-background",
+                  )}
+                >
+                  {TYPE_LABELS[type]}
+                  {boost && (
+                    <>
+                      <ChevronsUpIcon aria-hidden className="size-3" />
+                      <span className="sr-only">
+                        , potenciado por {boost.by}
+                      </span>
+                    </>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         ) : (
           <Placeholder className="h-4.5 w-24" />
@@ -268,7 +273,7 @@ function Facts({
   // corto a propósito: en una línea, la fila no cambia de alto al llegar los datos.
   const boosted =
     weather.status === "ready" &&
-    detail?.types.some((type) => boosts(weather.weather, type));
+    detail?.types.some((type) => weatherBoosts(weather.weather, type));
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
       <dt className="tracking-widest text-muted-foreground uppercase">

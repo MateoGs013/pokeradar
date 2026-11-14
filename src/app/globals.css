@@ -55,6 +55,8 @@
 
   /* La niebla tapa el terreno sin borrarlo del todo: se adivina la silueta de la isla. */
   --fog-opacity: 0.9;
+  /* De noche, el mundo bajo una capa del color del HUD con esta opacidad (lib/night.ts). */
+  --night-opacity: 0.45;
   /*
    * El mar visto a través de la niebla, para lo que ocupa el lugar del mapa antes de que cargue.
    * El mapa no entiende color-mix: su fondo lo calcula underFog (fog.ts) con la misma mezcla.
