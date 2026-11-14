@@ -21,7 +21,10 @@ export interface Frame {
   toMap: (position: Position) => Position;
   /** De las del mapa a las del mundo. */
   fromMap: (position: Position) => Position;
-  /** Cuántos niveles de zoom más hacen falta para ver el mundo del mismo tamaño. */
+  /**
+   * Cuántos niveles de zoom más hacen falta para ver el mundo del mismo tamaño en pantalla: cuenta
+   * la escala y, en el modo real, el estiramiento de Mercator.
+   */
   zoomOffset: number;
   /** Dónde está una señal, en palabras: para su botón y para la ficha. */
   describe: (spawn: Spawn) => string;
@@ -71,7 +74,9 @@ export function realFrame(
       anchor[0] + (lng - origin[0]) / (REAL_SCALE * stretch),
       anchor[1] + (lat - origin[1]) / REAL_SCALE,
     ],
-    zoomOffset: Math.log2(1 / REAL_SCALE),
+    // En Mercator, un grado del mundo ocupa en pantalla lo que `REAL_SCALE * stretch` grados de
+    // longitud del mapa: el zoom compensa los dos.
+    zoomOffset: Math.log2(1 / (REAL_SCALE * stretch)),
     // Sobre el mapa real, los biomas y los lugares inventados no corresponden a lo que se ve: la
     // señal se ubica por la distancia y el rumbo desde el radar base.
     describe: ({ position }) => {

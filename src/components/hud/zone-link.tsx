@@ -1,6 +1,8 @@
 // El cambio de zona (docs/concepto.md, "El mapa híbrido"): del mundo generado al mapa real de Río
 // Negro, y de vuelta. Es un enlace común y no uno de Next: el mapa toma el marco una sola vez, al
-// crearse (map-view.tsx), así que cambiar de zona carga la página de nuevo, con otro turno.
+// crearse (map-view.tsx), así que cambiar de zona carga la página de nuevo, con otro turno. Lo
+// escrito en el formulario de al lado (el del inicio de turno o el de los ajustes) sin guardar se
+// pierde, y el texto lo avisa.
 import { modeSearch, type MapMode } from "@/components/map/frame";
 
 /** El estilo de los enlaces de texto del HUD (el de Open-Meteo, la atribución del mapa). */
@@ -16,7 +18,7 @@ export function ZoneLink({ mode }: { mode: MapMode }) {
           ? "Operar sobre el mapa real, en Viedma"
           : "Volver al mundo generado"}
       </a>
-      . Empieza otro turno.
+      . Empieza otro turno, sin guardar lo que cambiaste acá.
     </p>
   );
 }
