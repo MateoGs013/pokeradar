@@ -112,14 +112,17 @@ function isPriority(value: unknown): value is NoticePriority {
 
 /**
  * La región de los avisos. En el celular va debajo del HUD de la izquierda, que en el caso peor
- * (el nombre más largo y el clima) llega hasta 112 px a 320 de ancho (medido): empiezan a 128; desde md, a la izquierda del lugar de la ficha, como
- * el HUD, para no tapar su encabezado cuando está abierta. Va sin portal, dentro de la sala: así le
- * llega `--panel-width`, que page.tsx define en el <main>.
+ * (el nombre más largo y el clima) llega hasta 114 px a 320 de ancho (medido): empiezan a 128.
+ * Desde md, a la izquierda del lugar de la ficha, como el HUD, para no tapar su encabezado cuando
+ * está abierta. De arriba, entre md y xl el HUD de la izquierda todavía ocupa dos o tres líneas
+ * (medido: llega a 66 px a 768 de ancho y a 50 a 1024): empiezan a 88 px; desde xl entra en una
+ * (llega a 34) y suben a 56, debajo de la hora. Va sin portal,
+ * dentro de la sala: así le llega `--panel-width`, que page.tsx define en el <main>.
  */
 export function CrewNotices() {
   return (
     <ToastProvider toastManager={notices} limit={3}>
-      <ToastViewport className="fixed top-32 right-3 z-20 w-80 max-w-[calc(100%-(--spacing(6)))] md:top-14 md:right-[calc(var(--panel-width)+(--spacing(3)))]">
+      <ToastViewport className="fixed top-32 right-3 z-20 w-80 max-w-[calc(100%-(--spacing(6)))] md:top-22 md:right-[calc(var(--panel-width)+(--spacing(3)))] xl:top-14">
         <NoticeList />
       </ToastViewport>
     </ToastProvider>

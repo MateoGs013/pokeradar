@@ -24,8 +24,16 @@ const MOTION_NAMES: Record<MotionLevel, string> = {
   reducida: "Reducida",
 };
 
+// Los radios y la casilla siguen siendo <input> nativos (el teclado, el formulario y el lector de
+// pantalla no cambian), con el aspecto del HUD en vez del del navegador: un borde apagado y, al
+// marcarlos, el acento con un anillo del color del fondo adentro, que deja un punto. shrink-0
+// para que la fila no los achique cuando el texto de al lado se parte en dos líneas. En el
+// modo de alto contraste del sistema vuelve el control nativo, que ese modo sabe pintar (sin
+// probar).
 const CHOICE_INPUT =
-  "size-4 accent-hud focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+  "size-4 shrink-0 appearance-none border border-muted-foreground bg-background checked:border-hud checked:bg-hud checked:inset-ring-3 checked:inset-ring-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring forced-colors:appearance-auto";
+const RADIO_INPUT = `${CHOICE_INPUT} rounded-full`;
+const CHECKBOX_INPUT = `${CHOICE_INPUT} rounded-sm`;
 
 const COLOR_NAMES: Record<HudColor, string> = {
   verde: "Verde",
@@ -115,7 +123,7 @@ export function ShiftForm({
                 name="hud"
                 value={color}
                 defaultChecked={initial.hud === color}
-                className={CHOICE_INPUT}
+                className={RADIO_INPUT}
               />
               <span
                 aria-hidden
@@ -141,7 +149,7 @@ export function ShiftForm({
                 name="motion"
                 value={level}
                 defaultChecked={motion === level}
-                className={CHOICE_INPUT}
+                className={RADIO_INPUT}
               />
               {MOTION_NAMES[level]}
             </label>
@@ -153,7 +161,7 @@ export function ShiftForm({
           type="checkbox"
           name="sound"
           defaultChecked={initial.sound}
-          className={CHOICE_INPUT}
+          className={CHECKBOX_INPUT}
         />
         Sonido: el ping del radar y el grito de cada Pokémon
       </label>
