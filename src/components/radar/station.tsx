@@ -18,8 +18,10 @@ import { RADAR_RADIUS, type RadarNetwork } from "./network";
 interface RadarStationProps {
   map: MapLibreMap;
   network: RadarNetwork;
-  /** Dónde está la estación. */
+  /** Dónde está la estación, en el mundo. */
   position: Position;
+  /** Del mundo al mapa (components/map/frame.ts). */
+  toMap: (position: Position) => Position;
   /** Si lleva la marca del puesto en el centro: las antenas sí; el radar base está en una ciudad. */
   mark: boolean;
   /** Avisa qué señales acaba de detectar (por speciesId). */
@@ -36,6 +38,7 @@ export function RadarStation({
   map,
   network,
   position,
+  toMap,
   mark,
   onDetect,
   onSweepEnd,
@@ -70,15 +73,19 @@ export function RadarStation({
         "absolute top-1/2 left-1/2 size-2 -translate-1/2 rotate-45 bg-hud";
       element.append(post);
     }
-    const marker = new Marker({ element }).setLngLat(position).addTo(map);
+    const marker = new Marker({ element })
+      .setLngLat(toMap(position))
+      .addTo(map);
     // Marker lo agrega al final del contenedor, encima de las señales. El contenedor también tiene
     // el canvas del mapa, primero: justo después del canvas, el aro queda encima del mapa y debajo
     // de las señales, también en una antena que se instala con las señales ya puestas. Al
     // principio del contenedor, el mapa lo tapaba (E-26).
     map.getCanvas().after(element);
     const resize = () => {
-      const center = map.project(position);
-      const edge = map.project([position[0] + RADAR_RADIUS, position[1]]);
+      const center = map.project(toMap(position));
+      const edge = map.project(
+        toMap([position[0] + RADAR_RADIUS, position[1]]),
+      );
       const size = `${2 * (edge.x - center.x)}px`;
       element.style.width = size;
       element.style.height = size;
@@ -130,7 +137,7 @@ export function RadarStation({
       map.off("resize", resize);
       marker.remove();
     };
-  }, [map, network, position, mark]);
+  }, [map, network, position, toMap, mark]);
 
   return null;
 }

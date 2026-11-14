@@ -5,12 +5,14 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
+  type BackgroundLayerSpecification,
   type ErrorEvent as MapErrorEvent,
   type MapMouseEvent,
   type FillLayerSpecification,
   Map as MapLibreMap,
   Marker,
   setWorkerUrl,
+  type StyleSpecification,
   type SymbolLayerSpecification,
 } from "maplibre-gl";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
@@ -33,7 +35,14 @@ import type {
 
 import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
+import { type Frame, mapBounds } from "./frame";
 import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
+import {
+  cityDot,
+  hudStyle,
+  MISSING_CITY_DOT,
+  REAL_STYLE_URL,
+} from "./real-style";
 import { type SignalSelection, SignalMarkers } from "./signal-markers";
 
 // MapLibre v6 arma la URL de su worker con `import.meta.url`, y si no empieza con http(s) la deja
@@ -88,6 +97,11 @@ export interface MapViewProps {
   night: boolean;
   /** Se identificó por primera vez la especie de una señal: llegó su ficha. */
   onIdentify: (speciesId: number, detail: PokemonDetail) => void;
+  /**
+   * Dónde se dibuja el mundo (frame.ts): sobre sus biomas o sobre el mapa real. Todo lo de arriba
+   * está en coordenadas del mundo; el marco las pasa a las del mapa.
+   */
+  frame: Frame;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -173,6 +187,60 @@ function worldLimit(world: Bounds, container: HTMLElement): Bounds {
   return expandToAspect(world, container.clientWidth / container.clientHeight);
 }
 
+/**
+ * El estilo del mundo generado: el mar de afuera, los biomas, la noche y los nombres, todo propio y
+ * sin teselas.
+ */
+function worldStyle(
+  {
+    biomes,
+    places,
+    spawns,
+  }: {
+    biomes: BiomeCollection;
+    places: readonly Place[];
+    spawns: readonly Spawn[];
+  },
+  night: BackgroundLayerSpecification,
+): StyleSpecification {
+  return {
+    version: 8,
+    sources: {
+      [BIOMES_SOURCE]: { type: "geojson", data: biomes },
+      [PLACES_SOURCE]: {
+        type: "geojson",
+        data: {
+          type: "FeatureCollection",
+          features: places.map(({ name, kind, position }) => ({
+            type: "Feature",
+            properties: { name, kind, anchor: labelAnchor(position, spawns) },
+            geometry: { type: "Point", coordinates: position },
+          })),
+        },
+      },
+    },
+    layers: [
+      {
+        id: "fondo",
+        type: "background",
+        // Fuera del mundo hay mar que nunca se despeja: se pinta ya cubierto por la niebla.
+        paint: {
+          "background-color": underFog(
+            cssToken("--bioma-sea"),
+            cssToken("--hud-bg"),
+            cssNumber("--fog-opacity"),
+          ),
+        },
+      },
+      ...biomeLayers(biomes),
+      // La noche: el color del HUD sobre los biomas, debajo de la niebla (que se suma antes de los
+      // nombres) y de los nombres. De día, transparente.
+      night,
+      ...placeLayers(),
+    ],
+  };
+}
+
 /** Una capa de relleno por bioma, en el mismo orden que la colección. */
 function biomeLayers(biomes: BiomeCollection): FillLayerSpecification[] {
   return biomes.features.map(({ properties: { habitat } }) => ({
@@ -205,11 +273,12 @@ export function MapView({
   weather,
   boosts,
   night,
+  frame,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
-  const initialRef = useRef({ biomes, bounds, places, spawns });
+  const initialRef = useRef({ biomes, bounds, places, spawns, frame });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Si el mapa ya dibujó la niebla: hasta entonces sigue el cartel de carga.
@@ -246,7 +315,7 @@ export function MapView({
       const target = originalEvent.target;
       if (target instanceof Element && target.closest(".maplibregl-marker"))
         return;
-      install(lngLat.toArray());
+      install(frame.fromMap(lngLat.toArray()));
     };
 
     const aim = document.createElement("div");
@@ -269,7 +338,7 @@ export function MapView({
       if (event.altKey || event.ctrlKey || event.metaKey) return;
       if (event.key === "Enter") {
         event.preventDefault();
-        install(marker.getLngLat().toArray());
+        install(frame.fromMap(marker.getLngLat().toArray()));
         return;
       }
       const direction = AIM_DIRECTIONS[event.key];
@@ -279,16 +348,20 @@ export function MapView({
       event.stopPropagation();
       const step = Math.min(canvas.clientWidth, canvas.clientHeight) * AIM_STEP;
       const point = loadedMap.project(marker.getLngLat());
-      const next = loadedMap.unproject([
-        point.x + direction[0] * step,
-        point.y + direction[1] * step,
-      ]);
+      const [lng, lat] = frame.fromMap(
+        loadedMap
+          .unproject([
+            point.x + direction[0] * step,
+            point.y + direction[1] * step,
+          ])
+          .toArray(),
+      );
       // La mira no sale del mundo: afuera no hay nada que despejar.
       const [[west, south], [east, north]] = bounds;
-      const lngLat: Position = [
-        Math.min(Math.max(next.lng, west), east),
-        Math.min(Math.max(next.lat, south), north),
-      ];
+      const lngLat = frame.toMap([
+        Math.min(Math.max(lng, west), east),
+        Math.min(Math.max(lat, south), north),
+      ]);
       marker.setLngLat(lngLat);
       // Con el mapa acercado, si la mira sale de la vista, el mapa la sigue.
       if (!loadedMap.getBounds().contains(lngLat)) {
@@ -304,7 +377,7 @@ export function MapView({
       canvas.style.cursor = "";
       marker.remove();
     };
-  }, [loadedMap, installing, bounds]);
+  }, [loadedMap, installing, bounds, frame]);
 
   // De noche, la capa de la noche sube su opacidad. La primera vez, sin fundido: si el turno empieza
   // de noche, el mapa ya aparece oscuro. Después, en 1,5 s, salvo con movimiento reducido.
@@ -367,70 +440,47 @@ export function MapView({
     const container = containerRef.current;
     if (!container) return;
     const initial = initialRef.current;
+    const { frame } = initial;
+    // El mundo en coordenadas del mapa: para encuadrarlo y para el límite.
+    const world = mapBounds(frame, initial.bounds);
+    const nightLayer: BackgroundLayerSpecification = {
+      id: NIGHT_LAYER,
+      type: "background",
+      paint: {
+        "background-color": cssToken("--hud-bg"),
+        "background-opacity": 0,
+      },
+    };
 
     const map = new MapLibreMap({
       container,
       // La inercia del arrastre sigue la intensidad visual (lib/motion.ts). MapLibre la lee al crear
       // el mapa: un cambio en los ajustes la toma al recargar.
       reduceMotion: prefersReducedMotion(),
-      style: {
-        version: 8,
-        sources: {
-          [BIOMES_SOURCE]: { type: "geojson", data: initial.biomes },
-          [PLACES_SOURCE]: {
-            type: "geojson",
-            data: {
-              type: "FeatureCollection",
-              features: initial.places.map(({ name, kind, position }) => ({
-                type: "Feature",
-                properties: {
-                  name,
-                  kind,
-                  anchor: labelAnchor(position, initial.spawns),
-                },
-                geometry: { type: "Point", coordinates: position },
-              })),
-            },
-          },
-        },
-        layers: [
-          {
-            id: "fondo",
-            type: "background",
-            // Fuera del mundo hay mar que nunca se despeja: se pinta ya cubierto por la niebla.
-            paint: {
-              "background-color": underFog(
-                cssToken("--bioma-sea"),
-                cssToken("--hud-bg"),
-                cssNumber("--fog-opacity"),
-              ),
-            },
-          },
-          ...biomeLayers(initial.biomes),
-          // La noche: el color del HUD sobre los biomas, debajo de la niebla (que se suma antes de
-          // los nombres) y de los nombres. De día, transparente.
-          {
-            id: NIGHT_LAYER,
-            type: "background",
-            paint: {
-              "background-color": cssToken("--hud-bg"),
-              "background-opacity": 0,
-            },
-          },
-          ...placeLayers(),
-        ],
-      },
+      // El modo real carga el estilo de OpenFreeMap y le pone los colores del HUD antes de usarlo.
+      ...(frame.mode === "real"
+        ? {
+            style: REAL_STYLE_URL,
+            transformStyle: (_previous, next) =>
+              hudStyle(next, nightLayer, world),
+          }
+        : { style: worldStyle(initial, nightLayer) }),
       // Sin fundido de los nombres al aparecer o al chocar, con movimiento reducido. Se lee al crear
       // el mapa: MapLibre no lo deja cambiar después.
       fadeDuration: prefersReducedMotion() ? 0 : 300,
-      bounds: initial.bounds,
+      bounds: world,
       // Si el límite fuera el mundo tal cual, en una pantalla angosta MapLibre acercaría el mapa
       // para no mostrar nada afuera, y la isla quedaría cortada a los costados.
-      maxBounds: worldLimit(initial.bounds, container),
-      maxZoom: MAX_ZOOM,
+      maxBounds: worldLimit(world, container),
+      maxZoom: MAX_ZOOM + frame.zoomOffset,
       // El canvas de MapLibre ya es una región con nombre (role="region", y tabindex="0" para
       // moverlo con las flechas). `locale` traduce ese nombre, que por defecto es "Map".
-      locale: { "Map.Title": "Mapa del mundo" },
+      locale: {
+        "Map.Title":
+          frame.mode === "real" ? "Mapa de Río Negro" : "Mapa del mundo",
+      },
+      // Sin el control de atribución de MapLibre: abajo a la derecha, a 390 px queda debajo del
+      // panel de las antenas. La del mapa real va en ese panel (monitoring-room.tsx).
       attributionControl: false,
       // Ni rotar ni inclinar: el mundo se ve desde arriba y con el norte arriba, que es el orden
       // del Tab entre las señales, y no hay un control para volver al norte. dragRotate apaga el
@@ -450,17 +500,23 @@ export function MapView({
     const onResize = () => {
       // El zoom de antes, para que volver a la señal no lo baje al del mundo entero.
       const zoom = map.getZoom();
-      map.setMaxBounds(worldLimit(initial.bounds, container));
-      map.fitBounds(initial.bounds, { animate: false, absolutePadding: true });
+      map.setMaxBounds(worldLimit(world, container));
+      map.fitBounds(world, { animate: false, absolutePadding: true });
       const focus = focusRef.current;
       if (focus) {
-        focusSignal(map, initial.bounds, focus, {
+        focusSignal(map, world, frame.toMap(focus), {
           animate: false,
           keepZoom: zoom,
         });
       }
     };
     map.on("resize", onResize);
+    // El punto de las ciudades del mapa real (real-style.ts). Un resolver y no el evento
+    // `styleimagemissing`: MapLibre espera al resolver antes de dar la imagen por perdida.
+    map.setMissingStyleImageResolver((id) => {
+      if (id === MISSING_CITY_DOT && !map.hasImage(id))
+        map.addImage(id, cityDot());
+    });
     // Antes de `load`, un error deja el mapa sin dibujar: por ejemplo, si no baja el worker (como
     // en E-07). Después de `load` se deja de escuchar, y MapLibre los muestra en la consola.
     const onError = ({ error }: MapErrorEvent) =>
@@ -503,6 +559,7 @@ export function MapView({
           <Radar
             map={loadedMap}
             bounds={bounds}
+            frame={frame}
             grid={grid}
             stations={
               active
@@ -517,7 +574,7 @@ export function MapView({
           />
           <SignalMarkers
             map={loadedMap}
-            places={places}
+            frame={frame}
             spawns={spawns}
             detected={detected}
             selectedId={
@@ -530,7 +587,11 @@ export function MapView({
               setSelection(next);
               setDossierOpen(true);
               focusRef.current = next.spawn.position;
-              focusSignal(loadedMap, bounds, next.spawn.position);
+              focusSignal(
+                loadedMap,
+                mapBounds(frame, bounds),
+                frame.toMap(next.spawn.position),
+              );
             }}
           />
         </>

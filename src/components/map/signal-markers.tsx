@@ -12,9 +12,10 @@ import { createPortal } from "react-dom";
 import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { type Boost, boostOf } from "@/lib/boosts";
-import type { Place, Position, Spawn } from "@/lib/world/types";
+import type { Position, Spawn } from "@/lib/world/types";
 
 import { prefersReducedMotion } from "./camera";
+import type { Frame } from "./frame";
 import { northToSouth, signalPlaces } from "./places";
 
 /**
@@ -70,8 +71,8 @@ export interface SignalSelection {
 
 interface SignalMarkersProps {
   map: MapLibreMap;
-  /** Los lugares con nombre, para decir dónde está cada señal. */
-  places: readonly Place[];
+  /** Dónde se dibuja el mundo y cómo se nombra el lugar de cada señal (frame.ts). */
+  frame: Frame;
   spawns: readonly Spawn[];
   /** La señal con la ficha abierta, si hay una. */
   selectedId: number | null;
@@ -88,7 +89,7 @@ interface SignalMarkersProps {
 
 export function SignalMarkers({
   map,
-  places,
+  frame,
   spawns,
   selectedId,
   identified,
@@ -102,7 +103,7 @@ export function SignalMarkers({
   // guarda (useMemo es una caché, y React puede descartarla). Las señales se ubican al compilar y
   // no cambian. Van de norte a sur: ese es el orden del Tab.
   const [anchors] = useState(() =>
-    signalPlaces(northToSouth(spawns), places).map(
+    signalPlaces(northToSouth(spawns), frame.describe).map(
       ({ spawn, place, label }) => ({
         spawn,
         place,
@@ -118,7 +119,9 @@ export function SignalMarkers({
       for (const type of MAP_GESTURES) {
         element.addEventListener(type, stopPropagation, { passive: true });
       }
-      return new Marker({ element }).setLngLat(spawn.position).addTo(map);
+      return new Marker({ element })
+        .setLngLat(frame.toMap(spawn.position))
+        .addTo(map);
     });
     return () => {
       for (const marker of markers) marker.remove();
@@ -128,7 +131,7 @@ export function SignalMarkers({
         }
       }
     };
-  }, [map, anchors]);
+  }, [map, anchors, frame]);
 
   // Los Marker de todas las señales existen desde el principio, en el orden de norte a sur: un
   // botón que aparece después queda en su lugar del Tab.
@@ -145,7 +148,7 @@ export function SignalMarkers({
           shiny={shiny.has(spawn.speciesId)}
           boosts={boosts}
           onSelect={onSelect}
-          onFocus={() => revealSignal(map, spawn.position)}
+          onFocus={() => revealSignal(map, frame.toMap(spawn.position))}
         />,
         element,
         String(spawn.speciesId),

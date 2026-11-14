@@ -6,7 +6,7 @@
 // el control las instala y el mapa las dibuja. También lleva la bitácora del turno, el fin de turno
 // y la señal de un enlace compartido.
 import { BellIcon, BellOffIcon, Settings2Icon } from "lucide-react";
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 
 import {
   closeNotices,
@@ -15,6 +15,12 @@ import {
 } from "@/components/crew/crew-notices";
 import { TYPE_LABELS } from "@/components/dossier/labels";
 import { threatLevel } from "@/components/dossier/threat";
+import {
+  modeSearch,
+  realFrame,
+  VIEDMA,
+  worldFrame,
+} from "@/components/map/frame";
 import { MapLoader } from "@/components/map/map-loader";
 import type { MapViewProps } from "@/components/map/map-view";
 import { northToSouth, signalPlaces } from "@/components/map/places";
@@ -53,6 +59,7 @@ import { Clock } from "./clock";
 import { ShiftEnd, type ShiftSummary } from "./shift-end";
 import { ShiftForm } from "./shift-form";
 import { ShiftLog } from "./shift-log";
+import { TEXT_LINK, ZoneLink } from "./zone-link";
 
 const percent = new Intl.NumberFormat("es-AR", {
   style: "percent",
@@ -140,6 +147,7 @@ interface MonitoringRoomProps extends Omit<
   | "weather"
   | "boosts"
   | "night"
+  | "frame"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -205,15 +213,26 @@ export function MonitoringRoom({
   const [installing, setInstalling] = useState(false);
   // Lo último que pasó con las antenas, a la vista: el resultado de su vuelta o un punto inválido.
   const [radarStatus, setRadarStatus] = useState("");
+  // Dónde se dibuja el mundo (docs/concepto.md, "El mapa híbrido"): `?modo=real` lo lleva al mapa
+  // real de Río Negro, con el radar base en Viedma. La URL se lee en el cliente: en el servidor es
+  // el mundo, y el mapa se monta recién en el cliente, ya con el modo de la URL.
+  const realMode = useSearchParam("modo") === "real";
+  const { radarBase, places, spawns } = mapProps;
+  const frame = useMemo(
+    () =>
+      realMode ? realFrame(radarBase, VIEDMA, "Viedma") : worldFrame(places),
+    [realMode, radarBase, places],
+  );
   // La etiqueta de cada señal, la misma de su botón. Las señales se ubican al compilar y no
-  // cambian: se calcula una vez.
-  const [labels] = useState(
+  // cambian: cambia solo con el marco.
+  const labels = useMemo(
     () =>
       new Map(
-        signalPlaces(northToSouth(mapProps.spawns), mapProps.places).map(
+        signalPlaces(northToSouth(spawns), frame.describe).map(
           ({ spawn, label }) => [spawn.speciesId, label],
         ),
       ),
+    [spawns, frame],
   );
 
   // Un aviso para el lector de pantalla. Si es igual al anterior, el texto de la región viva no
@@ -584,7 +603,7 @@ export function MonitoringRoom({
                 href="https://open-meteo.com/"
                 target="_blank"
                 rel="noreferrer"
-                className="pointer-events-auto underline underline-offset-2 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                className={`pointer-events-auto ${TEXT_LINK}`}
               >
                 Open-Meteo
               </a>
@@ -620,6 +639,7 @@ export function MonitoringRoom({
       <ShiftStart
         open={hydrated && !saved && shared === null}
         initial={settings}
+        mode={frame.mode}
       />
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent>
@@ -634,6 +654,7 @@ export function MonitoringRoom({
             }}
           />
           <Shortcuts />
+          <ZoneLink mode={frame.mode} />
           {/* La huella del mundo: si coincide entre local y producción, el mundo es el mismo. */}
           <p className="font-mono text-xs text-muted-foreground">
             Mundo: semilla {seed} · huella {hash}
@@ -674,6 +695,39 @@ export function MonitoringRoom({
             Bitácora {log.length > 0 && `(${log.length})`}
           </Button>
         </div>
+        {/* Los datos del mapa real piden atribución: el texto y los enlaces del TileJSON de
+            OpenFreeMap (tiles.openfreemap.org/planet, campo "attribution"). */}
+        {frame.mode === "real" && (
+          <p>
+            Mapa:{" "}
+            <a
+              href="https://openfreemap.org"
+              target="_blank"
+              rel="noreferrer"
+              className={TEXT_LINK}
+            >
+              OpenFreeMap
+            </a>{" "}
+            ·{" "}
+            <a
+              href="https://www.openmaptiles.org/"
+              target="_blank"
+              rel="noreferrer"
+              className={`whitespace-nowrap ${TEXT_LINK}`}
+            >
+              © OpenMapTiles
+            </a>{" "}
+            · datos de{" "}
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noreferrer"
+              className={`whitespace-nowrap ${TEXT_LINK}`}
+            >
+              © OpenStreetMap
+            </a>
+          </p>
+        )}
       </div>
       <ShiftLog
         open={logOpen}
@@ -696,7 +750,11 @@ export function MonitoringRoom({
         onOpenChange={setEndOpen}
         summary={summary}
         onDownload={downloadReport}
-        onRestart={() => window.location.assign(window.location.pathname)}
+        onRestart={() =>
+          window.location.assign(
+            window.location.pathname + modeSearch(frame.mode),
+          )
+        }
       />
       <p role="status" className="sr-only">
         {announcement}
@@ -717,6 +775,7 @@ export function MonitoringRoom({
         weather={weather}
         boosts={boosts}
         night={night ?? false}
+        frame={frame}
       />
       <CrewNotices />
     </>

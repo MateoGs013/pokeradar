@@ -8,7 +8,7 @@ import { conditionOf, type Weather } from "./conditions";
 
 /**
  * Viedma, la capital de Río Negro: la zona que el concepto usa cuando no hay ubicación del usuario
- * (docs/concepto.md). Pedir la ubicación llega con el modo híbrido (bloque 6).
+ * (docs/concepto.md), y la del mapa real (`?modo=real`), que no pide la ubicación.
  */
 const LATITUDE = -40.81;
 const LONGITUDE = -62.99;
