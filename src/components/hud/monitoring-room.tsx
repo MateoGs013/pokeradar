@@ -163,8 +163,12 @@ export function MonitoringRoom({
           Arriba, a la vista, lo último que pasó y, en el modo, qué hacer: el panel está anclado
           abajo y crece hacia arriba, así que el botón no se mueve cuando esas líneas aparecen o se
           van. El fondo es opaco: con el del rótulo (al 80 %), el pulso de una señal debajo bajaba
-          el contraste del texto (medido). */}
-      <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-(--spacing(6)))] flex-col items-start gap-1.5 bg-background px-1.5 py-1 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+          el contraste del texto (medido). Con `data-antenna-control`, el mapa sabe que la tecla A
+          vale también con el foco acá (map-view.tsx). */}
+      <div
+        data-antenna-control
+        className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-(--spacing(6)))] flex-col items-start gap-1.5 bg-background px-1.5 py-1 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]"
+      >
         {radarStatus && <p>{radarStatus}</p>}
         {installing && (
           <p>

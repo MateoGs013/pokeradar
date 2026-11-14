@@ -277,8 +277,10 @@ export function MapView({
     };
   }, [loadedMap, installing, bounds]);
 
-  // La tecla A entra o sale del modo de instalación (docs/concepto.md, "Teclado"), salvo con la
-  // ficha abierta, mientras se escribe o con una tecla modificadora.
+  // La tecla A entra o sale del modo de instalación (docs/concepto.md, "Teclado"), solo con el foco
+  // en el mapa (también en una de sus señales) o en el control de las antenas: un atajo de una
+  // letra en toda la página también se dispararía al dictar con la voz (WCAG 2.1.4). Con la ficha
+  // abierta o con una tecla modificadora, tampoco.
   const toggleInstall = useEffectEvent(onToggleInstall);
   useEffect(() => {
     if (dossierOpen) return;
@@ -287,9 +289,8 @@ export function MapView({
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target;
       if (
-        target instanceof HTMLElement &&
-        (target.isContentEditable ||
-          target.closest("input, textarea, select, [role='dialog']"))
+        !(target instanceof Element) ||
+        !target.closest(".maplibregl-map, [data-antenna-control]")
       )
         return;
       toggleInstall();
