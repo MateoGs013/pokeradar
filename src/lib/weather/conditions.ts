@@ -1,7 +1,9 @@
 // El clima del mundo (docs/concepto.md, "Eventos del mundo"): el código WMO que da Open-Meteo se
 // reduce a seis condiciones, y cada una potencia algunos tipos. El concepto fija tres (la lluvia
-// potencia Agua y Eléctrico; la nieve, Hielo; el sol, Fuego); el resto completa la tabla. Potenciar
-// marca la señal y la ficha: no cambia qué señales hay.
+// potencia Agua y Eléctrico; la nieve, Hielo; el sol, Fuego); el resto completa la tabla. De noche
+// no hay sol: el cielo despejado no potencia nada. Potenciar marca la señal y la ficha: no cambia
+// qué señales hay.
+import type { Boost } from "@/lib/boosts";
 import type { TypeName } from "@/lib/pokeapi/types";
 
 export type Condition = "clear" | "cloudy" | "fog" | "rain" | "snow" | "storm";
@@ -32,7 +34,8 @@ export const CONDITIONS: Record<
     by: "las nubes",
     boosted: ["fairy", "fighting", "poison"],
   },
-  fog: { label: "Niebla", by: "la niebla", boosted: ["ghost", "dark"] },
+  // Neblina y no niebla: la niebla es la del radar, la que tapa el mundo.
+  fog: { label: "Neblina", by: "la neblina", boosted: ["ghost", "dark"] },
   rain: {
     label: "Lluvia",
     by: "la lluvia",
@@ -48,7 +51,7 @@ export const CONDITIONS: Record<
 
 /**
  * La condición de un código WMO, con la tabla de Open-Meteo (open-meteo.com/en/docs, "WMO Weather
- * interpretation codes"): 0 y 1, despejado; 2 y 3, nublado; 45 y 48, niebla; llovizna, lluvia y
+ * interpretation codes"): 0 y 1, despejado; 2 y 3, nublado; 45 y 48, neblina; llovizna, lluvia y
  * chaparrones (51 a 67, 80 a 82), lluvia; nieve (71 a 77, 85 y 86); tormenta (95 a 99). Un código
  * fuera de la tabla da `null`.
  */
@@ -62,9 +65,12 @@ export function conditionOf(code: number): Condition | null {
   return null;
 }
 
-/** Si el clima potencia el tipo. */
-export function boosts(weather: Weather | null, type: TypeName): boolean {
-  return (
-    weather !== null && CONDITIONS[weather.condition].boosted.includes(type)
-  );
+/**
+ * Lo que potencia el clima ahora, o nada: de noche, el cielo despejado no tiene sol (la noche
+ * potencia lo suyo, lib/night.ts).
+ */
+export function weatherBoost(weather: Weather, night: boolean): Boost | null {
+  if (night && weather.condition === "clear") return null;
+  const { by, boosted } = CONDITIONS[weather.condition];
+  return { by, types: boosted };
 }

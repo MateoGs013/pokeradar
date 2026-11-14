@@ -16,7 +16,7 @@ import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { STATS } from "@/lib/pokeapi/types";
 import { type Boost, boostOf } from "@/lib/boosts";
-import { boosts as weatherBoosts, CONDITIONS } from "@/lib/weather/conditions";
+import { CONDITIONS, weatherBoost } from "@/lib/weather/conditions";
 
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
 import { hasSprite, PokemonSprite } from "./pokemon-sprite";
@@ -33,6 +33,8 @@ interface DossierBodyProps {
   /** Si es variocolor: ese sprite, y "Firma variocolor" en lugar de "Firma identificada". */
   shiny: boolean;
   weather: WeatherState;
+  /** De noche, el cielo despejado no potencia (lib/weather/conditions.ts). */
+  night: boolean;
   boosts: readonly Boost[];
   onRetry: () => void;
 }
@@ -42,6 +44,7 @@ export function DossierBody({
   place,
   shiny,
   weather,
+  night,
   boosts,
   onRetry,
 }: DossierBodyProps) {
@@ -59,7 +62,7 @@ export function DossierBody({
         <Identity detail={detail} shiny={shiny} boosts={boosts} />
         <Threat detail={detail} />
         <Stats detail={detail} />
-        <Facts detail={detail} place={place} weather={weather} />
+        <Facts detail={detail} place={place} weather={weather} night={night} />
         <Description detail={detail} />
       </div>
     </MotionConfig>
@@ -269,16 +272,20 @@ function Facts({
   detail,
   place,
   weather,
+  night,
 }: {
   detail: PokemonDetail | null;
   place: string;
   weather: WeatherState;
+  night: boolean;
 }) {
-  // El clima ya se sabe mientras se identifica la señal; con la ficha, se suma si la potencia. Es
-  // corto a propósito: en una línea, la fila no cambia de alto al llegar los datos.
+  // El clima ya se sabe mientras se identifica la señal; con la ficha, se suma si la potencia (de
+  // noche, el despejado no). Es corto a propósito: en una línea, la fila no cambia de alto al
+  // llegar los datos.
+  const sky =
+    weather.status === "ready" ? weatherBoost(weather.weather, night) : null;
   const boosted =
-    weather.status === "ready" &&
-    detail?.types.some((type) => weatherBoosts(weather.weather, type));
+    sky !== null && detail?.types.some((type) => sky.types.includes(type));
   return (
     <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
       <dt className="tracking-widest text-muted-foreground uppercase">

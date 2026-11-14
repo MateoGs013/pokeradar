@@ -633,6 +633,7 @@ export function MapView({
         place={selection?.place ?? null}
         shiny={selection ? shiny.has(selection.spawn.speciesId) : false}
         weather={weather}
+        night={night}
         boosts={boosts}
         onRetry={retry}
         onClose={() => {
