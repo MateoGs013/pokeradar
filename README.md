@@ -47,6 +47,10 @@ y el foco vuelve a la señal.
   una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
   aparecen con un ping, se anuncian al lector de pantalla y el rótulo las cuenta ("5 de 40 señales"). Con movimiento
   reducido, el círculo se despeja de una vez.
+- **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
+  mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
+  el mapa y Enter la instala en la mira del centro. Cada antena da su vuelta, y el panel dice cuántas señales
+  detectó o que no había ninguna en alcance. Esc cancela.
 
 ## Arquitectura y Stack
 
@@ -71,8 +75,8 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 ```
 src/app/                   layout, página (servidor) y estilos globales
 src/components/map/        mapa, señales, cámara, carga y error
-src/components/radar/      niebla y radar base: el canvas de la niebla, el haz y la detección
-src/components/hud/        sala de monitoreo: rótulo de la esquina, aviso de detecciones y su estado
+src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
+src/components/hud/        sala de monitoreo: rótulo de la esquina, antenas, aviso de detecciones y su estado
 src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
 src/components/ui/         componentes de shadcn con los tokens del HUD
 src/hooks/                 identificación con caché y cancelación; media queries
@@ -137,10 +141,10 @@ de arriba y acá queda lo que no entró.
 
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
-- **Antenas:** el operador instala de 3 a 5 puestos de radar para despejar más terreno y detectar más señales.
-- **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema.
+- **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema y
+  el control de intensidad visual del concepto: hoy el movimiento reducido sale solo de `prefers-reduced-motion`.
 - **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
-- **Bitácora, compartir por URL** (`?modo=mundo&p=25`), informe exportable, fin de turno y geocercas.
+- **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
 - **Modo híbrido:** el mismo radar sobre un mapa real.
 - **Sonido y atajos de teclado.**
 
