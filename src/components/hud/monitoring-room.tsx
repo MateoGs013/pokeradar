@@ -5,13 +5,7 @@
 // mapa muestra solo esas, el HUD las cuenta y Pelipper dice dónde aparecieron. Y guarda las antenas:
 // el control las instala y el mapa las dibuja.
 import { BellIcon, BellOffIcon, Settings2Icon } from "lucide-react";
-import {
-  useEffect,
-  useEffectEvent,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import {
   closeNotices,
@@ -37,7 +31,11 @@ import {
   saveShiftSettings,
   useShiftSettings,
 } from "@/hooks/use-shift-settings";
+import { useNight } from "@/hooks/use-night";
+import { useSearchParam } from "@/hooks/use-search-param";
 import { useWeather } from "@/hooks/use-weather";
+import type { Boost } from "@/lib/boosts";
+import { NIGHT_BOOST } from "@/lib/night";
 import { isShiny } from "@/lib/shiny";
 import { CONDITIONS, type Weather } from "@/lib/weather/conditions";
 import type { Position } from "@/lib/world/types";
@@ -57,20 +55,12 @@ function describeWeather({ condition, temperature }: Weather) {
   return `${CONDITIONS[condition].label.toLowerCase()} ${Math.round(temperature)} °C`;
 }
 
-// La URL no cambia mientras la sala está abierta: no hay a qué suscribirse.
-const subscribeToNothing = () => () => {};
-
 /**
  * La especie que `?shiny=<id>` fuerza variocolor, para mostrarla en una demo: con la semilla 151
- * ninguna lo es. En el servidor no hay URL; en el cliente se lee al hidratar.
+ * ninguna lo es.
  */
 function useForcedShiny() {
-  const search = useSyncExternalStore(
-    subscribeToNothing,
-    () => window.location.search,
-    () => "",
-  );
-  const id = Number(new URLSearchParams(search).get("shiny"));
+  const id = Number(useSearchParam("shiny"));
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
@@ -88,6 +78,8 @@ interface MonitoringRoomProps extends Omit<
   | "active"
   | "shiny"
   | "weather"
+  | "boosts"
+  | "night"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -115,6 +107,14 @@ export function MonitoringRoom({
       .filter((id) => id === forcedShiny || isShiny(seed, id)),
   );
   const weather = useWeather();
+  const night = useNight();
+  // Lo que potencia tipos ahora: el clima, si llegó, y la noche.
+  const boosts: Boost[] = [];
+  if (weather.status === "ready") {
+    const { by, boosted } = CONDITIONS[weather.weather.condition];
+    boosts.push({ by, types: boosted });
+  }
+  if (night) boosts.push(NIGHT_BOOST);
   // Qué parte del mundo despejó el radar (de 0 a 1), y qué especies se identificaron.
   const [coverage, setCoverage] = useState(0);
   const [identified, setIdentified] = useState<ReadonlySet<number>>(
@@ -242,6 +242,26 @@ export function MonitoringRoom({
     forecastGiven.current = true;
     forecast(weather.weather);
   }, [started, weather]);
+
+  // Noctowl toma la guardia cuando cae la noche, también si el turno empieza de noche. Una vez por
+  // noche: si amanece y vuelve a anochecer con la página abierta, avisa de nuevo.
+  const nightAnnounced = useRef(false);
+  const announceNight = useEffectEvent(() => {
+    if (muted) return;
+    const types = NIGHT_BOOST.types.map((type) => TYPE_LABELS[type]);
+    notify({
+      id: "noctowl",
+      member: "noctowl",
+      priority: "informativo",
+      text: `Cae la noche: Noctowl toma la guardia. Se potencian los tipos ${typeList.format(types)}.`,
+    });
+  });
+  useEffect(() => {
+    if (!night) nightAnnounced.current = false;
+    if (!started || !night || nightAnnounced.current) return;
+    nightAnnounced.current = true;
+    announceNight();
+  }, [started, night]);
 
   const toggleMuted = () => {
     if (!muted) closeNotices();
@@ -467,6 +487,8 @@ export function MonitoringRoom({
         onIdentify={onIdentify}
         shiny={shiny}
         weather={weather}
+        boosts={boosts}
+        night={night ?? false}
       />
       <CrewNotices />
     </>
