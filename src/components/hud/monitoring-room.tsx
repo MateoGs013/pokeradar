@@ -1,17 +1,27 @@
 "use client";
 
-// La sala de monitoreo: el rótulo de la esquina, el aviso de las detecciones y el mapa. Guarda qué
-// señales detectó el radar, porque las usan los tres: el mapa muestra solo esas, el rótulo las
-// cuenta y el aviso dice dónde aparecieron.
-import { useState } from "react";
+// La sala de monitoreo: el rótulo de la esquina, el control de las antenas, el aviso de las
+// detecciones y el mapa. Guarda qué señales detectó el radar, porque las usan todos: el mapa
+// muestra solo esas, el rótulo las cuenta y el aviso dice dónde aparecieron. Y guarda las antenas:
+// el control las instala y el mapa las dibuja.
+import { useEffect, useState } from "react";
 
 import { MapLoader } from "@/components/map/map-loader";
 import type { MapViewProps } from "@/components/map/map-view";
 import { northToSouth, signalPlaces } from "@/components/map/places";
+import { MAX_ANTENNAS } from "@/components/radar/network";
+import type { Station } from "@/components/radar/radar";
+import { Button } from "@/components/ui/button";
+import type { Position } from "@/lib/world/types";
 
 interface MonitoringRoomProps extends Omit<
   MapViewProps,
-  "detected" | "onDetect"
+  | "antennas"
+  | "installing"
+  | "onInstall"
+  | "detected"
+  | "onDetect"
+  | "onSweepEnd"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -27,6 +37,11 @@ export function MonitoringRoom({
     () => new Set(),
   );
   const [announcement, setAnnouncement] = useState("");
+  const [antennas, setAntennas] = useState<readonly Station[]>([]);
+  // Si se está eligiendo dónde va la próxima antena.
+  const [installing, setInstalling] = useState(false);
+  // Lo último que pasó con las antenas, a la vista: el resultado de su vuelta o un punto inválido.
+  const [radarStatus, setRadarStatus] = useState("");
   // La etiqueta de cada señal, la misma de su botón. Las señales se ubican al compilar y no
   // cambian: se calcula una vez.
   const [labels] = useState(
@@ -50,6 +65,51 @@ export function MonitoringRoom({
     );
   };
 
+  // Lo que dice una estación al terminar su vuelta: si no detectó nada, el estado vacío, también al
+  // lector de pantalla; si detectó, ya se anunció cada señal y solo queda a la vista el total.
+  const onSweepEnd = ({ id, kind }: Station, found: number) => {
+    const name = kind === "base" ? "Radar base" : `Antena ${id}`;
+    if (found === 0) {
+      const empty = `${name}: ninguna señal en alcance`;
+      setRadarStatus(empty);
+      setAnnouncement(empty);
+    } else if (kind === "antenna") {
+      setRadarStatus(
+        `${name}: ${found} ${found === 1 ? "señal detectada" : "señales detectadas"}`,
+      );
+    }
+  };
+
+  // El punto elegido tiene que estar dentro del mundo: afuera no hay nada que despejar.
+  const onInstall = ([lng, lat]: Position) => {
+    const [[west, south], [east, north]] = mapProps.bounds;
+    if (lng < west || lng > east || lat < south || lat > north) {
+      const outside = "Ese punto está fuera del mundo";
+      setRadarStatus(outside);
+      setAnnouncement(outside);
+      return;
+    }
+    if (antennas.length >= MAX_ANTENNAS) return;
+    const id = antennas.length + 1;
+    setAntennas([...antennas, { id, kind: "antenna", position: [lng, lat] }]);
+    setInstalling(false);
+    const installed = `Antena ${id} de ${MAX_ANTENNAS} instalada`;
+    setRadarStatus(installed);
+    setAnnouncement(installed);
+  };
+
+  // Esc sale del modo de instalación sin instalar.
+  useEffect(() => {
+    if (!installing) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setInstalling(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [installing]);
+
+  const full = antennas.length >= MAX_ANTENNAS;
+
   // El rótulo va antes que el mapa para que el encabezado sea lo primero que lee un lector de
   // pantalla; z-10 lo deja dibujado encima del mapa, que viene después. Lleva fondo porque al
   // mover el mapa puede quedar cualquier bioma debajo, y sin él el texto apagado no se lee bien
@@ -69,10 +129,43 @@ export function MonitoringRoom({
           {detected.size} de {mapProps.spawns.length} señales
         </span>
       </div>
+      {/* El control de las antenas, abajo a la izquierda. El botón alterna el modo de instalación
+          (aria-pressed); con las cuatro instaladas queda deshabilitado, y el contador dice por qué.
+          Debajo, a la vista, lo último que pasó y, en el modo, qué hacer. El fondo es opaco: con el
+          del rótulo (al 80 %), el pulso de una señal debajo bajaba el contraste del texto (medido). */}
+      <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100%-(--spacing(6)))] flex-col items-start gap-1.5 bg-background px-1.5 py-1 font-mono text-xs text-muted-foreground md:max-w-[calc(100%-var(--panel-width)-(--spacing(6)))]">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <Button
+            aria-pressed={installing}
+            disabled={full}
+            onClick={() => {
+              // Al entrar al modo, el resultado de la antena anterior ya no hace falta.
+              if (!installing) setRadarStatus("");
+              setInstalling(!installing);
+            }}
+            className="aria-pressed:bg-hud/15"
+          >
+            Instalar antena
+          </Button>
+          <span className="whitespace-nowrap">
+            Antenas {antennas.length} de {MAX_ANTENNAS}
+          </span>
+        </div>
+        {radarStatus && <p>{radarStatus}</p>}
+        {installing && <p>Tocá el mapa donde va la antena</p>}
+      </div>
       <p role="status" className="sr-only">
         {announcement}
       </p>
-      <MapLoader {...mapProps} detected={detected} onDetect={onDetect} />
+      <MapLoader
+        {...mapProps}
+        antennas={antennas}
+        installing={installing}
+        onInstall={onInstall}
+        detected={detected}
+        onDetect={onDetect}
+        onSweepEnd={onSweepEnd}
+      />
     </>
   );
 }

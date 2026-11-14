@@ -6,16 +6,17 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import {
   type ErrorEvent as MapErrorEvent,
+  type MapMouseEvent,
   type FillLayerSpecification,
   Map as MapLibreMap,
   setWorkerUrl,
   type SymbolLayerSpecification,
 } from "maplibre-gl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 import { DossierPanel } from "@/components/dossier/dossier-panel";
 import { underFog } from "@/components/radar/fog";
-import { Radar } from "@/components/radar/radar";
+import { Radar, type Station } from "@/components/radar/radar";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type {
@@ -52,10 +53,18 @@ export interface MapViewProps {
   grid: { width: number; height: number };
   /** Dónde está el radar base. */
   radarBase: Position;
+  /** Las antenas instaladas, en orden. */
+  antennas: readonly Station[];
+  /** Si se está eligiendo dónde instalar una antena: un clic en el mapa la ubica. */
+  installing: boolean;
+  /** Se eligió un punto del mapa para la antena. */
+  onInstall: (position: Position) => void;
   /** Las señales que el radar ya detectó, por speciesId: solo esas tienen botón. */
   detected: ReadonlySet<number>;
   /** El radar detectó estas señales. */
   onDetect: (ids: number[]) => void;
+  /** Una estación terminó su vuelta, con cuántas señales detectó. */
+  onSweepEnd: (station: Station, found: number) => void;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -144,8 +153,12 @@ export function MapView({
   places,
   grid,
   radarBase,
+  antennas,
+  installing,
+  onInstall,
   detected,
   onDetect,
+  onSweepEnd,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -167,6 +180,27 @@ export function MapView({
   // Dónde está la cámara mientras la ficha está abierta. Lo lee el redimensionado, que encuadra el
   // mundo otra vez y después vuelve a la señal.
   const focusRef = useRef<Position | null>(null);
+
+  // Con el modo de instalación, un clic en el mapa elige el lugar de la antena. MapLibre no emite
+  // `click` si el puntero se movió (un arrastre), así que mover el mapa no instala nada. Un clic en
+  // una señal también le llega al mapa: ese abre la ficha y no instala.
+  const install = useEffectEvent(onInstall);
+  useEffect(() => {
+    if (!loadedMap || !installing) return;
+    const canvas = loadedMap.getCanvas();
+    canvas.style.cursor = "crosshair";
+    const onClick = ({ lngLat, originalEvent }: MapMouseEvent) => {
+      const target = originalEvent.target;
+      if (target instanceof Element && target.closest(".maplibregl-marker"))
+        return;
+      install(lngLat.toArray());
+    };
+    loadedMap.on("click", onClick);
+    return () => {
+      loadedMap.off("click", onClick);
+      canvas.style.cursor = "";
+    };
+  }, [loadedMap, installing]);
 
   // Crea el mapa una sola vez y lo destruye al desmontar.
   useEffect(() => {
@@ -295,9 +329,13 @@ export function MapView({
             map={loadedMap}
             bounds={bounds}
             grid={grid}
-            stations={[{ id: 0, position: radarBase }]}
+            stations={[
+              { id: 0, kind: "base", position: radarBase },
+              ...antennas,
+            ]}
             spawns={spawns}
             onDetect={onDetect}
+            onSweepEnd={onSweepEnd}
             onFogDrawn={() => setFogDrawn(true)}
           />
           <SignalMarkers

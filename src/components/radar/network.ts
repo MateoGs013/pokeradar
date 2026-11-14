@@ -15,6 +15,12 @@ import { clearSector, type Fog, inSector } from "./fog";
  */
 export const RADAR_RADIUS = 2.4;
 
+/**
+ * Cuántas antenas se pueden instalar: el concepto pide de 3 a 5, para que haya que elegir dónde
+ * ponerlas. Tienen el mismo alcance que el radar base.
+ */
+export const MAX_ANTENNAS = 4;
+
 export class RadarNetwork {
   readonly fog: Fog;
   /** Las señales que ninguna estación detectó todavía. */
