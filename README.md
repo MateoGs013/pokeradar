@@ -45,13 +45,19 @@ y el foco vuelve a la señal.
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
 - **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz da
   una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
-  aparecen con un ping, se anuncian al lector de pantalla y el rótulo las cuenta ("5 de 40 señales"). Con movimiento
+  aparecen con un ping, se anuncian al lector de pantalla y el HUD las cuenta ("5 de 40 señales"). Con movimiento
   reducido, el círculo se despeja de una vez.
 - **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
   mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
   una mira y Enter la instala ahí. Cada antena da su vuelta, y el panel dice cuántas señales detectó o que no había
   ninguna en alcance. Esc cancela. La A vale con el foco en el mapa o en el panel de las antenas. Con las cuatro se
   llega como mucho a 38 de las 40 señales: cualquier combinación deja al menos dos afuera.
+- **Inicio de turno y arranque:** la primera vez, el operador elige un nombre en clave y el color del HUD (verde,
+  ámbar o cian), con "Saltar" siempre visible; mientras tanto el mapa carga por detrás y el radar espera. La carga la
+  cuenta Rotom con sus pasos reales: "Calibrando radar…", "Conectando satélites…", "Cobertura: 0%".
+- **HUD de esquinas:** arriba a la izquierda, el operador, la cobertura del mundo, las señales detectadas y las
+  identificadas; arriba a la derecha, la hora y los ajustes del turno, donde también están la semilla y la huella
+  del mundo.
 
 ## Arquitectura y Stack
 
@@ -77,13 +83,15 @@ dice que `ssr: false` da error en un Server Component, así que vive en un Clien
 src/app/                   layout, página (servidor) y estilos globales
 src/components/map/        mapa, señales, cámara, carga y error
 src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar y la detección
-src/components/hud/        sala de monitoreo: rótulo de la esquina, antenas, aviso de detecciones y su estado
+src/components/hud/        sala de monitoreo: HUD de esquinas, ajustes del turno, antenas y avisos
+src/components/onboarding/ inicio de turno y arranque del sistema con Rotom
 src/components/dossier/    ficha de inteligencia: panel, cuerpo, sprite, texto revuelto
 src/components/ui/         componentes de shadcn con los tokens del HUD
-src/hooks/                 identificación con caché y cancelación; media queries
+src/hooks/                 identificación con caché y cancelación; media queries; ajustes del turno guardados
 src/lib/pokeapi/           tipos, guards y cliente tipado de PokéAPI
 src/lib/world/             generación del mundo (ruido, biomas, polígonos)
 src/lib/geo/               encuadre y ubicación de las señales
+src/lib/shift.ts           ajustes del turno: nombre en clave y color del HUD
 docs/                      consigna, concepto, decisiones, hallazgos, errores y flujo
 ```
 
@@ -142,12 +150,12 @@ de arriba y acá queda lo que no entró.
 
 En el plan, en este orden, está el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
-- **HUD de instrumento** con cobertura por región, y un **onboarding** de tres pasos con el arranque del sistema y
-  el control de intensidad visual del concepto: hoy el movimiento reducido sale solo de `prefers-reduced-motion`.
+- **Cobertura por región** en el HUD: hoy es la del mundo entero.
 - **Tripulación y avisos** con prioridades; eventos del mundo (shiny, enjambres, día y noche, clima con Open-Meteo).
 - **Bitácora, compartir por URL** (`?modo=mundo&p=25`, y las antenas), informe exportable, fin de turno y geocercas.
-- **Modo híbrido:** el mismo radar sobre un mapa real.
-- **Sonido y atajos de teclado.**
+- **Modo híbrido:** el mismo radar sobre un mapa real, con la zona de operaciones en el inicio de turno.
+- **Sonido y atajos de teclado**, y la **intensidad visual** del inicio de turno: hoy el movimiento reducido sale solo
+  de `prefers-reduced-motion`.
 
 Con una semana más, además del plan:
 
