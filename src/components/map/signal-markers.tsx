@@ -43,8 +43,8 @@ const FOCUS_REACH = 14;
 /**
  * Si la señal enfocada no se ve entera, el mapa va hasta ella. Pasa con el mapa acercado: el Tab
  * llega a señales fuera de la vista, y el navegador no puede mostrarlas porque MapLibre vuelve a 0
- * el scroll de su contenedor. `panTo` anima con `easeTo`, que con movimiento reducido no anima
- * (MapLibre pone la duración en 0).
+ * el scroll de su contenedor. Con movimiento reducido (la intensidad de lib/motion.ts), sin
+ * animación; `essential` hace que MapLibre siga esa decisión y no solo `prefers-reduced-motion`.
  */
 function revealSignal(map: MapLibreMap, position: Position) {
   const { x, y } = map.project(position);
@@ -54,7 +54,11 @@ function revealSignal(map: MapLibreMap, position: Position) {
     x <= clientWidth - FOCUS_REACH &&
     y >= FOCUS_REACH &&
     y <= clientHeight - FOCUS_REACH;
-  if (!visible) map.panTo(position);
+  if (!visible)
+    map.panTo(position, {
+      animate: !prefersReducedMotion(),
+      essential: true,
+    });
 }
 
 /** La señal que se tocó: dónde está, cómo se nombra y su botón, para devolverle el foco. */

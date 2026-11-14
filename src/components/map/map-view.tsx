@@ -293,7 +293,7 @@ export function MapView({
       // Con el mapa acercado, si la mira sale de la vista, el mapa la sigue.
       if (!loadedMap.getBounds().contains(lngLat)) {
         if (prefersReducedMotion()) loadedMap.jumpTo({ center: lngLat });
-        else loadedMap.easeTo({ center: lngLat });
+        else loadedMap.easeTo({ center: lngLat, essential: true });
       }
     };
     loadedMap.on("click", onClick);
@@ -370,6 +370,9 @@ export function MapView({
 
     const map = new MapLibreMap({
       container,
+      // La inercia del arrastre sigue la intensidad visual (lib/motion.ts). MapLibre la lee al crear
+      // el mapa: un cambio en los ajustes la toma al recargar.
+      reduceMotion: prefersReducedMotion(),
       style: {
         version: 8,
         sources: {
