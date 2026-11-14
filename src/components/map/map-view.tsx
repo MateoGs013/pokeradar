@@ -66,6 +66,11 @@ export interface MapViewProps {
   detected: ReadonlySet<number>;
   /** El radar detectó estas señales. */
   onDetect: (ids: number[]) => void;
+  /**
+   * Si el turno empezó: recién ahí el radar base da su primera vuelta. Antes, el mapa y la niebla
+   * cargan por detrás del inicio de turno.
+   */
+  active: boolean;
   /** Una estación terminó su vuelta, con cuántas señales detectó. */
   onSweepEnd: (station: Station, found: number) => void;
   /** Al terminar cada vuelta: qué parte del mundo está despejada, de 0 a 1. */
@@ -183,6 +188,7 @@ export function MapView({
   onSweepEnd,
   onCoverage,
   onIdentify,
+  active,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
@@ -435,10 +441,11 @@ export function MapView({
             map={loadedMap}
             bounds={bounds}
             grid={grid}
-            stations={[
-              { id: 0, kind: "base", position: radarBase },
-              ...antennas,
-            ]}
+            stations={
+              active
+                ? [{ id: 0, kind: "base", position: radarBase }, ...antennas]
+                : []
+            }
             spawns={spawns}
             onDetect={onDetect}
             onSweepEnd={onSweepEnd}
@@ -463,7 +470,7 @@ export function MapView({
           />
         </>
       )}
-      {!fogDrawn && <MapLoading />}
+      {!fogDrawn && <MapLoading step={loadedMap ? "coverage" : "connecting"} />}
       {/* Montado siempre, aunque no haya señal: Base UI anima la entrada solo cuando el panel ya
           existía cerrado y pasa a abierto (useTransitionStatus, animateInitialOpen). */}
       <DossierPanel

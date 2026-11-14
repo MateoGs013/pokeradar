@@ -64,9 +64,14 @@ export function saveShiftSettings(settings: ShiftSettings) {
   for (const listener of listeners) listener();
 }
 
+// Sin suscripción: el valor del navegador no cambia, solo el del servidor es otro.
+const noSubscription = () => () => {};
+
 /**
- * Los ajustes del turno, y si ya hay algunos guardados. En el servidor (la página es estática) no
- * hay nada guardado: se renderiza con los de por defecto y el navegador los cambia al hidratar.
+ * Los ajustes del turno, si ya hay algunos guardados, y si ya se leyeron. En el servidor (la página
+ * es estática) no hay nada guardado: se renderiza con los de por defecto, y `hydrated` es false
+ * hasta que el navegador los lee al hidratar. Así el inicio de turno no se abre para alguien que ya
+ * lo pasó.
  */
 export function useShiftSettings() {
   const raw = useSyncExternalStore(
@@ -74,6 +79,15 @@ export function useShiftSettings() {
     () => read() ?? fallback,
     () => null,
   );
+  const hydrated = useSyncExternalStore(
+    noSubscription,
+    () => true,
+    () => false,
+  );
   const saved = parse(raw);
-  return { settings: saved ?? DEFAULT_SETTINGS, saved: saved !== null };
+  return {
+    settings: saved ?? DEFAULT_SETTINGS,
+    saved: saved !== null,
+    hydrated,
+  };
 }

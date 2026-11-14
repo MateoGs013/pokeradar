@@ -1,5 +1,5 @@
 // La sala de monitoreo. El servidor genera el mundo y ubica las señales al compilar, y se los
-// pasa a la sala, que es cliente, una sola vez. El rótulo de la esquina muestra la huella del
+// pasa a la sala, que es cliente, una sola vez. Los ajustes del turno muestran la huella del
 // mundo: si coincide entre local y producción, el mundo es el mismo.
 import { PANEL_WIDTH } from "@/components/dossier/panel-size";
 import { MonitoringRoom } from "@/components/hud/monitoring-room";
