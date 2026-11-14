@@ -295,7 +295,7 @@ export function MapView({
             map={loadedMap}
             bounds={bounds}
             grid={grid}
-            base={radarBase}
+            stations={[{ id: 0, position: radarBase }]}
             spawns={spawns}
             onDetect={onDetect}
             onFogDrawn={() => setFogDrawn(true)}
