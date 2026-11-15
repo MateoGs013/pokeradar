@@ -10,7 +10,7 @@ import { MotionConfig, motion } from "motion/react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui/button";
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useReducedIntensity } from "@/hooks/use-media-query";
 import type { Identification } from "@/hooks/use-pokemon-detail";
 import type { WeatherState } from "@/hooks/use-weather";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
@@ -48,7 +48,7 @@ export function DossierBody({
   boosts,
   onRetry,
 }: DossierBodyProps) {
-  const reduced = usePrefersReducedMotion();
+  const reduced = useReducedIntensity();
   if (identification.status === "error") {
     return <DossierError onRetry={onRetry} />;
   }

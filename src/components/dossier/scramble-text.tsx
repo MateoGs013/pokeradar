@@ -6,7 +6,7 @@
 // queda quieto (docs/decisiones.md, sección 8).
 import { useEffect, useState } from "react";
 
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useReducedIntensity } from "@/hooks/use-media-query";
 
 /** Caracteres de relleno: ASCII, para que en la monoespaciada midan lo mismo que las letras. */
 const GLYPHS = "#%&*+=/<>?01";
@@ -24,7 +24,7 @@ function scramble(text: string, revealed: number): string {
 }
 
 export function ScrambleText({ text }: { text: string }) {
-  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotion = useReducedIntensity();
   const [shown, setShown] = useState(text);
 
   useEffect(() => {

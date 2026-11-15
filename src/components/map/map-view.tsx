@@ -25,6 +25,8 @@ import { Radar, type Station } from "@/components/radar/radar";
 import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import type { WeatherState } from "@/hooks/use-weather";
 import type { Boost } from "@/lib/boosts";
+import { reducedMotion } from "@/lib/motion";
+import type { MotionLevel } from "@/lib/shift";
 import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
@@ -34,7 +36,7 @@ import type {
   Spawn,
 } from "@/lib/world/types";
 
-import { focusSignal, prefersReducedMotion, releaseFocus } from "./camera";
+import { focusSignal, releaseFocus } from "./camera";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
 import { type Frame, mapBounds } from "./frame";
 import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
@@ -103,6 +105,8 @@ export interface MapViewProps {
    * está en coordenadas del mundo; el marco las pasa a las del mapa.
    */
   frame: Frame;
+  /** La intensidad visual elegida en los ajustes, o null sin elegir (lib/shift.ts). */
+  motion: MotionLevel | null;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -288,6 +292,7 @@ export function MapView({
   boosts,
   night,
   frame: initialFrame,
+  motion,
 }: MapViewProps) {
   // El marco con el que se creó el mapa. No cambia mientras la página vive, porque cambiar de zona
   // recarga (zone-link.tsx); en el estado y no en la prop, para no contar con la identidad del
@@ -296,7 +301,7 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
-  const initialRef = useRef({ biomes, bounds, places, spawns });
+  const initialRef = useRef({ biomes, bounds, places, spawns, motion });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Si el mapa ya dibujó la niebla: hasta entonces sigue el cartel de carga.
@@ -388,7 +393,7 @@ export function MapView({
       marker.setLngLat(lngLat);
       // Con el mapa acercado, si la mira sale de la vista, el mapa la sigue.
       if (!loadedMap.getBounds().contains(lngLat)) {
-        if (prefersReducedMotion()) loadedMap.jumpTo({ center: lngLat });
+        if (reducedMotion()) loadedMap.jumpTo({ center: lngLat });
         else loadedMap.easeTo({ center: lngLat, essential: true });
       }
     };
@@ -407,7 +412,7 @@ export function MapView({
   const nightApplied = useRef(false);
   useEffect(() => {
     if (!loadedMap) return;
-    const fade = nightApplied.current && !prefersReducedMotion();
+    const fade = nightApplied.current && !reducedMotion();
     loadedMap.setPaintProperty(NIGHT_LAYER, "background-opacity-transition", {
       duration: fade ? 1500 : 0,
       delay: 0,
@@ -481,9 +486,15 @@ export function MapView({
 
     const map = new MapLibreMap({
       container,
-      // La inercia del arrastre sigue la intensidad visual (lib/motion.ts). MapLibre la lee al crear
-      // el mapa: un cambio en los ajustes la toma al recargar.
-      reduceMotion: prefersReducedMotion(),
+      // La inercia del arrastre, las flechas, el +/− y el doble clic son animaciones de MapLibre,
+      // con su propia preferencia: sin opción, mira `prefers-reduced-motion` en cada animación; con
+      // `reduceMotion`, queda fija al crear el mapa. Por eso va solo con una intensidad elegida: sin
+      // elegir, MapLibre sigue al sistema, como el resto de la sala, también si cambia con la página
+      // abierta. Elegida, MapLibre toma un cambio al recargar, también el del inicio de turno,
+      // porque el mapa ya se creó detrás.
+      ...(initial.motion !== null && {
+        reduceMotion: initial.motion === "reducida",
+      }),
       // El modo real carga el estilo de OpenFreeMap y le pone los colores del HUD antes de usarlo.
       ...(frame.mode === "real"
         ? {
@@ -494,7 +505,7 @@ export function MapView({
         : { style: worldStyle(initial, nightLayer) }),
       // Sin fundido de los nombres al aparecer o al chocar, con movimiento reducido. Se lee al crear
       // el mapa: MapLibre no lo deja cambiar después.
-      fadeDuration: prefersReducedMotion() ? 0 : 300,
+      fadeDuration: reducedMotion() ? 0 : 300,
       bounds: world,
       // Si el límite fuera el mundo tal cual, en una pantalla angosta MapLibre acercaría el mapa
       // para no mostrar nada afuera, y la isla quedaría cortada a los costados.

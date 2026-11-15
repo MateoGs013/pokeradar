@@ -13,13 +13,17 @@ import {
   isHudColor,
   isMotionLevel,
   MOTION_LEVELS,
-  type MotionLevel,
   OPERATOR_MAX_LENGTH,
   type ShiftSettings,
 } from "@/lib/shift";
-import { reducedMotion } from "@/lib/motion";
 
-const MOTION_NAMES: Record<MotionLevel, string> = {
+// "sistema" es `motion: null` en los ajustes: sin elegir, la intensidad sigue a la del sistema
+// (`prefers-reduced-motion`), también si cambia con la página abierta. Es un radio más para poder
+// volver a eso después de elegir.
+const SYSTEM_MOTION = "sistema";
+const MOTION_CHOICES = [SYSTEM_MOTION, ...MOTION_LEVELS] as const;
+const MOTION_NAMES: Record<(typeof MOTION_CHOICES)[number], string> = {
+  sistema: "Como el sistema",
   completa: "Completa",
   reducida: "Reducida",
 };
@@ -65,10 +69,7 @@ export function ShiftForm({
   children,
 }: ShiftFormProps) {
   const nameId = useId();
-  // Sin elegir todavía, la que rige ahora: la del sistema (lib/motion.ts). El formulario se abre en
-  // un diálogo, solo en el navegador, así que se puede leer <html>.
-  const motion: MotionLevel =
-    initial.motion ?? (reducedMotion() ? "reducida" : "completa");
+  const motion = initial.motion ?? SYSTEM_MOTION;
 
   // Los campos no se controlan: el formulario se lee entero al confirmar. Un nombre vacío vuelve
   // al de por defecto.
@@ -84,7 +85,8 @@ export function ShiftForm({
         DEFAULT_SETTINGS.operator,
       hud: isHudColor(hud) ? hud : DEFAULT_SETTINGS.hud,
       sound: data.get("sound") === "on",
-      motion: isMotionLevel(chosen) ? chosen : DEFAULT_SETTINGS.motion,
+      // "Como el sistema" no es un nivel: queda null.
+      motion: isMotionLevel(chosen) ? chosen : null,
     });
   };
 
@@ -139,7 +141,7 @@ export function ShiftForm({
           Intensidad visual
         </legend>
         <div className="flex flex-wrap gap-x-4 gap-y-2">
-          {MOTION_LEVELS.map((level) => (
+          {MOTION_CHOICES.map((level) => (
             <label
               key={level}
               className="flex cursor-pointer items-center gap-2 text-sm"

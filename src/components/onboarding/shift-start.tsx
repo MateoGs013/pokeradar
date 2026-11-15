@@ -1,10 +1,11 @@
 "use client";
 
 // El inicio de turno (docs/concepto.md, "Onboarding: inicio de turno"): la primera vez, el nombre en
-// clave y el color del HUD, con el mismo formulario de los ajustes. Mientras está abierto, el mapa y
-// la niebla cargan por detrás, y el radar espera (monitoring-room.tsx). "Saltar" y Esc guardan los
-// ajustes de por defecto, así no vuelve a aparecer; tocar afuera no lo cierra. Abajo, el enlace a
-// la otra zona de operaciones: el mundo generado o el mapa real (zone-link.tsx).
+// clave, el color del HUD, la intensidad visual y el sonido, con el mismo formulario de los
+// ajustes. Mientras está abierto, el mapa y la niebla cargan por detrás, y el radar espera
+// (monitoring-room.tsx). "Saltar" y Esc guardan los ajustes de por defecto, así no vuelve a
+// aparecer; tocar afuera no lo cierra. Abajo, el enlace a la otra zona de operaciones: el mundo
+// generado o el mapa real (zone-link.tsx).
 import { ShiftForm } from "@/components/hud/shift-form";
 import { ZoneLink } from "@/components/hud/zone-link";
 import type { MapMode } from "@/components/map/frame";

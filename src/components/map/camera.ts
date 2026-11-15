@@ -25,11 +25,6 @@ interface Insets {
 
 const NO_PADDING: Insets = { top: 0, right: 0, bottom: 0, left: 0 };
 
-/** La intensidad visual de lib/motion.ts: la de los ajustes o, si no se eligió, la del sistema. */
-export function prefersReducedMotion(): boolean {
-  return reducedMotion();
-}
-
 /** Lo que tapa la ficha: el costado derecho en escritorio, la parte de abajo en el celular. */
 function panelPadding(map: MapLibreMap): Insets {
   if (window.matchMedia(PANEL_DESKTOP_QUERY).matches) {
@@ -86,15 +81,14 @@ export function focusSignal(
     zoom: Math.max(keepZoom, worldZoom + FOCUS_ZOOM_STEP),
     padding,
   };
-  // `essential`: la decisión es nuestra. Sin él, MapLibre mira solo `prefers-reduced-motion` y no la
-  // intensidad elegida en los ajustes.
-  if (animate && !prefersReducedMotion())
-    map.flyTo({ ...camera, essential: true });
+  // `essential`: la decisión es nuestra. Sin él, MapLibre mira su propia preferencia (la del
+  // sistema o la elegida al crear el mapa, map-view.tsx) y no la intensidad de ahora.
+  if (animate && !reducedMotion()) map.flyTo({ ...camera, essential: true });
   else map.jumpTo(camera);
 }
 
 /** Al cerrar la ficha, el mapa vuelve a usar toda la pantalla: se saca el padding. */
 export function releaseFocus(map: MapLibreMap) {
-  if (prefersReducedMotion()) map.jumpTo({ padding: NO_PADDING });
+  if (reducedMotion()) map.jumpTo({ padding: NO_PADDING });
   else map.easeTo({ padding: NO_PADDING, essential: true });
 }

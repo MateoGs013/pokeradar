@@ -12,9 +12,9 @@ import { createPortal } from "react-dom";
 import { hasSprite, PokemonSprite } from "@/components/dossier/pokemon-sprite";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import { type Boost, boostOf } from "@/lib/boosts";
+import { reducedMotion } from "@/lib/motion";
 import type { Position, Spawn } from "@/lib/world/types";
 
-import { prefersReducedMotion } from "./camera";
 import type { Frame } from "./frame";
 import { northToSouth, signalPlaces } from "./places";
 
@@ -45,7 +45,8 @@ const FOCUS_REACH = 14;
  * Si la señal enfocada no se ve entera, el mapa va hasta ella. Pasa con el mapa acercado: el Tab
  * llega a señales fuera de la vista, y el navegador no puede mostrarlas porque MapLibre vuelve a 0
  * el scroll de su contenedor. Con movimiento reducido (la intensidad de lib/motion.ts), sin
- * animación; `essential` hace que MapLibre siga esa decisión y no solo `prefers-reduced-motion`.
+ * animación; `essential` hace que MapLibre siga esa decisión y no su propia preferencia
+ * (map-view.tsx).
  */
 function revealSignal(map: MapLibreMap, position: Position) {
   const { x, y } = map.project(position);
@@ -57,7 +58,7 @@ function revealSignal(map: MapLibreMap, position: Position) {
     y <= clientHeight - FOCUS_REACH;
   if (!visible)
     map.panTo(position, {
-      animate: !prefersReducedMotion(),
+      animate: !reducedMotion(),
       essential: true,
     });
 }
@@ -201,7 +202,7 @@ function SignalButton({
   // si se cancela: activar el movimiento reducido a mitad del ping lo corta sin animationend. Con
   // movimiento reducido no está desde el principio. El botón se monta solo en el cliente (es un
   // portal), así que se puede leer la preferencia al crear el estado.
-  const [pinged, setPinged] = useState(prefersReducedMotion);
+  const [pinged, setPinged] = useState(reducedMotion);
   const endPing = () => setPinged(true);
   return (
     <button

@@ -5,7 +5,7 @@
 import { cn } from "cn";
 import Image from "next/image";
 
-import { usePrefersReducedMotion } from "@/hooks/use-media-query";
+import { useReducedIntensity } from "@/hooks/use-media-query";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 
 interface PokemonSpriteProps {
@@ -28,7 +28,7 @@ export function PokemonSprite({
   size,
   className,
 }: PokemonSpriteProps) {
-  const reducedMotion = usePrefersReducedMotion();
+  const reducedMotion = useReducedIntensity();
   const src = reducedMotion
     ? (sprites.still ?? sprites.animated)
     : (sprites.animated ?? sprites.still);
