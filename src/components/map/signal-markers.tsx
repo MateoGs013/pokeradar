@@ -180,9 +180,10 @@ interface SignalButtonProps {
  * pide los centros a 24 px o más. Medido en pantallas verticales, la separación lo cumple desde
  * 344 px de ancho; a 320 px quedan a 22,2 px (MIN_SPACING en src/lib/geo/spawns.ts, con las
  * mediciones). En el mapa real, vertical como Argentina, es al revés: cumple a 320 px de ancho, y
- * en horizontal, desde 345 px de alto (src/lib/geo/argentina-spawns.ts). El foco se ve como un contorno verde separado del botón; la señal con la ficha
- * abierta, como un anillo claro pegado a él, para que no se confundan cuando están en señales
- * distintas. Abre la ficha, que es un diálogo: aria-haspopup y aria-expanded, como el Trigger de
+ * en horizontal, desde 345 px de alto (src/lib/geo/argentina-spawns.ts). El foco se ve en dos tonos, un aro del papel y afuera un contorno de tinta: sobre el
+ * relieve pintado, un solo color se pierde en alguna parte del terreno. La señal con la ficha
+ * abierta lleva un disco del papel con un aro de tinta pegado al botón, para que no se confundan
+ * cuando están en señales distintas. Abre la ficha, que es un diálogo: aria-haspopup y aria-expanded, como el Trigger de
  * Base UI (dialog/trigger/DialogTrigger.js). Identificada, muestra el sprite y su nombre.
  */
 function SignalButton({
@@ -221,7 +222,7 @@ function SignalButton({
         onSelect({ spawn, place, button: event.currentTarget })
       }
       onFocus={onFocus}
-      className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring aria-expanded:ring-2 aria-expanded:ring-foreground"
+      className="relative flex size-5 cursor-pointer items-center justify-center rounded-full focus-visible:ring-4 focus-visible:ring-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground aria-expanded:bg-background/80 aria-expanded:ring-2 aria-expanded:ring-foreground"
     >
       {/* El ping de la detección: el botón aparece cuando el haz pasa por la señal, y este anillo
           crece una sola vez desde ahí. Va primero: sacarlo no cambia el lugar de lo que sigue, que
@@ -235,7 +236,7 @@ function SignalButton({
             span?.addEventListener("animationcancel", endPing);
             return () => span?.removeEventListener("animationcancel", endPing);
           }}
-          className="pointer-events-none absolute inset-0 rounded-full border-2 border-hud opacity-0 motion-safe:animate-deteccion"
+          className="pointer-events-none absolute inset-0 rounded-full border-2 border-glow opacity-0 motion-safe:animate-deteccion"
         />
       )}
       {sprites && hasSprite(sprites) ? (
@@ -256,10 +257,15 @@ function SignalButton({
               toque cerca de otra señal podría caer en esta. */}
           <span
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-full bg-hud/50 motion-safe:animate-pulso-radar motion-reduce:hidden"
+            className="pointer-events-none absolute inset-0 rounded-full bg-glow/60 motion-safe:animate-pulso-radar motion-reduce:hidden"
             style={{ animationDelay: `${-(spawn.speciesId % 12) * 0.2}s` }}
           />
-          <span aria-hidden className="relative size-2.5 rounded-full bg-hud" />
+          {/* El punto va en el color luminoso del HUD, con un aro de tinta: sobre el relieve
+              pintado se despega tanto de la pradera como de la nieve. */}
+          <span
+            aria-hidden
+            className="relative size-2.5 rounded-full bg-glow ring-2 ring-foreground"
+          />
         </>
       )}
       {/* La marca de lo que la potencia (el clima o la noche), en la esquina del sprite, que

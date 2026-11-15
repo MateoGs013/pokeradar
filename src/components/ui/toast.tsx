@@ -1,7 +1,8 @@
 "use client";
 
 // Toast de shadcn (base Base UI), recortado a lo que usan los avisos de la tripulación y con el
-// aspecto del HUD. En lugar de la pila con perspectiva del registro (cada aviso encogido detrás del
+// aspecto de la hoja: un parte de papel, con borde de tinta, una franja a la izquierda que dice la
+// prioridad (crew-notices.tsx) y una sombra, que entra desde la derecha. En lugar de la pila con perspectiva del registro (cada aviso encogido detrás del
 // anterior, con transformaciones calculadas), los avisos van en una columna: se leen todos y no
 // hay valores sueltos. Base UI se encarga de la región viva (los de prioridad alta se anuncian como
 // alerta), del tiempo de cada aviso, de pausarlo con el mouse o el foco encima, y de F6 para llegar
@@ -51,7 +52,7 @@ function Toast({
     <ToastPrimitive.Root
       data-slot="toast"
       className={cn(
-        "rounded-md border border-border bg-card text-card-foreground transition-opacity duration-150 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-ending-style:opacity-0 data-limited:hidden data-starting-style:opacity-0",
+        "relative overflow-hidden rounded-sm border border-foreground/50 bg-card text-card-foreground shadow-[0_14px_30px_-20px_var(--hud-scrim)] transition-[opacity,translate] duration-200 ease-out select-none before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-foreground/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring data-ending-style:opacity-0 data-limited:hidden data-starting-style:translate-x-4 data-starting-style:opacity-0",
         className,
       )}
       {...props}
@@ -66,7 +67,7 @@ function ToastContent({
   return (
     <ToastPrimitive.Content
       data-slot="toast-content"
-      className={cn("flex items-start gap-2 p-2", className)}
+      className={cn("flex items-start gap-2.5 py-2 pr-1 pl-3.5", className)}
       {...props}
     />
   );
@@ -80,7 +81,7 @@ function ToastTitle({
     <ToastPrimitive.Title
       data-slot="toast-title"
       className={cn(
-        "font-mono text-xs tracking-widest text-hud uppercase",
+        "font-mono text-[0.6875rem] leading-5 tracking-[0.16em] text-hud uppercase",
         className,
       )}
       {...props}
@@ -95,7 +96,10 @@ function ToastDescription({
   return (
     <ToastPrimitive.Description
       data-slot="toast-description"
-      className={cn("text-sm text-card-foreground", className)}
+      className={cn(
+        "text-[0.8125rem] leading-snug text-card-foreground",
+        className,
+      )}
       {...props}
     />
   );
@@ -110,7 +114,7 @@ function ToastAction({
     <ToastPrimitive.Action
       data-slot="toast-action"
       render={<Button />}
-      className={cn("mt-1.5", className)}
+      className={cn("mt-2 mb-1 h-8 pointer-coarse:h-10", className)}
       {...props}
     />
   );
@@ -125,7 +129,7 @@ function ToastClose({
       data-slot="toast-close"
       aria-label="Cerrar aviso"
       render={<Button variant="ghost" size="icon" />}
-      className={cn("shrink-0 text-muted-foreground", className)}
+      className={cn("size-8 shrink-0 text-muted-foreground", className)}
       {...props}
     >
       <XIcon aria-hidden />

@@ -4,8 +4,8 @@
 
 /*
  * Los componentes de shadcn usan `dark:`. Por defecto Tailwind v4 lo ata a
- * `prefers-color-scheme`; acá lo atamos a la clase `dark` que <html> tiene siempre,
- * para que se vean igual en un sistema con tema claro.
+ * `prefers-color-scheme`; acá lo atamos a una clase `dark` que <html> no lleva: la sala es una
+ * hoja de papel, clara, y se ve igual en un sistema con tema oscuro.
  */
 @custom-variant dark (&:is(.dark *));
 
@@ -19,39 +19,57 @@
 
 /*
  * Tokens de diseño del HUD: único lugar donde viven los colores.
- * La app es solo oscura (sala de monitoreo), así que no hay tema claro.
+ * La sala es una hoja de carta: papel (--hud-bg), cajas un poco más claras (--hud-surface), un
+ * fondo apagado (--hud-surface-2) y tinta (--hud-fg). No hay tema oscuro.
  * El color del HUD se elige con data-hud en <html>: "verde" (por defecto), "ambar" o "cian".
- * Contraste medido (WCAG): cada acento sobre --hud-bg da más de 11:1,
- * --hud-fg-muted sobre --hud-surface-2 da 5.99:1 (AA pide 4.5:1).
+ * Contraste (WCAG 1.4.3, AA pide 4,5:1), calculado con la fórmula de WCAG sobre estos valores,
+ * contra el papel, la caja y el fondo apagado:
+ *   tinta 12,45 · 13,77 · 10,85        tinta apagada 6,00 · 6,63 · 5,23
+ *   verde 5,58 · 6,17 · 4,86           ámbar 5,48 · 6,06 · 4,78
+ *   cian 5,84 · 6,46 · 5,09            peligro 5,42 · 6,00 · 4,73
+ * El papel sobre cada tinta (el texto de un botón lleno): 5,58, 5,48 y 5,84. Son cuentas sobre los
+ * colores: en pantalla, con el grano del papel encima, está sin medir.
  */
 :root {
-  --hud-bg: #070d0b;
-  --hud-surface: #0e1814;
-  --hud-surface-2: #15211c;
-  --hud-fg: #d9e6e0;
-  --hud-fg-muted: #8ca096;
-  --hud-line: rgb(217 230 224 / 12%);
-  --hud-danger: #ff6b6b;
+  --hud-bg: #e4e1d6;
+  --hud-surface: #eeece3;
+  --hud-surface-2: #d6d3c5;
+  --hud-fg: #17212b;
+  --hud-fg-muted: #48535e;
+  --hud-line: rgb(23 33 43 / 22%);
+  --hud-danger: #a8261c;
+  /* Lo que oscurece el mapa detrás de la ficha y de los diálogos: la tinta, con poca opacidad. */
+  --hud-scrim: #17212b;
 
-  --hud-verde: #5bea8c;
-  --hud-ambar: #f5b841;
-  --hud-cian: #4fd8e8;
+  /* Las tres tintas del HUD: para el texto y las líneas, sobre el papel. */
+  --hud-verde: #14633a;
+  --hud-ambar: #9c350a;
+  --hud-cian: #0a5a78;
   --hud-accent: var(--hud-verde);
+  /*
+   * Y su versión luminosa, para lo que va sobre el terreno pintado (las señales, el haz del radar,
+   * las antenas): ahí una tinta oscura se pierde, y un color de luz se despega.
+   */
+  --hud-verde-luz: #5bea8c;
+  --hud-ambar-luz: #f5b841;
+  --hud-cian-luz: #4fd8e8;
+  --hud-glow: var(--hud-verde-luz);
 
   /*
-   * Biomas del mundo generado, uno por hábitat de PokéAPI. Tonos oscuros y apagados (mapa de
-   * sala de monitoreo) para que los acentos del HUD resalten encima. Son fijos: no cambian con
+   * Biomas del mundo generado, uno por hábitat de PokéAPI, en los tonos de una carta impresa.
+   * Son los colores planos: los de respaldo del relieve pintado (lib/world/relief.ts, que usa
+   * parecidos), los del modo real y los de las referencias de la hoja. Son fijos: no cambian con
    * data-hud. El mapa los lee con getComputedStyle al montarse.
    */
-  --bioma-sea: #08161a;
-  --bioma-waters-edge: #11303a;
-  --bioma-grassland: #17301f;
-  --bioma-rough-terrain: #33301d;
-  --bioma-forest: #123a26;
-  --bioma-urban: #34403c;
-  --bioma-mountain: #27453a;
-  --bioma-cave: #3b5a4c;
-  --bioma-rare: #6e3418;
+  --bioma-sea: #a9c1c6;
+  --bioma-waters-edge: #d6cfa6;
+  --bioma-grassland: #b3c28c;
+  --bioma-rough-terrain: #d2b37f;
+  --bioma-forest: #7f9c70;
+  --bioma-urban: #cdaa9c;
+  --bioma-mountain: #bc9270;
+  --bioma-cave: #d6bea4;
+  --bioma-rare: #60483e;
 
   /*
    * Nombres de lugares en el mapa. MapLibre no entiende CSS: el mapa los lee con getComputedStyle
@@ -62,14 +80,26 @@
   --map-label-halo: 1.5;
 
   /*
-   * La niebla tapa los colores del terreno y las señales. En el mundo generado, su forma la muestra
-   * la carta: las curvas de nivel van arriba de la niebla (chart.ts), la costa más marcada que las
-   * de adentro. En el modo real no hay carta, y la niebla es la misma.
+   * La niebla tapa los colores del terreno y las señales. Su forma la muestra la carta, que va
+   * arriba de la niebla (chart.ts): de la más marcada a la más tenue, la costa, las curvas
+   * maestras, las de tierra, las isobatas, el marco del mundo y la grilla. Los grados de la grilla,
+   * en px. En el modo real no hay carta, y la niebla es la misma.
    */
   --fog-opacity: 0.86;
-  --chart-opacity: 0.32;
-  --chart-coast-opacity: 0.6;
-  /* De noche, el mundo bajo una capa del color del HUD con esta opacidad (lib/night.ts). */
+  --chart-coast-opacity: 0.85;
+  --chart-index-opacity: 0.5;
+  --chart-opacity: 0.28;
+  --chart-sea-opacity: 0.3;
+  --chart-frame-opacity: 0.45;
+  --chart-grid-opacity: 0.12;
+  --chart-label-size: 10;
+  --chart-label-opacity: 0.8;
+  /* El nombre de la isla, en el mar: el tamaño en px y el espaciado entre letras en em. */
+  --chart-title-size: 15;
+  --chart-title-tracking: 0.9;
+  --chart-title-opacity: 0.55;
+  /* De noche, el mundo bajo una capa de este azul con esta opacidad (lib/night.ts). */
+  --night-color: #14233d;
   --night-opacity: 0.45;
   /*
    * El mar visto a través de la niebla, para lo que ocupa el lugar del mapa antes de que cargue.
@@ -90,8 +120,20 @@
   --radar-rings: repeating-radial-gradient(
     circle closest-side,
     transparent 0 calc(100% / 3 - 1px),
-    color-mix(in srgb, var(--hud-accent) 15%, transparent) 0 calc(100% / 3)
+    color-mix(in srgb, var(--hud-glow) 45%, transparent) 0 calc(100% / 3)
   );
+
+  /* La sombra de adentro de la lámina (monitoring-room.tsx): tinta muy tenue hacia los bordes. */
+  --map-vignette: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    color-mix(in srgb, var(--hud-fg) 14%, transparent) 125%
+  );
+  /*
+   * El grano del papel: ruido de un filtro SVG, en gris, que la sala multiplica sobre todo lo que
+   * tiene debajo. Es una imagen fija de 220 px que se repite.
+   */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='linear' slope='0.22'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 
   /* Tokens que leen los componentes de shadcn, conectados al HUD. */
   --background: var(--hud-bg);
@@ -117,10 +159,12 @@
 
 :root[data-hud="ambar"] {
   --hud-accent: var(--hud-ambar);
+  --hud-glow: var(--hud-ambar-luz);
 }
 
 :root[data-hud="cian"] {
   --hud-accent: var(--hud-cian);
+  --hud-glow: var(--hud-cian-luz);
 }
 
 @theme inline {
@@ -144,14 +188,17 @@
   --color-ring: var(--ring);
 
   --color-hud: var(--hud-accent);
+  --color-glow: var(--hud-glow);
   --color-hud-verde: var(--hud-verde);
   --color-hud-ambar: var(--hud-ambar);
   --color-hud-cian: var(--hud-cian);
   --color-fog-sea: var(--fog-sea);
+  --color-scrim: var(--hud-scrim);
 
   --font-sans: var(--font-atkinson);
   --font-mono: var(--font-martian-mono);
   --font-heading: var(--font-martian-mono);
+  --font-poster: var(--font-big-shoulders);
   --font-display: var(--font-doto);
   /* El eje ROND de Doto en 100: puntos redondos, como en la muestra de tipografías elegida. */
   --font-display--font-variation-settings: "ROND" 100;
@@ -200,7 +247,7 @@
   }
   html {
     @apply bg-background font-sans text-foreground;
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     @apply bg-background text-foreground;
@@ -215,6 +262,50 @@
 @layer components {
   .maplibregl-canvas:focus-visible {
     @apply outline-2 -outline-offset-2 outline-ring;
+  }
+
+  /*
+   * Las marcas de corte de la lámina: en cada esquina, dos rayas de 10 px que siguen sus bordes
+   * hacia afuera, como en una hoja impresa. El elemento sale 16 px de la lámina por cada lado.
+   */
+  .crop-marks {
+    --mark: color-mix(in srgb, var(--hud-fg) 70%, transparent);
+    background:
+      linear-gradient(var(--mark), var(--mark)) 0 16px / 10px 1px no-repeat,
+      linear-gradient(var(--mark), var(--mark)) 16px 0 / 1px 10px no-repeat,
+      linear-gradient(var(--mark), var(--mark)) 100% 16px / 10px 1px no-repeat,
+      linear-gradient(var(--mark), var(--mark)) calc(100% - 16px) 0 / 1px 10px
+        no-repeat,
+      linear-gradient(var(--mark), var(--mark)) 0 calc(100% - 16px) / 10px 1px
+        no-repeat,
+      linear-gradient(var(--mark), var(--mark)) 16px 100% / 1px 10px no-repeat,
+      linear-gradient(var(--mark), var(--mark)) 100% calc(100% - 16px) / 10px
+        1px no-repeat,
+      linear-gradient(var(--mark), var(--mark)) calc(100% - 16px) 100% / 1px
+        10px no-repeat;
+  }
+}
+
+/*
+ * La escala gráfica del mapa (map-view.tsx), con el aspecto de la hoja y no el de MapLibre: solo
+ * la regla, en tinta, y el número en la monoespaciada. Hasta lg no se muestra: ahí está el panel de
+ * las antenas. Va fuera de las capas de Tailwind: el CSS de MapLibre tampoco está en una capa, y
+ * dentro de una perdería contra él. Y con dos clases: el CSS de MapLibre se carga después, y con
+ * una sola ganaría él (visto: quedaba su fondo blanco).
+ */
+.maplibregl-ctrl.maplibregl-ctrl-scale {
+  display: none;
+  border-color: color-mix(in srgb, var(--hud-fg) 70%, transparent);
+  background-color: transparent;
+  color: var(--hud-fg);
+  font-family: var(--font-martian-mono), monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.1em;
+}
+
+@media (min-width: 64rem) {
+  .maplibregl-ctrl.maplibregl-ctrl-scale {
+    display: block;
   }
 }
 

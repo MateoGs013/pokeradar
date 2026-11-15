@@ -17,10 +17,10 @@ function SheetContent({
 }: SheetPrimitive.Popup.Props) {
   return (
     <SheetPrimitive.Portal>
-      <SheetPrimitive.Backdrop className="fixed inset-0 z-50 bg-background/30 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
+      <SheetPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim/15 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
       <SheetPrimitive.Popup
         className={cn(
-          "fixed inset-y-0 right-0 z-50 flex flex-col border-l border-border bg-card text-card-foreground outline-none",
+          "fixed inset-y-0 right-0 z-50 flex flex-col border-l border-foreground/60 bg-card text-card-foreground shadow-[-28px_0_60px_-36px_var(--hud-scrim)] outline-none",
           "transition duration-200 ease-out data-ending-style:translate-x-full data-starting-style:translate-x-full",
           className,
         )}

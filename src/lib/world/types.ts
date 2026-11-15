@@ -40,8 +40,26 @@ export interface Place {
   position: Position;
 }
 
+/** Qué curva de la carta es: la costa, una de tierra o una isobata (bajo el mar). */
+export type ChartKind = "coast" | "land" | "sea";
+
+/** Una curva de nivel de la carta: todos sus tramos, como un MultiLineString de GeoJSON. */
+export interface ChartFeature {
+  type: "Feature";
+  /** `index`: una curva maestra, que el mapa dibuja más marcada. */
+  properties: { kind: ChartKind; index: boolean };
+  geometry: { type: "MultiLineString"; coordinates: Position[][] };
+}
+
+export interface ChartCollection {
+  type: "FeatureCollection";
+  features: ChartFeature[];
+}
+
 export interface World {
   seed: number;
+  /** Las curvas de nivel de la carta, en tierra y bajo el mar (chart.ts). */
+  chart: ChartCollection;
   /** Polígonos de los 9 biomas, en el orden en que se pintan (de abajo hacia arriba). */
   biomes: BiomeCollection;
   /** Hábitat de cada celda de la grilla, fila por fila. Es la fuente de verdad para ubicar spawns. */

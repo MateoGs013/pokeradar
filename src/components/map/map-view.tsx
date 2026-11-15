@@ -1,7 +1,8 @@
 "use client";
 
-// El mapa: MapLibre. En el modo mundo, el mundo generado es la única fuente y no hay teselas; en el
-// modo real, el estilo y las teselas son de OpenFreeMap (real-style.ts).
+// El mapa: MapLibre. En el modo mundo, el mundo generado es la única fuente (sus biomas, su carta y
+// su relieve pintado, todo de esta app) y no hay teselas; en el modo real, el estilo y las teselas
+// son de OpenFreeMap (real-style.ts).
 // Se carga solo en el navegador (ver map-loader.tsx): MapLibre necesita `window` y WebGL.
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -12,6 +13,7 @@ import {
   type FillLayerSpecification,
   Map as MapLibreMap,
   Marker,
+  ScaleControl,
   setWorkerUrl,
   type StyleSpecification,
   type SymbolLayerSpecification,
@@ -31,16 +33,18 @@ import { type Bounds, clampToMap, expandToAspect } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
   BiomeCollection,
+  ChartCollection,
   Place,
   Position,
   Spawn,
 } from "@/lib/world/types";
 
 import { focusSignal, releaseFocus } from "./camera";
-import { CONTOUR_LAYER, contourLayer } from "./chart";
+import { chartLayers, chartSources, setChartColor } from "./chart";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
 import { type Frame, mapBounds } from "./frame";
 import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
+import { addRelief } from "./relief";
 import {
   cityDot,
   hudStyle,
@@ -60,6 +64,8 @@ setWorkerUrl(
 export interface MapViewProps {
   /** Los 9 biomas, en el orden en que se pintan (de abajo hacia arriba). */
   biomes: BiomeCollection;
+  /** Las curvas de nivel de la carta, que va arriba de la niebla (chart.ts). */
+  chart: ChartCollection;
   /** Extensión del mundo: [[oeste, sur], [este, norte]]. */
   bounds: Bounds;
   /** Las señales del mundo, ya ubicadas en el servidor. */
@@ -108,8 +114,10 @@ export interface MapViewProps {
   frame: Frame;
   /** La intensidad visual elegida en los ajustes, o null sin elegir (lib/shift.ts). */
   motion: MotionLevel | null;
-  /** El color del HUD elegido: las curvas de la carta lo siguen (chart.ts). */
+  /** El color del HUD elegido: la carta lo sigue (chart.ts). */
   hud: HudColor;
+  /** El nombre del mundo, que la carta escribe en el mar ("Isla 151"). */
+  worldName: string;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -150,10 +158,10 @@ const AIM_DIRECTIONS: Partial<Record<string, [number, number]>> = {
  * (sin `font-faces` en el estilo) no puede pedirla comprimida ni con otro peso, así que va regular,
  * en mayúsculas y con aire entre las letras. Cada nombre va del lado con menos señales cerca
  * (`labelAnchor`), para que los botones no lo tapen.
- * Contraste (WCAG 1.4.3, AA pide 4,5:1), medido en el render: a 1440 px, capturas con y sin los
- * nombres, del mundo entero y con zoom 7,5 sobre cada lugar. Los píxeles del texto dan 13,35:1 o
- * más contra el halo, y 5,24:1 o más contra el bioma de atrás aun sin contar el halo (el peor,
- * sobre las cuevas).
+ * Contraste (WCAG 1.4.3, AA pide 4,5:1): el texto va en la tinta y el halo, en el papel, que dan
+ * 12,45:1 entre los dos (calculado con sus tokens, globals.css; en el render está sin medir desde
+ * que la sala es de papel). Contra el relieve pintado de atrás (relief.ts), sin contar el halo,
+ * está sin medir.
  */
 function placeLayers(): SymbolLayerSpecification[] {
   const base = {
@@ -213,21 +221,27 @@ function worldLimit(
 }
 
 /**
- * El estilo del mundo generado: el mar de afuera, los biomas, la noche, las curvas de la carta y los
- * nombres, todo propio y sin teselas. La niebla se suma después (radar.tsx), justo debajo de las
- * curvas.
+ * El estilo del mundo generado: el mar de afuera, los biomas, la noche, la carta y los nombres,
+ * todo propio y sin teselas. Después de `load` se suman el relieve pintado (relief.ts), debajo de
+ * la noche, y la niebla (radar.tsx), justo debajo de la carta.
  */
 function worldStyle(
   {
     biomes,
+    chart,
+    bounds,
     places,
     spawns,
     hud,
+    worldName,
   }: {
     biomes: BiomeCollection;
+    chart: ChartCollection;
+    bounds: Bounds;
     places: readonly Place[];
     spawns: readonly Spawn[];
     hud: HudColor;
+    worldName: string;
   },
   night: BackgroundLayerSpecification,
 ): StyleSpecification {
@@ -235,6 +249,7 @@ function worldStyle(
     version: 8,
     sources: {
       [BIOMES_SOURCE]: { type: "geojson", data: biomes },
+      ...chartSources(chart, bounds, worldName),
       [PLACES_SOURCE]: {
         type: "geojson",
         data: {
@@ -261,10 +276,10 @@ function worldStyle(
         },
       },
       ...biomeLayers(biomes),
-      // La noche: el fondo del HUD sobre los biomas, debajo de la niebla (que se suma antes de las
-      // curvas) y de los nombres. De día, transparente.
+      // La noche: una capa azul (--night-color) sobre los biomas y el relieve, debajo de la niebla
+      // (que se suma antes de la carta) y de los nombres. De día, transparente.
       night,
-      contourLayer(BIOMES_SOURCE, cssToken(`--hud-${hud}`)),
+      ...chartLayers(cssToken(`--hud-${hud}`)),
       ...placeLayers(),
     ],
   };
@@ -283,6 +298,7 @@ function biomeLayers(biomes: BiomeCollection): FillLayerSpecification[] {
 
 export function MapView({
   biomes,
+  chart,
   bounds,
   spawns,
   places,
@@ -305,6 +321,7 @@ export function MapView({
   frame: initialFrame,
   motion,
   hud,
+  worldName,
 }: MapViewProps) {
   // El marco con el que se creó el mapa. No cambia mientras la página vive, porque cambiar de zona
   // recarga (zone-link.tsx); en el estado y no en la prop, para no contar con la identidad del
@@ -313,7 +330,16 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
-  const initialRef = useRef({ biomes, bounds, places, spawns, motion, hud });
+  const initialRef = useRef({
+    biomes,
+    chart,
+    bounds,
+    places,
+    spawns,
+    motion,
+    hud,
+    worldName,
+  });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Si el mapa ya dibujó la niebla: hasta entonces sigue el cartel de carga.
@@ -358,8 +384,8 @@ export function MapView({
     aim.className =
       "pointer-events-none hidden size-6 group-has-[.maplibregl-canvas:focus-visible]:block";
     for (const line of [
-      "absolute top-1/2 left-0 h-px w-full bg-hud",
-      "absolute top-0 left-1/2 h-full w-px bg-hud",
+      "absolute top-1/2 left-0 h-px w-full bg-foreground outline outline-background/80",
+      "absolute top-0 left-1/2 h-full w-px bg-foreground outline outline-background/80",
     ]) {
       const span = document.createElement("span");
       span.className = line;
@@ -437,16 +463,11 @@ export function MapView({
     nightApplied.current = true;
   }, [loadedMap, night]);
 
-  // Al cambiar el color del HUD en los ajustes, las curvas de la carta lo siguen. El color sale de
-  // su token propio (--hud-verde, …) y no de --hud-accent: data-hud lo cambia el efecto de la sala
-  // (monitoring-room.tsx), que corre después de este. En el modo real no hay curvas.
+  // Al cambiar el color del HUD en los ajustes, la carta lo sigue. El color sale de su token propio
+  // (--hud-verde, …) y no de --hud-accent: data-hud lo cambia el efecto de la sala
+  // (monitoring-room.tsx), que corre después de este. En el modo real no hay carta.
   useEffect(() => {
-    if (!loadedMap?.getLayer(CONTOUR_LAYER)) return;
-    loadedMap.setPaintProperty(
-      CONTOUR_LAYER,
-      "line-color",
-      cssToken(`--hud-${hud}`),
-    );
+    if (loadedMap) setChartColor(loadedMap, cssToken(`--hud-${hud}`));
   }, [loadedMap, hud]);
 
   // La URL dice qué señal tiene la ficha abierta (`?p=25`): copiada de la barra de direcciones,
@@ -503,7 +524,7 @@ export function MapView({
       id: NIGHT_LAYER,
       type: "background",
       paint: {
-        "background-color": cssToken("--hud-bg"),
+        "background-color": cssToken("--night-color"),
         "background-opacity": 0,
       },
     };
@@ -554,6 +575,13 @@ export function MapView({
     // inclinan).
     map.touchZoomRotate.disableRotation();
     map.keyboard.disableRotation();
+    // La escala gráfica de la carta: la de MapLibre, que se actualiza sola con el zoom. Va abajo a
+    // la izquierda de la lámina y se ve desde lg (globals.css, .maplibregl-ctrl-scale): más chico,
+    // ahí está el panel de las antenas.
+    map.addControl(
+      new ScaleControl({ maxWidth: 120, unit: "metric" }),
+      "bottom-left",
+    );
     // Al rotar el teléfono o cambiar el tamaño de la ventana: límite nuevo y el mundo encuadrado
     // otra vez. MapLibre se redimensiona con el límite viejo, que puede dejar el mapa acercado
     // y la isla cortada; el límite nuevo solo impide salir, no aleja. absolutePadding encuadra
@@ -590,6 +618,9 @@ export function MapView({
     map.on("error", onError);
     const onLoad = () => {
       map.off("error", onError);
+      // El relieve pintado, solo en el mundo generado. Recién ahora, que el error ya no se escucha:
+      // si la imagen no baja, el mapa sigue con los biomas planos (relief.ts).
+      if (frame.mode === "mundo") addRelief(map, initial.bounds, NIGHT_LAYER);
       setLoadedMap(map);
     };
     map.on("load", onLoad);

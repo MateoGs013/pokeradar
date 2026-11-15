@@ -27,6 +27,7 @@ export default async function Home() {
         seed={world.seed}
         hash={worldHash(world)}
         biomes={world.biomes}
+        chart={world.chart}
         bounds={[
           [west, south],
           [east, north],

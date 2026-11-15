@@ -16,6 +16,7 @@ import {
   layerFields,
   type Thresholds,
 } from "./biomes";
+import { chartLines } from "./chart";
 import {
   moistureField,
   SEA_BORDER_CELLS,
@@ -41,7 +42,12 @@ export const WORLD_SEED = 151;
 const CITY_COUNT = 4;
 const CITY_MIN_SPACING = 30;
 
-export function generateWorld(seed: number = WORLD_SEED): World {
+/**
+ * Los campos del mundo, antes de pasarlos a polígonos. Los comparten los biomas (generateWorld) y
+ * el relieve pintado (relief.ts): salen de la misma semilla, así que la imagen y los polígonos
+ * muestran el mismo mundo.
+ */
+export function worldFields(seed: number = WORLD_SEED) {
   // Los umbrales salen del terreno natural; el hundimiento del borde se aplica después.
   const terrain = terrainField(deriveSeed(seed, "altura"));
   const moisture = moistureField(deriveSeed(seed, "humedad"));
@@ -66,6 +72,22 @@ export function generateWorld(seed: number = WORLD_SEED): World {
     lakes,
   });
 
+  return {
+    terrain,
+    moisture,
+    thresholds,
+    height,
+    cities,
+    volcano,
+    lakes,
+    fields,
+  };
+}
+
+export function generateWorld(seed: number = WORLD_SEED): World {
+  const { terrain, thresholds, cities, volcano, lakes, fields } =
+    worldFields(seed);
+
   const cells = classifyCells(fields);
   assertEveryHabitat(cells);
   assertSeaBorder(cells);
@@ -85,6 +107,7 @@ export function generateWorld(seed: number = WORLD_SEED): World {
     cells,
     places,
     radarBase: centralCity(places),
+    chart: chartLines(terrain, thresholds),
     biomes: {
       type: "FeatureCollection",
       features: LAYER_ORDER.map((habitat) => ({

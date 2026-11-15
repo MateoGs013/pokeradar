@@ -100,9 +100,12 @@ export function ShiftEnd({
           El resumen del turno. Un turno nuevo empieza con el mundo cubierto
           otra vez.
         </DialogDescription>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
+        <dl className="grid grid-cols-[auto_1fr] border-t border-border font-mono text-xs">
           {rows.map(([label, value]) => (
-            <div key={label} className="contents">
+            <div
+              key={label}
+              className="col-span-2 grid grid-cols-subgrid gap-x-4 border-b border-border py-1.5"
+            >
               <dt className="tracking-widest text-muted-foreground uppercase">
                 {label}
               </dt>
@@ -118,7 +121,9 @@ export function ShiftEnd({
           >
             Bajar informe CSV
           </Button>
-          <Button onClick={onRestart}>Empezar otro turno</Button>
+          <Button variant="solid" onClick={onRestart}>
+            Empezar otro turno
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -19,6 +19,8 @@ import { type Boost, boostOf } from "@/lib/boosts";
 import { THREAT_LEVELS, threatLevel } from "@/lib/threat";
 import { CONDITIONS, weatherBoost } from "@/lib/weather/conditions";
 
+import { QUARTER_TICKS } from "@/components/hud/coverage-scale";
+
 import { STAT_LABELS, TYPE_LABELS } from "./labels";
 import { hasSprite, PokemonSprite } from "./pokemon-sprite";
 import { ScrambleText } from "./scramble-text";
@@ -97,7 +99,7 @@ function Identity({
       {/* El marco mide lo de adentro (96 px en los dos estados) más el borde. Con un tamaño fijo,
           el borde le dejaba al sprite 94 px de ancho en vez de 96 (medido). Una especie sin
           sprite muestra el "?" quieto, para que el marco no quede vacío. */}
-      <div className="shrink-0 rounded-md border border-border bg-background">
+      <div className="shrink-0 rounded-sm border border-foreground/40 bg-background">
         {sprites && hasSprite(sprites) ? (
           <PokemonSprite sprites={sprites} size={96} className="size-24" />
         ) : (
@@ -157,7 +159,7 @@ function Identity({
                 <li
                   key={type}
                   className={cn(
-                    "flex items-center gap-0.5 rounded-sm border border-hud/40 px-1.5 font-mono text-xs text-hud uppercase",
+                    "flex items-center gap-0.5 rounded-sm border border-foreground/40 px-1.5 font-mono text-xs text-foreground uppercase",
                     boost && "border-hud bg-hud text-background",
                   )}
                 >
@@ -188,7 +190,7 @@ function Threat({ detail }: { detail: PokemonDetail | null }) {
   const critical = level === "Crítico";
   // Comprimida y sin cortes: así "Crítico · suma 600" entra en una línea también a 320 px (medido).
   return (
-    <dl className="flex items-center gap-3 font-mono text-xs font-stretch-condensed">
+    <dl className="flex items-center gap-3 border-y border-border py-2.5 font-mono text-xs font-stretch-condensed">
       <dt className="tracking-widest text-muted-foreground uppercase">
         Amenaza
       </dt>
@@ -229,7 +231,7 @@ function Threat({ detail }: { detail: PokemonDetail | null }) {
 function Stats({ detail }: { detail: PokemonDetail | null }) {
   return (
     <div className="flex flex-col gap-2">
-      <h4 className="font-mono text-xs tracking-widest text-muted-foreground uppercase">
+      <h4 className="font-mono text-[0.6875rem] tracking-[0.16em] text-muted-foreground uppercase">
         Estadísticas base
       </h4>
       <dl className="grid grid-cols-[auto_auto_1fr] items-center gap-x-3 gap-y-1.5 font-mono text-xs">
@@ -240,8 +242,12 @@ function Stats({ detail }: { detail: PokemonDetail | null }) {
             <Fragment key={name}>
               <dt className="text-muted-foreground">{STAT_LABELS[name]}</dt>
               <dd className="text-right">{value ?? "—"}</dd>
-              {/* La barra repite el número de al lado: el lector de pantalla no la necesita. */}
-              <dd aria-hidden className="h-1.5 bg-muted">
+              {/* La barra repite el número de al lado: el lector de pantalla no la necesita. Es
+                  una regla como la de la cobertura, con una marca en cada cuarto del máximo. */}
+              <dd aria-hidden className="relative h-2 bg-muted">
+                <span
+                  className={`absolute inset-0 z-1 opacity-35 ${QUARTER_TICKS}`}
+                />
                 {value !== null && (
                   <motion.div
                     className="h-full origin-left bg-hud"
@@ -287,7 +293,7 @@ function Facts({
   const boosted =
     sky !== null && detail?.types.some((type) => sky.types.includes(type));
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs">
+    <dl className="grid grid-cols-[auto_1fr] border-t border-border font-mono text-xs *:border-b *:border-border *:py-1.5 [&>dt]:pr-4">
       <dt className="tracking-widest text-muted-foreground uppercase">
         Altura
       </dt>

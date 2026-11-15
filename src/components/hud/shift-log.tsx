@@ -49,11 +49,11 @@ export function ShiftLog({
         </DialogDescription>
         {entries.length > 0 && (
           // Con muchas entradas, la lista se desplaza y los botones de abajo quedan a la vista.
-          <ol className="-mx-1 flex max-h-[50dvh] flex-col gap-2 overflow-y-auto px-1 py-0.5">
+          <ol className="-mx-1 flex max-h-[50dvh] flex-col gap-2 overflow-y-auto overscroll-contain border-t border-border px-1 pt-2 pb-0.5">
             {newestFirst.map((entry) => (
               <li
                 key={entry.speciesId}
-                className="flex items-start gap-3 border-b border-border pb-2 last:border-b-0"
+                className="flex items-center gap-3 border-b border-border pb-2 last:border-b-0"
               >
                 <span className="font-mono text-xs text-muted-foreground">
                   {formatTime(entry.time)}
