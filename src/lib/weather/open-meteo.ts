@@ -2,16 +2,13 @@
 // `access-control-allow-origin: *` (medido). Es gratis para uso no comercial, hasta 600 pedidos por
 // minuto (open-meteo.com/en/terms), y la sala hace uno por carga. Los datos son CC BY 4.0: van con
 // un enlace a Open-Meteo junto al dato (open-meteo.com/en/licence), que pone el HUD.
+import { VIEDMA } from "@/lib/geo/viedma";
 import { isRecord } from "@/lib/pokeapi/guards";
 
 import { conditionOf, type Weather } from "./conditions";
 
-/**
- * Viedma, la capital de Río Negro: la zona que el concepto usa cuando no hay ubicación del usuario
- * (docs/concepto.md), y la del mapa real (`?modo=real`), que no pide la ubicación.
- */
-const LATITUDE = -40.81;
-const LONGITUDE = -62.99;
+/** El clima es el de Viedma (lib/geo/viedma.ts): la sala no pide la ubicación del usuario. */
+const [LONGITUDE, LATITUDE] = VIEDMA;
 
 const URL = `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current=weather_code,temperature_2m`;
 

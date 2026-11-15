@@ -74,7 +74,7 @@ export function labelAnchor(
 }
 
 /** Los 8 rumbos, desde el este y en sentido antihorario: el orden de los ángulos de Math.atan2. */
-export const DIRECTIONS = [
+const DIRECTIONS = [
   "este",
   "noreste",
   "norte",
@@ -84,6 +84,19 @@ export const DIRECTIONS = [
   "sur",
   "sudeste",
 ] as const;
+
+/** El rumbo de un desplazamiento hacia el este y el norte: "norte", "sudoeste"… */
+export function compassDirection(
+  east: number,
+  north: number,
+): (typeof DIRECTIONS)[number] {
+  // El ángulo en octavos de vuelta: de -4 a 4, donde 0 es el este y 2 el norte.
+  const octant = Math.round(Math.atan2(north, east) / (Math.PI / 4));
+  const direction = DIRECTIONS[(octant + 8) % 8];
+  if (direction === undefined)
+    throw new RangeError(`Rumbo fuera de rango: ${octant}`);
+  return direction;
+}
 
 /** Hasta qué distancia una señal está "en" un lugar y no "al norte de" él: 3 celdas (0,24°). */
 const AT_PLACE_DEGREES = 0.24;
@@ -125,12 +138,7 @@ export function describePlace(spawn: Spawn, places: readonly Place[]): string {
   if (Math.hypot(east, north) <= AT_PLACE_DEGREES) {
     return `${habitat} de ${nearest.name}`;
   }
-  // El ángulo en octavos de vuelta: de -4 a 4, donde 0 es el este y 2 el norte.
-  const octant = Math.round(Math.atan2(north, east) / (Math.PI / 4));
-  const direction = DIRECTIONS[(octant + 8) % 8];
-  if (direction === undefined)
-    throw new RangeError(`Rumbo fuera de rango: ${octant}`);
-  return `${habitat}, al ${direction} de ${nearest.name}`;
+  return `${habitat}, al ${compassDirection(east, north)} de ${nearest.name}`;
 }
 
 /**

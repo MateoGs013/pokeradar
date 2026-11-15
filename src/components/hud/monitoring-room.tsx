@@ -14,12 +14,7 @@ import {
   notify,
 } from "@/components/crew/crew-notices";
 import { TYPE_LABELS } from "@/components/dossier/labels";
-import {
-  modeSearch,
-  realFrame,
-  VIEDMA,
-  worldFrame,
-} from "@/components/map/frame";
+import { modeSearch, realFrame, worldFrame } from "@/components/map/frame";
 import { MapLoader } from "@/components/map/map-loader";
 import type { MapViewProps } from "@/components/map/map-view";
 import { northToSouth, signalPlaces } from "@/components/map/places";
@@ -47,6 +42,7 @@ import {
   reportFileName,
   toCsv,
 } from "@/lib/report";
+import { VIEDMA } from "@/lib/geo/viedma";
 import { REDUCED_MOTION_QUERY, systemMotion } from "@/lib/motion";
 import { NIGHT_BOOST } from "@/lib/night";
 import { playCry, playPing } from "@/lib/sound/sounds";

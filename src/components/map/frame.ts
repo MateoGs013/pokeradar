@@ -6,7 +6,7 @@
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position, Spawn } from "@/lib/world/types";
 
-import { describePlace, DIRECTIONS } from "./places";
+import { compassDirection, describePlace } from "./places";
 
 export type MapMode = "mundo" | "real";
 
@@ -39,9 +39,6 @@ export function worldFrame(places: Parameters<typeof describePlace>[1]): Frame {
     describe: (spawn) => describePlace(spawn, places),
   };
 }
-
-/** Viedma, la capital de Río Negro: la zona del concepto cuando no hay ubicación. */
-export const VIEDMA: Position = [-62.99, -40.81];
 
 /**
  * Cuántos grados de latitud real mide un grado del mundo: los 12° de alto del mundo quedan en unos
@@ -86,10 +83,7 @@ export function realFrame(
         Math.hypot(east, north) * REAL_SCALE * KM_PER_DEGREE,
       );
       if (km < 1) return `la zona de ${originName}`;
-      // El ángulo en octavos de vuelta: de -4 a 4, donde 0 es el este y 2 el norte.
-      const octant = Math.round(Math.atan2(north, east) / (Math.PI / 4));
-      const direction = DIRECTIONS[(octant + 8) % 8];
-      return `la zona de ${originName}, a ${km} km al ${direction}`;
+      return `la zona de ${originName}, a ${km} km al ${compassDirection(east, north)}`;
     },
   };
 }
