@@ -61,8 +61,14 @@
   --map-label-tracking: 0.1;
   --map-label-halo: 1.5;
 
-  /* La niebla tapa el terreno sin borrarlo del todo: se adivina la silueta de la isla. */
-  --fog-opacity: 0.9;
+  /*
+   * La niebla tapa los colores del terreno y las señales. En el mundo generado, su forma la muestra
+   * la carta: las curvas de nivel van arriba de la niebla (chart.ts), la costa más marcada que las
+   * de adentro. En el modo real no hay carta, y la niebla es la misma.
+   */
+  --fog-opacity: 0.86;
+  --chart-opacity: 0.32;
+  --chart-coast-opacity: 0.6;
   /* De noche, el mundo bajo una capa del color del HUD con esta opacidad (lib/night.ts). */
   --night-opacity: 0.45;
   /*

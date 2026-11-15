@@ -82,11 +82,12 @@ y el foco vuelve a la señal.
 - **Nombres de lugares:** las cuatro ciudades, el volcán y los dos lagos tienen nombres inventados, elegidos con la
   semilla, que el mapa dibuja con Martian Mono. Cada señal se nombra desde la ciudad o el volcán más cercano ("la
   llanura, al noreste de Campo Garza"), en su `aria-label` y en la ficha.
-- **Niebla y radar base:** el mundo arranca cubierto. Desde Campo Garza, la ciudad más cercana al centro, un haz da
-  una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales que detecta existen como botones:
-  aparecen con un ping, Pelipper las avisa y el HUD las cuenta ("5 de 40 señales"). Al terminar la vuelta, el panel
-  de abajo dice cuántas detectó y cómo seguir: "Radar base: 5 señales detectadas. Instalá antenas para despejar el
-  resto." Con movimiento reducido, el círculo se despeja de una vez.
+- **Niebla y radar base:** el mundo arranca cubierto. La niebla tapa los colores del terreno y las señales, no su
+  forma: encima va la carta, con la costa y las curvas de nivel en el color del HUD. Desde Campo Garza, la ciudad
+  más cercana al centro, un haz da una vuelta, despeja un círculo, el 17 % de la isla, y se apaga. Solo las señales
+  que detecta existen como botones: aparecen con un ping, Pelipper las avisa y el HUD las cuenta ("5 de 40
+  señales"). Al terminar la vuelta, el panel de abajo dice cuántas detectó y cómo seguir: "Radar base: 5 señales
+  detectadas. Instalá antenas para despejar el resto." Con movimiento reducido, el círculo se despeja de una vez.
 - **Antenas:** el operador instala hasta cuatro, con el mismo alcance que el radar base, donde quiera dentro del
   mundo. Con "Instalar antena" o la tecla A, un clic o un toque en el mapa la ubica; con teclado, las flechas mueven
   una mira y Enter la instala ahí. Cada antena da su vuelta, y el panel dice cuántas señales detectó o que no había
@@ -174,8 +175,8 @@ OpenFreeMap.
 
 ```
 src/app/                   layout, página (servidor) y estilos globales
-src/components/map/        mapa, señales, cámara, carga y error, nombres de los lugares; el marco y el estilo del
-                           mapa real
+src/components/map/        mapa, señales, cámara, carga y error, nombres de los lugares, la carta de curvas de
+                           nivel; el marco y el estilo del mapa real
 src/components/radar/      niebla y estaciones: el canvas de la niebla, el haz de cada radar, la red que reparte
                            las señales y la detección
 src/components/hud/        sala de monitoreo: HUD de esquinas, hora, ajustes del turno, antenas, bitácora, fin de
