@@ -1,7 +1,8 @@
 // El estilo del modo real (docs/concepto.md, "El mapa híbrido"): las teselas vectoriales de
 // OpenFreeMap, sin API key, con los colores del HUD. Se parte de su estilo oscuro: se cambian los
-// colores y se suman dos capas, la de la noche y la niebla fija de afuera del mundo; las fuentes y
-// los íconos quedan como vienen. La atribución va en el panel de las antenas (monitoring-room.tsx).
+// colores y la fuente de los nombres, y se suman dos capas, la de la noche y la niebla fija de
+// afuera del mundo; los íconos quedan como vienen. La atribución va en el panel de las antenas
+// (monitoring-room.tsx).
 import type {
   FillLayerSpecification,
   GeoJSONSourceSpecification,
@@ -11,7 +12,7 @@ import type {
 
 import type { Bounds } from "@/lib/geo/bounds";
 
-import { cssNumber, cssToken } from "./css-token";
+import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
 
 /** Responde con `access-control-allow-origin: *` (medido, 14/11/2026). */
 export const REAL_STYLE_URL = "https://tiles.openfreemap.org/styles/dark";
@@ -61,8 +62,13 @@ function recolor(layer: LayerSpecification): LayerSpecification {
         },
       };
     case "symbol":
+      // Los nombres en Martian Mono, como los del mundo generado (placeLayers, en map-view.tsx).
       return {
         ...layer,
+        layout: {
+          ...layer.layout,
+          "text-font": cssFontFamilies("--font-martian-mono"),
+        },
         paint: {
           ...layer.paint,
           "text-color": cssToken("--hud-fg"),
@@ -139,11 +145,15 @@ export function hudStyle(
     .lastIndexOf(true);
   layers.splice(lastNotSymbol + 1, 0, night);
   const outside = outsideLayer(world);
-  return {
+  const hud: StyleSpecification = {
     ...style,
     sources: { ...style.sources, [OUTSIDE]: outside.source },
     layers: [...layers, outside.layer],
   };
+  // Sin `glyphs`, MapLibre dibuja los nombres con la fuente que ya cargó la página (recolor):
+  // OpenFreeMap sirve solo Noto Sans, sin una fuente monoespaciada (docs/decisiones.md).
+  delete hud.glyphs;
+  return hud;
 }
 
 /**
