@@ -256,8 +256,23 @@ capturas o releyendo.
 
 ## Próximos Pasos
 
-Lo que quedó afuera de la entrega, en el orden en que lo haría. Primero, el resto del concepto
-([docs/concepto.md](docs/concepto.md)):
+Lo que quedó afuera de la entrega, en el orden en que lo haría.
+
+Primero, la experiencia y el diseño. La sala que se entrega es la dirección elegida (una hoja de carta, con el mapa
+como lámina), pero no llegué a pulirla: con más tiempo, es donde pondría más horas. Lo que veo en las capturas de la
+entrega (de 320 a 1440 px):
+
+- **Contraste y jerarquía:** la niebla, el viñeteado y el grano del papel lavan la pantalla fuera del radar; sobran
+  rótulos chicos y grises, y el nombre del Pokémon en la ficha, con la tipografía de puntos, es de lo menos legible.
+- **Los avisos de la tripulación:** dejan el lugar de la ficha aunque esté cerrada: en escritorio flotan en el medio
+  del mapa (a 1024 px pisan el borde de la lámina) y en el celular no se alinean con los paneles.
+- **El celular:** la isla ocupa un tercio de la pantalla y deja una franja vacía abajo; el panel de arriba está
+  apretado, y a 320 px el botón de la bitácora queda solo en su renglón.
+- **El escritorio:** la mitad de abajo de la ficha queda vacía; la semilla y la huella se repiten en dos lugares de la
+  hoja; con la ficha abierta asoman cortadas las notas del margen, y los íconos de los avisos y los ajustes casi no se
+  ven.
+
+Después, el resto del concepto ([docs/concepto.md](docs/concepto.md)):
 
 - **Cobertura por región** en el HUD: hoy es la del mundo entero.
 - **Eventos del mundo:** los enjambres.
@@ -272,7 +287,7 @@ Lo que quedó afuera de la entrega, en el orden en que lo haría. Primero, el re
 - **Atajos R, G y /** del concepto: el barrido manual, las geocercas y la búsqueda. El radar barre una sola vez, y no
   hay geocercas ni búsqueda.
 
-Después, lo que la entrega resuelve a medias:
+Luego, lo que la entrega resuelve a medias:
 
 - **Un estilo de respaldo para el mapa real:** si el estilo de OpenFreeMap no carga, la sala muestra "No se pudo cargar
   el mapa", y lo mismo si fallan el TileJSON o el sprite, sin los que MapLibre igual seguiría (sin probar); si fallan
