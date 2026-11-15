@@ -24,3 +24,5 @@ paths:
 - Teclado: todo interactivo es alcanzable con Tab, con foco visible, y Esc cierra el panel abierto.
 - Un comentario o un doc que diga que algo cumple un criterio de WCAG cita el criterio y una medición; nunca de memoria
   ni con una cuenta.
+- Lo que depende de la URL (`?modo`, `?p`) se lee en el cliente: el HTML estático no lo sabe. Antes de hidratar no se
+  muestra el valor de un modo; va una raya o nada (E-33).

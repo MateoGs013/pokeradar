@@ -42,6 +42,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-30 | 2026-11-14 | IA       | hud        | El PR #10 decía que el color guardado estaba desde el primer cuadro; con la red lenta, 4,7 s en verde               |
 | E-31 | 2026-11-15 | IA       | map        | El README decía que en el mapa real una de mar "puede caer en tierra"; medido, 22 de las 40 caen en el agua         |
 | E-32 | 2026-11-15 | IA       | map        | Comentarios del marco de Argentina y un commit afirmaban de más, sin medir; corregidos antes del push               |
+| E-33 | 2026-11-15 | IA       | hud        | Con señales propias en el mapa real, su HUD decía "de 40" hasta hidratar: 5,5 s con la red lenta                    |
 
 ## Formato de cada entrada
 
@@ -565,3 +566,17 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Arreglo:** los comentarios se corrigieron antes del commit, y el mensaje, con `git commit --amend` antes del push.
 - **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de probar lo que un comentario o un commit afirma ya lo pedía,
   y esta vez la detección llegó antes del commit y del push.
+
+### E-33 · 2026-11-15 06:01 · IA · hud
+
+- **Síntoma:** en el PR #17, el modo real pasó a tener 18 señales, pero el HUD de `?modo=real` decía "0 de 40 señales"
+  hasta hidratar. Medido con la red lenta (50 KB/s y 400 ms de latencia, a 390 px): "de 40" desde 1,8 s hasta 7,3 s.
+- **Causa:** la página es estática y el modo se lee en el cliente (`useSearchParam`): el HTML trae el HUD del mundo
+  generado. Mientras los dos modos tenían 40 señales no se notaba; al darle al modo real sus propias señales, Claude
+  no revisó qué mostraba el HTML estático.
+- **Detección:** la propia IA, antes del merge: una revisión con otro modelo lo señaló, y Claude lo midió con la red
+  lenta en Chrome sin interfaz.
+- **Arreglo:** PR #17: hasta hidratar, el total es una raya, como el clima mientras carga. Medido con la misma red:
+  "0 de —" desde 1,7 s y "0 de 18" a los 7,2 s en el modo real; "0 de —" y después "0 de 40" en el mundo.
+- **Prevención:** una línea en `.claude/rules/ui.md`: lo que depende de la URL no muestra el valor de un modo antes de
+  hidratar.
