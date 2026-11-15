@@ -639,9 +639,12 @@ export function MonitoringRoom({
           cobertura{" "}
           <span className="text-foreground">{percent.format(coverage)}</span> ·
         </span>{" "}
+        {/* El total depende del modo (`?modo=real`), que se lee en el cliente: en el HTML estático
+            todavía no se sabe, y va una raya, como el clima mientras carga. Medido con la red lenta,
+            el modo real decía "de 40" durante 5,5 s antes de hidratar. */}
         <span className="whitespace-nowrap">
           <span className="text-foreground">
-            {detected.size} de {spawns.length}
+            {detected.size} de {hydrated ? spawns.length : "—"}
           </span>{" "}
           señales ·
         </span>{" "}
