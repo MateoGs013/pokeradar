@@ -48,9 +48,11 @@ export const metadata: Metadata = {
  * mientras lee el HTML, antes de pintar (node_modules/next/dist/docs, "How to prevent flash before
  * hydration", sección "Themes"). next/script con beforeInteractive no sirve para esto: en el App
  * Router lo corre Next cuando ya cargó su JS. Valida lo mismo que el hook (use-shift-settings.ts):
- * si lo guardado no sirve, queda el verde y se abre el inicio de turno.
+ * si lo guardado no sirve, queda el verde y se abre el inicio de turno. Va dentro de una función que
+ * se llama sola, para que sus variables no queden globales en `window`.
  */
-const applyStoredHud = `var root = document.documentElement;
+const applyStoredSettings = `(function () {
+var root = document.documentElement;
 root.dataset.motion = matchMedia(${JSON.stringify(REDUCED_MOTION_QUERY)}).matches ? "reducida" : "completa";
 try {
   var shift = JSON.parse(localStorage.getItem(${JSON.stringify(SHIFT_STORAGE_KEY)}));
@@ -58,7 +60,8 @@ try {
     root.dataset.hud = shift.hud;
     if (${JSON.stringify(MOTION_LEVELS)}.indexOf(shift.motion) >= 0) root.dataset.motion = shift.motion;
   }
-} catch (error) {}`;
+} catch (error) {}
+})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -70,7 +73,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`dark ${atkinson.variable} ${martianMono.variable} ${doto.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: applyStoredHud }} />
+        <script dangerouslySetInnerHTML={{ __html: applyStoredSettings }} />
       </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>

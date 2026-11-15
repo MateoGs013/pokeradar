@@ -167,6 +167,7 @@ interface MonitoringRoomProps extends Omit<
   | "boosts"
   | "night"
   | "frame"
+  | "motion"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -454,9 +455,13 @@ export function MonitoringRoom({
     setEndOpen(true);
   };
 
+  // La campana y la M: con la M el foco queda en el mapa, así que el cambio se anuncia.
   const toggleMuted = () => {
     if (!muted) closeNotices();
     setMuted(!muted);
+    announce(
+      muted ? "Avisos y sonido activados" : "Avisos y sonido silenciados",
+    );
   };
 
   // Lo que dice una estación al terminar su vuelta: si no detectó nada, el estado vacío, también al
@@ -659,7 +664,7 @@ export function MonitoringRoom({
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Silenciar avisos"
+          aria-label="Silenciar avisos y sonido"
           aria-pressed={muted}
           onClick={toggleMuted}
         >
@@ -821,6 +826,7 @@ export function MonitoringRoom({
         boosts={boosts}
         night={night ?? false}
         frame={frame}
+        motion={settings.motion}
       />
       <CrewNotices />
     </>

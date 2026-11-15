@@ -27,6 +27,6 @@ export function useMediaQuery(query: string): boolean {
  * el sistema una sola vez al montar (framer-motion, utils/reduced-motion/use-reduced-motion.mjs,
  * con un TODO al respecto) y no sabe de los ajustes.
  */
-export function usePrefersReducedMotion(): boolean {
+export function useReducedIntensity(): boolean {
   return useSyncExternalStore(subscribeToMotion, reducedMotion, () => false);
 }
