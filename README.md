@@ -267,8 +267,9 @@ Lo que quedó afuera de la entrega, en el orden en que lo haría. Primero, el re
 Después, lo que la entrega resuelve a medias:
 
 - **Un estilo de respaldo para el mapa real:** si el estilo de OpenFreeMap no carga, la sala muestra "No se pudo cargar
-  el mapa", y lo mismo si fallan el TileJSON o el sprite, aunque el resto andaría; si fallan solo las teselas, sigue
-  sin el fondo. El cartel ofrece solo "Reintentar", que recarga el mismo modo: falta el enlace al mundo generado.
+  el mapa", y lo mismo si fallan el TileJSON o el sprite, sin los que MapLibre igual seguiría (sin probar); si fallan
+  solo las teselas, sigue sin el fondo. El cartel ofrece solo "Reintentar", que recarga el mismo modo: falta el enlace
+  al mundo generado.
 - **La niebla del mapa real, exacta con zoom:** MapLibre estira la imagen de la niebla en Mercator, y el marco pasa la
   latitud en forma lineal: en el zoom máximo, el despeje queda unos 17 px al sur de los aros (calculado, sin medir).
 - **Señales del mapa real según el terreno:** el modo híbrido lleva cada señal a la misma posición que tiene en el
