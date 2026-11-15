@@ -17,9 +17,10 @@ paths:
   se mueve ahí va después del canvas (`map.getCanvas().after`), o el mapa lo tapa. Lo que se afirma de su lugar
   (encima o debajo de algo) se comprueba en una captura, no en el orden del DOM (E-26).
 - La niebla es una **capa del mapa** (máscara), no elementos HTML encima del canvas.
-- Cámara: `flyTo` con `padding` según el panel abierto (lateral en desktop, abajo en mobile). Con movimiento reducido,
-  `jumpTo` con el mismo destino y padding.
-- Barrido y pulsos: sin animación cuando hay `prefers-reduced-motion`.
+- Cámara: `flyTo` con `padding` según el panel abierto (lateral en desktop, abajo en mobile). Con la intensidad
+  reducida, `jumpTo` con el mismo destino y padding.
+- Barrido y pulsos: sin animación con la intensidad reducida. La intensidad es la de `reducedMotion()`
+  (`src/lib/motion.ts`: la elegida o, sin elegir, `prefers-reduced-motion`), no `prefers-reduced-motion` directo.
 - Importar el CSS de MapLibre: `import "maplibre-gl/dist/maplibre-gl.css"`.
 - El div que recibe el mapa no lleva clases de posición: el CSS de MapLibre le gana a Tailwind; van en un div de
   afuera.

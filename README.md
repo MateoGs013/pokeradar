@@ -128,9 +128,11 @@ y el foco vuelve a la señal.
 - **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=4`, Charmander; en el mapa real,
   `?modo=real&p=279`, Pelipper), y el botón del enlace la copia. Ese enlace abre la sala con la señal identificada y
   saltea el inicio de turno. Un número que no está en el mundo, o algo que no es un número, lo avisa Rotom.
-- **Intensidad visual:** en el inicio de turno y en los ajustes, "Completa" o "Reducida". Sin elegir, sigue a
-  `prefers-reduced-motion`; elegida, gana. Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de
-  las señales, el texto que se descifra, el sprite animado y las transiciones, y la cámara salta en lugar de volar.
+- **Intensidad visual:** en el inicio de turno y en los ajustes, "Como el sistema" (de entrada), "Completa" o
+  "Reducida". Como el sistema sigue a `prefers-reduced-motion`, también si cambia con la página abierta; elegida, gana.
+  Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de las señales, el texto que se descifra,
+  el sprite animado y las transiciones, y la cámara salta en lugar de volar. Las animaciones propias del mapa (las
+  flechas, el +/−, el doble clic y la inercia) toman una elección nueva al recargar.
 - **Sonido:** apagado por defecto; se prende en el inicio de turno o en los ajustes. Un ping de radar hecho con Web
   Audio, sin archivos, en cada detección, y el grito del Pokémon (`cries.latest` de PokéAPI) al identificarlo. La
   campana del HUD silencia también el sonido.
@@ -269,6 +271,9 @@ Después, lo que la entrega resuelve a medias:
 - **Señales del mapa real según el terreno:** el modo híbrido lleva cada señal a la misma posición que tiene en el
   mundo generado, así que una especie de mar puede caer en tierra.
 - **Una bitácora que sobreviva a la recarga:** hoy vive en memoria, y recargar la página empieza otra.
+- **Apagar los atajos de una letra:** valen solo con el foco en el mapa o en el panel de abajo, pero al cerrar una
+  ficha el foco vuelve a su señal, y siguen activos. Una casilla en los ajustes para apagarlos, el otro camino que da
+  WCAG 2.1.4, los dejaría a elección de la persona.
 
 Fuera del concepto, lo que mejoraría:
 
