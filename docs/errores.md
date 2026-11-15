@@ -40,6 +40,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-28 | 2026-11-14 | IA       | radar      | Dos comentarios del radar quedaron viejos; el de la doble corrida escondía un aviso falso con movimiento reducido   |
 | E-29 | 2026-11-14 | IA       | onboarding | El inicio de turno y el arranque quedaron en hud/ y map/; CLAUDE.md los pone en src/components/onboarding/          |
 | E-30 | 2026-11-14 | IA       | hud        | El PR #10 decía que el color guardado estaba desde el primer cuadro; con la red lenta, 4,7 s en verde               |
+| E-31 | 2026-11-15 | IA       | map        | El README decía que en el mapa real una de mar "puede caer en tierra"; medido, 22 de las 40 caen en el agua         |
 
 ## Formato de cada entrada
 
@@ -526,3 +527,22 @@ Para agregar una entrada se puede usar `/registrar-error`.
 - **Prevención:** en `CLAUDE.md`, la regla de E-28 pide que la búsqueda muestre el texto alrededor de cada coincidencia,
   no el principio de la línea. Para la red lenta, ninguna nueva: la regla de E-21 ya pide medir el caso peor, y no se
   aplicó a la red.
+
+### E-31 · 2026-11-15 03:14 · IA · map
+
+- **Síntoma:** en Próximos pasos, el README decía que el mapa real lleva cada señal a la misma posición que tiene en el
+  mundo generado, "así que una especie de mar puede caer en tierra". Medido, 22 de las 40 señales caen en el agua. De
+  las 31 de tierra (ni `sea` ni `waters-edge`), 17: 15 en el mar, una en una laguna y Electrode, de ciudad, en el Río
+  Negro, a 1 km del radar base. De las 4 de mar, 2 caen en tierra; una es Pelipper, en la captura del README
+  (`docs/img/mapa-real-1440.png`): tierra firme, a 16 km al norte de Viedma. Pelipper y Electrode están entre las 5 que
+  el radar base detecta al empezar.
+- **Causa:** en el modo híbrido (PR #14), el marco (`realFrame`, `src/components/map/frame.ts`) escala y traslada las
+  posiciones del mundo inventado para que su radar base caiga en Viedma, y nunca mira el terreno real. Claude anotó la
+  consecuencia con un ejemplo, sin medirla.
+- **Detección:** a mano: el 15/11, Mateo preguntó si las señales caían donde les corresponde. Claude lo midió con un
+  script de una sola vez, fuera del repo: las 40 posiciones del build, pasadas por el marco, contra las capas `water`,
+  `landcover` y `landuse` de las teselas de OpenFreeMap, las mismas que dibuja el mapa. A zoom 9 y a zoom 11 dio lo
+  mismo.
+- **Arreglo:** PR #16, "docs(docs): contar lo medido de las señales del mapa real": el README dice lo medido.
+- **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de probar lo que un doc afirma del comportamiento ya lo pedía,
+  y no se aplicó a la consecuencia del marco.

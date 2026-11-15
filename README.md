@@ -225,14 +225,14 @@ entrada (E-18).
   "sin probar".
 
 **Dónde se equivocó y cómo lo corregí.** Todo está en [docs/errores.md](docs/errores.md), con síntoma, causa, cómo se
-detectó, arreglo y prevención. De las 30 entradas, 28 son errores de la IA. Los que más me enseñaron:
+detectó, arreglo y prevención. De las 31 entradas, 29 son errores de la IA. Los que más me enseñaron:
 
 - **Afirmar sin medir, o de memoria,** fue el error más repetido (E-03, E-05, E-08, E-09, E-10, E-11, E-12, E-13, E-15,
-  E-18, E-19, E-21, E-22, E-23, E-24, E-25, E-27, E-28 y E-30). Por ejemplo, dijo que las señales cumplían WCAG 2.5.8 sin
-  medir: quedaban a 23,3 px entre centros (E-10); que sin WebGL "el mapa no se dibuja y no hay un mensaje propio",
-  cuando se caía la página entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe (E-18). En doce
-  de esos diecinueve sumé una prevención; E-12, E-15, E-22, E-23, E-24, E-25 y E-27 ya los cubría una anterior. Una de
-  ellas es la línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
+  E-18, E-19, E-21, E-22, E-23, E-24, E-25, E-27, E-28, E-30 y E-31). Por ejemplo, dijo que las señales cumplían WCAG
+  2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10); que sin WebGL "el mapa no se dibuja y no hay un mensaje
+  propio", cuando se caía la página entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe
+  (E-18). En doce de esos veinte sumé una prevención; E-12, E-15, E-22, E-23, E-24, E-25, E-27 y E-31 ya los cubría una
+  anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
 - **Dimensionar mal:** planificó con las "3 a 4 horas" de la consigna en lugar del tiempo real que yo tenía; lo
   corregí (E-01).
 - **Comandos de Windows:** me pasó un `taskkill` con flags que, probablemente, Git Bash convirtió en rutas (E-02).
@@ -243,8 +243,9 @@ detectó, arreglo y prevención. De las 30 entradas, 28 son errores de la IA. Lo
 - **Librerías:** MapLibre v6 con Turbopack se quedaba sin su worker (E-07), y su cámara recorta el destino con el padding
   anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
-Quién detectó las 30: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
-encontró 13; yo, 2; y la propia IA, otras 15: midiendo, mirando capturas o releyendo.
+Quién detectó las 31: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
+encontró 13; yo, 3 (en E-31, la pregunta fue mía y la medición, de la IA); y la propia IA, otras 15: midiendo, mirando
+capturas o releyendo.
 
 ## Próximos Pasos
 
@@ -273,7 +274,9 @@ Después, lo que la entrega resuelve a medias:
 - **La niebla del mapa real, exacta con zoom:** MapLibre estira la imagen de la niebla en Mercator, y el marco pasa la
   latitud en forma lineal: en el zoom máximo, el despeje queda unos 17 px al sur de los aros (calculado, sin medir).
 - **Señales del mapa real según el terreno:** el modo híbrido lleva cada señal a la misma posición que tiene en el
-  mundo generado, así que una especie de mar puede caer en tierra.
+  mundo generado, sin mirar el terreno real. Medido contra las teselas de OpenFreeMap, 22 de las 40 caen en el agua:
+  17 de las 31 de tierra (una es Electrode, de ciudad, en el Río Negro), y 2 de las 4 de mar caen en tierra, como
+  Pelipper en la captura de arriba (E-31).
 - **Una bitácora que sobreviva a la recarga:** hoy vive en memoria, y recargar la página empieza otra.
 - **Apagar los atajos de una letra:** valen solo con el foco en el mapa o en el panel de abajo, pero al cerrar una
   ficha el foco vuelve a su señal, y siguen activos. Una casilla en los ajustes para apagarlos, el otro camino que da
