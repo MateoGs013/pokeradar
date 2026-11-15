@@ -460,24 +460,30 @@ export function MonitoringRoom({
     );
   };
 
-  // Lo que dice una estación al terminar su vuelta: si no detectó nada, el estado vacío, también al
-  // lector de pantalla; si detectó, ya se anunció cada señal y solo queda a la vista el total. El
-  // radar base suma qué sigue: después de su vuelta quedan casi todas las señales ocultas, y nada
-  // decía que las antenas despejan el resto.
+  // Lo que dice una estación al terminar su vuelta. Si no detectó nada, el estado vacío, también al
+  // lector de pantalla. Si detectó, ya se anunció cada señal, y la antena deja a la vista solo el
+  // total. El radar base suma qué sigue (después de su vuelta quedan casi todas las señales
+  // ocultas, y nada decía que las antenas despejan el resto), y esa línea va entera también a la
+  // región viva: ningún aviso la dijo. Con el modo de instalación abierto, la línea es de la ayuda
+  // (toggleInstall la vacía al entrar): la vuelta que termina no la pisa, y solo se anuncia si no
+  // detectó nada.
   const onSweepEnd = ({ id, kind }: Station, found: number) => {
     const name = kind === "base" ? "Radar base" : `Antena ${id}`;
     if (found === 0) {
       const empty = `${name}: ninguna señal en alcance`;
-      setRadarStatus(empty);
+      if (!installing) setRadarStatus(empty);
       announce(empty);
       return;
     }
+    if (installing) return;
     const total = `${name}: ${found} ${found === 1 ? "señal detectada" : "señales detectadas"}`;
-    setRadarStatus(
-      kind === "base"
-        ? `${total}. Instalá antenas para despejar el resto.`
-        : total,
-    );
+    if (kind !== "base") {
+      setRadarStatus(total);
+      return;
+    }
+    const next = `${total}. Instalá antenas para despejar el resto.`;
+    setRadarStatus(next);
+    announce(next);
   };
 
   // El punto elegido tiene que estar dentro del mundo: afuera no hay nada que despejar.
