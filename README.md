@@ -10,7 +10,7 @@ identificar cada una con datos reales de PokéAPI.
   <img src="docs/img/sala-1440.png" alt="La sala de monitoreo en desktop después de la primera vuelta del radar: la isla bajo la niebla, el círculo despejado alrededor de Campo Garza con sus señales, el HUD en las esquinas y el panel de las antenas abajo" width="100%">
 </p>
 <p>
-  <img src="docs/img/mapa-real-1440.png" alt="El modo híbrido sobre el mapa real de Viedma, con la niebla, el radar base, las señales y una ficha abierta al costado" width="68%">
+  <img src="docs/img/mapa-real-1440.png" alt="El modo híbrido sobre el mapa real de Argentina: la niebla, el círculo despejado alrededor de Viedma con sus señales y la ficha de Pelipper, en el mar frente a Península Valdés, abierta al costado" width="68%">
   <img src="docs/img/ficha-390.png" alt="La ficha de inteligencia de una señal en el teléfono, abierta desde abajo, con el sprite, los tipos, las estadísticas base y el nivel de amenaza" width="19.6%">
 </p>
 
@@ -37,8 +37,8 @@ abrir la página con `pnpm dev`).
 - `/`: la primera vez, el inicio de turno; después, la sala. El radar base da su vuelta y detecta 5 de las 40 señales.
 - `/?p=4`: la sala con la ficha de Charmander abierta y la señal identificada, sin pasar por el inicio de turno.
 - `/?noche=1`: la noche a cualquier hora (`?noche=0` la apaga).
-- `/?modo=real`: el mapa real, con el radar base en Viedma.
-- `/?modo=real&p=279`: el mapa real con la ficha de Pelipper.
+- `/?modo=real`: el mapa real de Argentina, con 18 señales; el radar base, en Viedma, detecta 4.
+- `/?modo=real&p=279`: el mapa real con la ficha de Pelipper, en el mar frente a Península Valdés.
 
 Con el foco en el mapa: A instala una antena (flechas y Enter la ubican con teclado), B abre la bitácora, M silencia y
 ? abre los ajustes con la lista de atajos.
@@ -59,8 +59,9 @@ historia, en lugar de un spinner o un mensaje genérico.
 
 En el modo por defecto, el mundo no es un mapa real: es una isla generada con ruido y semilla (151), con nueve biomas,
 uno por cada hábitat de PokéAPI (el mar, la cueva, la ciudad; el volcán es el de las especies raras). Cada una de las
-40 señales es una especie distinta, ubicada en su hábitat. El modo híbrido (`?modo=real`) lleva ese mismo mundo al
-mapa real de Río Negro.
+40 señales es una especie distinta, ubicada en su hábitat. El modo híbrido (`?modo=real`) lleva el radar a Argentina
+entera: 18 de esas especies, cada una en un lugar real de su hábitat, como las Cataratas del Iguazú, la pampa del
+Salado o el mar frente a Península Valdés.
 
 **El MVP de la consigna:**
 
@@ -138,11 +139,14 @@ y el foco vuelve a la señal.
   campana del HUD silencia también el sonido.
 - **Atajos de teclado:** A instala una antena, B abre la bitácora, M silencia y ? abre los ajustes, que listan los
   atajos. Valen con el foco en el mapa o en el panel de abajo, para no dispararse al dictar con la voz (WCAG 2.1.4).
-- **Mapa real (modo híbrido):** `?modo=real` lleva el mismo mundo (señales, radar, niebla y antenas) a un mapa real,
-  con el radar base en Viedma (Río Negro). El mapa son las teselas vectoriales de OpenFreeMap, sin clave, con los
-  colores del HUD. Los biomas inventados no se dibujan, y cada señal se ubica por la distancia y el rumbo desde el radar
-  base: "la zona de Viedma, a 16 km al norte". Se entra y se sale con el enlace del inicio de turno o de los ajustes,
-  que empieza otro turno. La atribución del mapa va en el panel de abajo.
+- **Mapa real (modo híbrido):** `?modo=real` lleva la sala a Argentina entera, con el radar, la niebla y las antenas,
+  y el radar base en Viedma. Las señales son 18 de las 40 especies del mundo, sorteadas en el build dentro de 46 zonas
+  reales según su hábitat (el Mar Argentino, las Cataratas del Iguazú, la pampa, la Cueva de las Manos, ocho
+  ciudades), con la misma semilla y la misma separación; cada zona se comprobó contra las teselas que dibuja el mapa
+  ([docs/decisiones.md](docs/decisiones.md), "Las señales del mapa real"). El mapa son las teselas vectoriales de
+  OpenFreeMap, sin clave, con los colores del HUD. Los biomas inventados no se dibujan, y cada señal se nombra por su
+  zona: "Señal detectada en las Cataratas del Iguazú". Se entra y se sale con el enlace del inicio de turno o de los
+  ajustes, que empieza otro turno. La atribución del mapa va en el panel de abajo.
 
 ## Arquitectura y Stack
 
@@ -185,7 +189,8 @@ src/hooks/                 identificación con caché y cancelación; media quer
                            la hora, el clima, la noche y los parámetros de la URL
 src/lib/pokeapi/           tipos, guards y cliente tipado de PokéAPI
 src/lib/world/             generación del mundo (ruido, biomas, polígonos, agua, lugares y nombres)
-src/lib/geo/               random con semilla, encuadre, ubicación de las señales y Viedma
+src/lib/geo/               random con semilla, encuadre, Viedma y la ubicación de las señales: en el mundo y en
+                           Argentina, con su marco y sus zonas
 src/lib/weather/           el clima de Open-Meteo y los tipos que potencia cada condición
 src/lib/shift.ts           ajustes del turno: nombre en clave, color del HUD, sonido e intensidad visual
 src/lib/utils.ts           el cn que espera el CLI de shadcn (components.json); el código lo importa del paquete cn
@@ -225,13 +230,13 @@ entrada (E-18).
   "sin probar".
 
 **Dónde se equivocó y cómo lo corregí.** Todo está en [docs/errores.md](docs/errores.md), con síntoma, causa, cómo se
-detectó, arreglo y prevención. De las 31 entradas, 29 son errores de la IA. Los que más me enseñaron:
+detectó, arreglo y prevención. De las 32 entradas, 30 son errores de la IA. Los que más me enseñaron:
 
 - **Afirmar sin medir, o de memoria,** fue el error más repetido (E-03, E-05, E-08, E-09, E-10, E-11, E-12, E-13, E-15,
-  E-18, E-19, E-21, E-22, E-23, E-24, E-25, E-27, E-28, E-30 y E-31). Por ejemplo, dijo que las señales cumplían WCAG
-  2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10); que sin WebGL "el mapa no se dibuja y no hay un mensaje
-  propio", cuando se caía la página entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe
-  (E-18). En doce de esos veinte sumé una prevención; E-12, E-15, E-22, E-23, E-24, E-25, E-27 y E-31 ya los cubría una
+  E-18, E-19, E-21, E-22, E-23, E-24, E-25, E-27, E-28, E-30, E-31 y E-32). Por ejemplo, dijo que las señales cumplían
+  WCAG 2.5.8 sin medir: quedaban a 23,3 px entre centros (E-10); que sin WebGL "el mapa no se dibuja y no hay un mensaje
+  propio", cuando se caía la página entera (E-11); y que la ficha entraba deslizándose, cuando aparecía de golpe (E-18).
+  En doce de esos veintiuno sumé una prevención; E-12, E-15, E-22, E-23, E-24, E-25, E-27, E-31 y E-32 ya los cubría una
   anterior. Una de ellas es la línea de `CLAUDE.md` que obliga a probar o a escribir "sin probar".
 - **Dimensionar mal:** planificó con las "3 a 4 horas" de la consigna en lugar del tiempo real que yo tenía; lo
   corregí (E-01).
@@ -243,8 +248,8 @@ detectó, arreglo y prevención. De las 31 entradas, 29 son errores de la IA. Lo
 - **Librerías:** MapLibre v6 con Turbopack se quedaba sin su worker (E-07), y su cámara recorta el destino con el padding
   anterior, lo que dejaba la señal debajo de la ficha (E-17). Las dos se confirmaron midiendo.
 
-Quién detectó las 31: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
-encontró 13; yo, 3 (en E-31, la pregunta fue mía y la medición, de la IA); y la propia IA, otras 15: midiendo, mirando
+Quién detectó las 32: la review delegada (`/pr-review`), que disparo yo y después de la cual decido qué se arregla,
+encontró 13; yo, 3 (en E-31, la pregunta fue mía y la medición, de la IA); y la propia IA, otras 16: midiendo, mirando
 capturas o releyendo.
 
 ## Próximos Pasos
@@ -271,12 +276,6 @@ Después, lo que la entrega resuelve a medias:
   el mapa", y lo mismo si fallan el TileJSON o el sprite, sin los que MapLibre igual seguiría (sin probar); si fallan
   solo las teselas, sigue sin el fondo. El cartel ofrece solo "Reintentar", que recarga el mismo modo: falta el enlace
   al mundo generado.
-- **La niebla del mapa real, exacta con zoom:** MapLibre estira la imagen de la niebla en Mercator, y el marco pasa la
-  latitud en forma lineal: en el zoom máximo, el despeje queda unos 17 px al sur de los aros (calculado, sin medir).
-- **Señales del mapa real según el terreno:** el modo híbrido lleva cada señal a la misma posición que tiene en el
-  mundo generado, sin mirar el terreno real. Medido contra las teselas de OpenFreeMap, 22 de las 40 caen en el agua:
-  17 de las 31 de tierra (una es Electrode, de ciudad, en el Río Negro), y 2 de las 4 de mar caen en tierra, como
-  Pelipper en la captura de arriba (E-31).
 - **Una bitácora que sobreviva a la recarga:** hoy vive en memoria, y recargar la página empieza otra.
 - **Apagar los atajos de una letra:** valen solo con el foco en el mapa o en el panel de abajo, pero al cerrar una
   ficha el foco vuelve a su señal, y siguen activos. Una casilla en los ajustes para apagarlos, el otro camino que da

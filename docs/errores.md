@@ -41,6 +41,7 @@ Para agregar una entrada se puede usar `/registrar-error`.
 | E-29 | 2026-11-14 | IA       | onboarding | El inicio de turno y el arranque quedaron en hud/ y map/; CLAUDE.md los pone en src/components/onboarding/          |
 | E-30 | 2026-11-14 | IA       | hud        | El PR #10 decía que el color guardado estaba desde el primer cuadro; con la red lenta, 4,7 s en verde               |
 | E-31 | 2026-11-15 | IA       | map        | El README decía que en el mapa real una de mar "puede caer en tierra"; medido, 22 de las 40 caen en el agua         |
+| E-32 | 2026-11-15 | IA       | map        | Comentarios del marco de Argentina y un commit afirmaban de más, sin medir; corregidos antes del push               |
 
 ## Formato de cada entrada
 
@@ -543,6 +544,24 @@ Para agregar una entrada se puede usar `/registrar-error`.
   script de una sola vez, fuera del repo: las 40 posiciones del build, pasadas por el marco, contra las capas `water`,
   `landcover` y `landuse` de las teselas de OpenFreeMap, las mismas que dibuja el mapa. A zoom 9 y a zoom 11 dio lo
   mismo.
-- **Arreglo:** PR #16, "docs(docs): contar lo medido de las señales del mapa real": el README dice lo medido.
+- **Arreglo:** PR #16, "docs(docs): contar lo medido de las señales del mapa real": el README dice lo medido. Y PR
+  #17: el mapa real pasó a ser Argentina entera, con señales propias sorteadas en zonas reales de su hábitat,
+  comprobadas contra las mismas teselas (docs/decisiones.md, "Las señales del mapa real").
 - **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de probar lo que un doc afirma del comportamiento ya lo pedía,
   y no se aplicó a la consecuencia del marco.
+
+### E-32 · 2026-11-15 05:18 · IA · map
+
+- **Síntoma:** al escribir `src/lib/geo/argentina.ts` (sin commitear), dos comentarios afirmaban de más: que los 16° de
+  alto del mundo llegaban a −20,9° de latitud (llegan a −21,0°), y que las zonas del mar "caen enteras en el océano",
+  cuando el chequeo miró 65 puntos por círculo. Después, el mensaje del commit del mapa real (sin
+  pushear) decía que "el terreno bajo cada punto es el de su hábitat", cuando el chequeo de los puntos solo mira si caen
+  en el agua o en tierra.
+- **Causa:** Claude escribió la cuenta que tenía en la cabeza y resumió los chequeos como más amplios de lo que eran,
+  antes de medir o de releer qué medía cada script.
+- **Detección:** Claude. Los comentarios, enseguida y antes de commitear: al calcular los extremos del marco con node y
+  contrastar el comentario con lo que hace el script de las zonas. El mensaje, antes del push, al releerlo contra lo que
+  mide el script de los puntos.
+- **Arreglo:** los comentarios se corrigieron antes del commit, y el mensaje, con `git commit --amend` antes del push.
+- **Prevención:** ninguna nueva: la regla de `CLAUDE.md` de probar lo que un comentario o un commit afirma ya lo pedía,
+  y esta vez la detección llegó antes del commit y del push.
