@@ -10,7 +10,9 @@ paths:
 - Tokens de diseño en un solo lugar: `src/app/globals.css` (`--hud-*`, incluidos los 3 colores verde, ámbar y cian).
   En componentes se usan las clases del tema (`bg-background`, `text-hud`, `border-border`), nunca hex ni valores sueltos.
 - Animaciones con propósito: cada una comunica algo (detección, carga, cambio de estado). Con `motion` se importa de
-  `"motion/react"` y se respeta movimiento reducido (`MotionConfig reducedMotion="user"` o `useReducedMotion`).
+  `"motion/react"` y se respeta la intensidad visual de `src/lib/motion.ts` (la elegida o, sin elegir, la del sistema):
+  `useReducedIntensity()` y `MotionConfig reducedMotion` en "always" o "never". Con "user" o `useReducedMotion`, motion
+  leería solo el sistema.
 - Siempre los tres estados: carga (skeleton "Analizando firma…"), vacío y error ("Señal perdida. Reintentar").
 - Sin saltos de layout: los skeletons tienen el tamaño del contenido final; las imágenes llevan dimensiones.
 - Contraste AA en los tres colores del HUD, también sobre las superficies.
