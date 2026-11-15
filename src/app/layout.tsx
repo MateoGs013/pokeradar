@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import {
   Atkinson_Hyperlegible_Next,
+  Big_Shoulders,
   Doto,
   Martian_Mono,
 } from "next/font/google";
@@ -10,8 +11,9 @@ import { HUD_COLORS, MOTION_LEVELS, SHIFT_STORAGE_KEY } from "@/lib/shift";
 
 import "./globals.css";
 
-// Las tres voces del HUD (docs/decisiones.md, "Tipografía"). Las tres son variables: no hace
-// falta listar pesos.
+// Las voces de la sala (docs/decisiones.md, "Tipografía"): tres para la interfaz y una, la del
+// afiche, para el título y las cifras de la hoja. Las cuatro son variables: no hace falta listar
+// pesos.
 
 /**
  * Para leer: descripciones y mensajes. next/font no tiene sus métricas, así que no arma solo la
@@ -35,6 +37,18 @@ const doto = Doto({
   variable: "--font-doto",
   subsets: ["latin"],
   axes: ["ROND"],
+});
+
+/**
+ * La voz del afiche: una gótica condensada y pesada, de cartel, para el título de la hoja y sus
+ * cifras. Solo en grande. next/font no tiene sus métricas (lo avisa al compilar), así que no arma
+ * sola la fuente de respaldo: si no carga, va una condensada del sistema.
+ */
+const bigShoulders = Big_Shoulders({
+  variable: "--font-big-shoulders",
+  subsets: ["latin"],
+  adjustFontFallback: false,
+  fallback: ["Impact", "Haettenschweiler", "Arial Narrow", "sans-serif"],
 });
 
 export const metadata: Metadata = {
@@ -70,7 +84,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-hud="verde"
       // El script del <head> puede cambiar data-hud y pone data-motion antes de hidratar.
       suppressHydrationWarning
-      className={`dark ${atkinson.variable} ${martianMono.variable} ${doto.variable} h-full antialiased`}
+      className={`${atkinson.variable} ${martianMono.variable} ${doto.variable} ${bigShoulders.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: applyStoredSettings }} />

@@ -65,7 +65,7 @@ export function RadarStation({
     // recalcula al cambiar el zoom.
     const beam = document.createElement("div");
     beam.className =
-      "absolute inset-0 rounded-full bg-conic from-transparent from-75% to-hud/35 transition-opacity duration-700 motion-reduce:hidden";
+      "absolute inset-0 rounded-full bg-conic from-transparent from-75% to-glow/55 transition-opacity duration-700 motion-reduce:hidden";
     const element = document.createElement("div");
     element.className =
       "pointer-events-none rounded-full border border-hud/40 bg-(image:--radar-rings)";
@@ -73,7 +73,7 @@ export function RadarStation({
     if (mark) {
       const post = document.createElement("div");
       post.className =
-        "absolute top-1/2 left-1/2 size-2 -translate-1/2 rotate-45 bg-hud";
+        "absolute top-1/2 left-1/2 size-2 -translate-1/2 rotate-45 bg-glow outline outline-foreground";
       element.append(post);
     }
     const marker = new Marker({ element })

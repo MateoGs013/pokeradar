@@ -80,14 +80,21 @@ function borderSink(x: number, y: number): number {
   return SINK_DEPTH * t * t * (3 - 2 * t);
 }
 
-/** Terreno natural de cada celda: ruido fractal menos una caída hacia los bordes. */
-export function terrainField(seed: number): number[] {
+/**
+ * El terreno natural como función de la posición, en celdas: ruido fractal menos una caída hacia
+ * los bordes. Es continua: el relieve pintado (relief.ts) la lee también entre los centros de las
+ * celdas, y por eso su sombreado no muestra la grilla.
+ */
+export function terrainSampler(seed: number): (x: number, y: number) => number {
   const noise = createNoise2D(createRandom(seed));
-  return mapGrid(
-    (x, y) =>
-      fractalNoise(noise, x / HEIGHT_SCALE, y / HEIGHT_SCALE, 5) -
-      EDGE_FALLOFF * distanceToCenter(x, y) ** 2,
-  );
+  return (x, y) =>
+    fractalNoise(noise, x / HEIGHT_SCALE, y / HEIGHT_SCALE, 5) -
+    EDGE_FALLOFF * distanceToCenter(x, y) ** 2;
+}
+
+/** Terreno natural de cada celda: el de terrainSampler en su centro. */
+export function terrainField(seed: number): number[] {
+  return mapGrid(terrainSampler(seed));
 }
 
 /**

@@ -7,10 +7,10 @@ identificar cada una con datos reales de PokéAPI.
 - **Consigna:** [docs/consigna.md](docs/consigna.md) · **Concepto completo:** [docs/concepto.md](docs/concepto.md)
 
 <p>
-  <img src="docs/img/sala-1440.png" alt="La sala de monitoreo en desktop después de la primera vuelta del radar: la isla bajo la niebla, el círculo despejado alrededor de Campo Garza con sus señales, el HUD en las esquinas y el panel de las antenas abajo" width="100%">
+  <img src="docs/img/sala-1440.png" alt="La sala de monitoreo en desktop después de la primera vuelta del radar: la isla bajo la niebla con sus curvas de nivel, el círculo despejado alrededor de Campo Garza con sus señales y, a la izquierda, la columna de la hoja con el título, la cobertura, las referencias y las antenas" width="100%">
 </p>
 <p>
-  <img src="docs/img/mapa-real-1440.png" alt="El modo híbrido sobre el mapa real de Argentina: la niebla, el círculo despejado alrededor de Viedma con sus señales y la ficha de Pelipper, en el mar frente a Península Valdés, abierta al costado" width="68%">
+  <img src="docs/img/mapa-real-1440.png" alt="El modo híbrido sobre el mapa real de Argentina: la niebla, los círculos despejados del radar de Viedma y de una antena, con sus señales, y la ficha de Pelipper, en el mar frente a Península Valdés, abierta al costado" width="68%">
   <img src="docs/img/ficha-390.png" alt="La ficha de inteligencia de una señal en el teléfono, abierta desde abajo, con el sprite, los tipos, las estadísticas base y el nivel de amenaza" width="19.6%">
 </p>
 
@@ -130,8 +130,8 @@ y el foco vuelve a la señal.
 - **Compartir una señal:** con la ficha abierta, la URL dice cuál es (`?p=4`, Charmander; en el mapa real,
   `?modo=real&p=279`, Pelipper), y el botón del enlace la copia. Ese enlace abre la sala con la señal identificada y
   saltea el inicio de turno. Un número que no está en el mundo, o algo que no es un número, lo avisa Rotom.
-- **Intensidad visual:** en el inicio de turno y en los ajustes, "Como el sistema" (de entrada), "Completa" o
-  "Reducida". Como el sistema sigue a `prefers-reduced-motion`, también si cambia con la página abierta; elegida, gana.
+- **Intensidad visual:** en el inicio de turno y en los ajustes, "Sistema" (de entrada), "Completa" o
+  "Reducida". "Sistema" sigue a `prefers-reduced-motion`, también si cambia con la página abierta; elegida, gana.
   Reducida apaga el haz y el barrido (el radar despeja de una vez), el pulso de las señales, el texto que se descifra,
   el sprite animado y las transiciones, y la cámara salta en lugar de volar. Las animaciones propias del mapa (las
   flechas, el +/−, el doble clic y la inercia) toman una elección nueva al recargar.

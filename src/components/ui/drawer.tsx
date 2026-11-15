@@ -18,11 +18,11 @@ function DrawerContent({
   return (
     <DrawerPrimitive.Portal>
       {/* Se aclara a medida que se desliza el panel (--drawer-swipe-progress va de 0 a 1). */}
-      <DrawerPrimitive.Backdrop className="fixed inset-0 z-50 bg-background/30 opacity-[calc(1-var(--drawer-swipe-progress,0))] transition-opacity duration-300 data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0" />
+      <DrawerPrimitive.Backdrop className="fixed inset-0 z-50 bg-scrim/15 opacity-[calc(1-var(--drawer-swipe-progress,0))] transition-opacity duration-300 data-ending-style:opacity-0 data-starting-style:opacity-0 data-swiping:duration-0" />
       <DrawerPrimitive.Viewport className="fixed inset-0 z-50">
         <DrawerPrimitive.Popup
           className={cn(
-            "fixed inset-x-0 bottom-0 flex flex-col rounded-t-xl border-t border-border bg-card text-card-foreground outline-none",
+            "fixed inset-x-0 bottom-0 flex flex-col overscroll-contain rounded-t-md border-t border-foreground/60 bg-card text-card-foreground outline-none",
             // Sigue al dedo mientras se desliza (--drawer-swipe-movement-y), y entra y sale por abajo.
             "translate-y-[var(--drawer-swipe-movement-y,0px)] transition-transform duration-300 ease-out data-ending-style:translate-y-full data-starting-style:translate-y-full data-swiping:duration-0",
             className,
@@ -32,7 +32,7 @@ function DrawerContent({
           {/* La manija: muestra que el panel se puede deslizar. */}
           <div
             aria-hidden
-            className="mx-auto mt-2 h-1 w-12 shrink-0 rounded-full bg-muted"
+            className="mx-auto mt-2 h-1 w-12 shrink-0 rounded-full bg-foreground/30"
           />
           {/* Un arrastre con el mouse que empieza acá selecciona texto y no desliza el panel
               (Base UI, drawer/viewport/DrawerViewport.js). */}

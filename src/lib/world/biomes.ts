@@ -38,9 +38,9 @@ const HEIGHT_SHARES = {
 /** Dentro de la tierra baja: el 25 % más seco es árido y el 40 % más húmedo, bosque. */
 const MOISTURE_SHARES = { dry: 0.25, wet: 0.6 };
 
-/** Radios, en celdas, de las ciudades y del volcán. */
-const CITY_RADIUS = 3.5;
-const VOLCANO_RADIUS = 3;
+/** Radios, en celdas, de las ciudades y del volcán. El relieve pintado (relief.ts) usa los mismos. */
+export const CITY_RADIUS = 3.5;
+export const VOLCANO_RADIUS = 3;
 
 /** Menos celdas que esto en un hábitat es un mundo roto: no habría dónde ubicar sus especies. */
 const MIN_CELLS_PER_HABITAT = 10;

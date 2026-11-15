@@ -28,12 +28,18 @@ interface NoticeData {
 // Uno solo para toda la sala: la sala avisa desde sus manejadores, fuera del árbol de los avisos.
 const notices = createToastManager<NoticeData>();
 
-// El borde dice la prioridad: el informativo, como cualquier superficie del HUD; la alerta, con el
-// color del HUD; el crítico, con el de peligro.
-const PRIORITY_BORDER: Record<NoticePriority, string> = {
+// La franja de la izquierda dice la prioridad: el informativo, tinta tenue (la de ui/toast.tsx); la
+// alerta, el color del HUD; el crítico, el de peligro, que también toma el borde. Las dos últimas
+// llevan además su nombre escrito al lado de quien avisa: el color solo no alcanza.
+const PRIORITY_MARK: Record<NoticePriority, string> = {
   informativo: "",
-  alerta: "border-hud",
-  critico: "border-destructive",
+  alerta: "before:bg-hud",
+  critico: "border-destructive before:bg-destructive",
+};
+const PRIORITY_NAME: Record<NoticePriority, string | null> = {
+  informativo: null,
+  alerta: "Alerta",
+  critico: "Crítico",
 };
 
 interface Notice {
@@ -82,7 +88,7 @@ function NoticeList() {
     const member = toast.data?.member;
     const priority = isPriority(toast.type) ? toast.type : "informativo";
     return (
-      <Toast key={toast.id} toast={toast} className={PRIORITY_BORDER[priority]}>
+      <Toast key={toast.id} toast={toast} className={PRIORITY_MARK[priority]}>
         <ToastContent>
           {member && (
             <Image
@@ -91,11 +97,20 @@ function NoticeList() {
               width={48}
               height={48}
               unoptimized
-              className="shrink-0 [image-rendering:pixelated]"
+              className="size-10 shrink-0 border border-border bg-background [image-rendering:pixelated] md:size-12"
             />
           )}
           <div className="min-w-0 flex-1">
-            <ToastTitle />
+            <div className="flex items-baseline gap-2">
+              <ToastTitle />
+              {PRIORITY_NAME[priority] && (
+                <span
+                  className={`font-mono text-[0.625rem] tracking-wider uppercase ${priority === "critico" ? "text-destructive" : "text-foreground"}`}
+                >
+                  {PRIORITY_NAME[priority]}
+                </span>
+              )}
+            </div>
             <ToastDescription />
             <ToastAction />
           </div>
@@ -111,18 +126,19 @@ function isPriority(value: unknown): value is NoticePriority {
 }
 
 /**
- * La región de los avisos. En el celular va debajo del HUD de la izquierda, que en el caso peor
- * (el nombre más largo y el clima) llega hasta 114 px a 320 de ancho (medido): empiezan a 128.
- * Desde md, a la izquierda del lugar de la ficha, como el HUD, para no tapar su encabezado cuando
- * está abierta. De arriba, entre md y xl el HUD de la izquierda todavía ocupa dos o tres líneas
- * (medido: llega a 66 px a 768 de ancho y a 50 a 1024): empiezan a 88 px; desde xl entra en una
- * (llega a 34) y suben a 56, debajo de la hora. Va sin portal,
- * dentro de la sala: así le llega `--panel-width`, que page.tsx define en el <main>.
+ * La región de los avisos. Desde md va a la izquierda del lugar de la ficha, para no tapar su
+ * encabezado cuando está abierta. De arriba:
+ * - hasta lg va debajo del panel del turno, que llega a 126 px (medido de 320 a 767 de ancho, con
+ *   el nombre de operador más largo) o a 118 (a 768): los avisos empiezan a 136;
+ * - desde lg el panel del turno está en la columna de la hoja y los avisos van sobre la lámina, a
+ *   60 px de arriba: 12 debajo de su borde. A 1024, con la ficha abierta, empiezan en 332, a la
+ *   derecha de la columna, que termina en 328 (medido).
+ * Va sin portal, dentro de la sala: así le llega `--panel-width`, que page.tsx define en el <main>.
  */
 export function CrewNotices() {
   return (
     <ToastProvider toastManager={notices} limit={3}>
-      <ToastViewport className="fixed top-32 right-3 z-20 w-80 max-w-[calc(100%-(--spacing(6)))] md:top-22 md:right-[calc(var(--panel-width)+(--spacing(3)))] xl:top-14">
+      <ToastViewport className="fixed top-34 right-3 z-20 w-80 max-w-[calc(100%-(--spacing(6)))] md:right-[calc(var(--panel-width)+(--spacing(3)))] lg:top-15">
         <NoticeList />
       </ToastViewport>
     </ToastProvider>

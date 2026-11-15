@@ -234,7 +234,7 @@ function PanelLayout({
 }) {
   return (
     <>
-      <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 py-2 pr-2 pl-4">
+      <div className="mb-4 flex shrink-0 flex-wrap items-center gap-x-1 gap-y-1 border-b border-foreground/30 py-1.5 pr-1.5 pl-4">
         <div className="min-w-0 flex-1">{title}</div>
         {share}
         {close}

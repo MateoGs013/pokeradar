@@ -9,7 +9,7 @@ import { useEffect, useEffectEvent, useState } from "react";
 
 import { cssNumber, cssToken } from "@/components/map/css-token";
 import { type Frame, mapCorners } from "@/components/map/frame";
-import { CONTOUR_LAYER } from "@/components/map/chart";
+import { CHART_BOTTOM_LAYER } from "@/components/map/chart";
 import { PLACE_NAMES_LAYER } from "@/components/map/places";
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position, Spawn } from "@/lib/world/types";
@@ -103,11 +103,10 @@ export function Radar({
           "raster-fade-duration": 0,
         },
       },
-      // En el mundo generado, debajo de las curvas de la carta (chart.ts) y de los nombres: la
-      // niebla tapa los colores del terreno, no su forma. En el modo real no hay ni curvas ni
-      // nombres propios: la niebla va arriba de todo, también de los nombres del mapa real, que se
-      // ven al despejar.
-      [CONTOUR_LAYER, PLACE_NAMES_LAYER].find((id) => map.getLayer(id)),
+      // En el mundo generado, debajo de la carta (chart.ts) y de los nombres: la niebla tapa los
+      // colores del terreno, no su forma. En el modo real no hay ni carta ni nombres propios: la
+      // niebla va arriba de todo, también de los nombres del mapa real, que se ven al despejar.
+      [CHART_BOTTOM_LAYER, PLACE_NAMES_LAYER].find((id) => map.getLayer(id)),
     );
     // getSource<T> no valida el tipo, solo lo afirma: instanceof sí lo comprueba.
     const source = map.getSource(FOG_SOURCE);
