@@ -131,6 +131,8 @@ trabajo diario con datos geoespaciales.
 ### Niebla y radar
 
 - Todo el mapa arranca cubierto. Un barrido giratorio despeja la niebla a su alrededor.
+- La niebla tapa los colores del terreno y las señales, no su forma: encima va la carta, con la costa y
+  las curvas de nivel en el color del HUD.
 - Cada región muestra su porcentaje de cobertura.
 
 ### Antenas

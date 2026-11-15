@@ -168,6 +168,7 @@ interface MonitoringRoomProps extends Omit<
   | "night"
   | "frame"
   | "motion"
+  | "hud"
 > {
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
@@ -847,6 +848,7 @@ export function MonitoringRoom({
         night={night ?? false}
         frame={frame}
         motion={settings.motion}
+        hud={settings.hud}
       />
       <CrewNotices />
     </>

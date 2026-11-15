@@ -26,7 +26,7 @@ import { usePokemonDetail } from "@/hooks/use-pokemon-detail";
 import type { WeatherState } from "@/hooks/use-weather";
 import type { Boost } from "@/lib/boosts";
 import { reducedMotion } from "@/lib/motion";
-import type { MotionLevel } from "@/lib/shift";
+import type { HudColor, MotionLevel } from "@/lib/shift";
 import { type Bounds, clampToMap, expandToAspect } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
@@ -37,6 +37,7 @@ import type {
 } from "@/lib/world/types";
 
 import { focusSignal, releaseFocus } from "./camera";
+import { CONTOUR_LAYER, contourLayer } from "./chart";
 import { cssFontFamilies, cssNumber, cssToken } from "./css-token";
 import { type Frame, mapBounds } from "./frame";
 import { labelAnchor, PLACE_NAMES_LAYER } from "./places";
@@ -107,6 +108,8 @@ export interface MapViewProps {
   frame: Frame;
   /** La intensidad visual elegida en los ajustes, o null sin elegir (lib/shift.ts). */
   motion: MotionLevel | null;
+  /** El color del HUD elegido: las curvas de la carta lo siguen (chart.ts). */
+  hud: HudColor;
 }
 
 const BIOMES_SOURCE = "biomas";
@@ -210,18 +213,21 @@ function worldLimit(
 }
 
 /**
- * El estilo del mundo generado: el mar de afuera, los biomas, la noche y los nombres, todo propio y
- * sin teselas.
+ * El estilo del mundo generado: el mar de afuera, los biomas, la noche, las curvas de la carta y los
+ * nombres, todo propio y sin teselas. La niebla se suma después (radar.tsx), justo debajo de las
+ * curvas.
  */
 function worldStyle(
   {
     biomes,
     places,
     spawns,
+    hud,
   }: {
     biomes: BiomeCollection;
     places: readonly Place[];
     spawns: readonly Spawn[];
+    hud: HudColor;
   },
   night: BackgroundLayerSpecification,
 ): StyleSpecification {
@@ -255,9 +261,10 @@ function worldStyle(
         },
       },
       ...biomeLayers(biomes),
-      // La noche: el color del HUD sobre los biomas, debajo de la niebla (que se suma antes de los
-      // nombres) y de los nombres. De día, transparente.
+      // La noche: el fondo del HUD sobre los biomas, debajo de la niebla (que se suma antes de las
+      // curvas) y de los nombres. De día, transparente.
       night,
+      contourLayer(BIOMES_SOURCE, cssToken(`--hud-${hud}`)),
       ...placeLayers(),
     ],
   };
@@ -297,6 +304,7 @@ export function MapView({
   night,
   frame: initialFrame,
   motion,
+  hud,
 }: MapViewProps) {
   // El marco con el que se creó el mapa. No cambia mientras la página vive, porque cambiar de zona
   // recarga (zone-link.tsx); en el estado y no en la prop, para no contar con la identidad del
@@ -305,7 +313,7 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   // Props con las que se crea el mapa. El mundo se genera al compilar y no cambia: el mapa se crea
   // una sola vez, con ellas.
-  const initialRef = useRef({ biomes, bounds, places, spawns, motion });
+  const initialRef = useRef({ biomes, bounds, places, spawns, motion, hud });
   // El mapa, cuando ya cargó su estilo: recién ahí se montan las señales.
   const [loadedMap, setLoadedMap] = useState<MapLibreMap | null>(null);
   // Si el mapa ya dibujó la niebla: hasta entonces sigue el cartel de carga.
@@ -428,6 +436,18 @@ export function MapView({
     );
     nightApplied.current = true;
   }, [loadedMap, night]);
+
+  // Al cambiar el color del HUD en los ajustes, las curvas de la carta lo siguen. El color sale de
+  // su token propio (--hud-verde, …) y no de --hud-accent: data-hud lo cambia el efecto de la sala
+  // (monitoring-room.tsx), que corre después de este. En el modo real no hay curvas.
+  useEffect(() => {
+    if (!loadedMap?.getLayer(CONTOUR_LAYER)) return;
+    loadedMap.setPaintProperty(
+      CONTOUR_LAYER,
+      "line-color",
+      cssToken(`--hud-${hud}`),
+    );
+  }, [loadedMap, hud]);
 
   // La URL dice qué señal tiene la ficha abierta (`?p=25`): copiada de la barra de direcciones,
   // abre la sala con esa señal identificada. Al cerrar la ficha, se saca. replaceState y no
