@@ -179,7 +179,8 @@ interface SignalButtonProps {
  * Una señal sin identificar: un punto de 20 px con el pulso del radar. Con ese tamaño, WCAG 2.5.8
  * pide los centros a 24 px o más. Medido en pantallas verticales, la separación lo cumple desde
  * 344 px de ancho; a 320 px quedan a 22,2 px (MIN_SPACING en src/lib/geo/spawns.ts, con las
- * mediciones). El foco se ve como un contorno verde separado del botón; la señal con la ficha
+ * mediciones). En el mapa real, vertical como Argentina, es al revés: cumple a 320 px de ancho, y
+ * en horizontal, desde 345 px de alto (src/lib/geo/argentina-spawns.ts). El foco se ve como un contorno verde separado del botón; la señal con la ficha
  * abierta, como un anillo claro pegado a él, para que no se confundan cuando están en señales
  * distintas. Abre la ficha, que es un diálogo: aria-haspopup y aria-expanded, como el Trigger de
  * Base UI (dialog/trigger/DialogTrigger.js). Identificada, muestra el sprite y su nombre.

@@ -1,5 +1,5 @@
-// El cambio de zona (docs/concepto.md, "El mapa híbrido"): del mundo generado al mapa real de Río
-// Negro, y de vuelta. Es un enlace común y no uno de Next: el mapa toma el marco una sola vez, al
+// El cambio de zona (docs/concepto.md, "El mapa híbrido"): del mundo generado al mapa real de
+// Argentina, y de vuelta. Es un enlace común y no uno de Next: el mapa toma el marco una sola vez, al
 // crearse (map-view.tsx), así que cambiar de zona carga la página de nuevo, con otro turno. Lo
 // escrito en el formulario de al lado (el del inicio de turno o el de los ajustes) sin guardar se
 // pierde, y el texto lo avisa.
@@ -15,7 +15,7 @@ export function ZoneLink({ mode }: { mode: MapMode }) {
     <p className="text-sm text-muted-foreground">
       <a href={`/${modeSearch(other)}`} className={TEXT_LINK}>
         {other === "real"
-          ? "Operar sobre el mapa real, en Viedma"
+          ? "Operar sobre el mapa de Argentina"
           : "Volver al mundo generado"}
       </a>
       . Empieza otro turno, sin guardar lo que cambiaste acá.

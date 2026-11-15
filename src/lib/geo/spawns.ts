@@ -24,9 +24,10 @@ export const SPAWN_COUNT = 40;
  * Separación mínima entre señales, en celdas de 0,08°. Los botones miden 20 px, y para botones de
  * menos de 24 px WCAG 2.5.8 pide los centros a 24 px o más. Medido con 14 celdas en pantallas
  * verticales: 24,2 px a 344 px de ancho, 25,2 a 360, 26,3 a 375 y 27,3 a 390; a 320 quedan a 22,2
- * y no cumple. Con 12 quedaban a 23,3 px a 390 (docs/errores.md, E-10).
+ * y no cumple. Con 12 quedaban a 23,3 px a 390 (docs/errores.md, E-10). En el mapa real, que es
+ * vertical, las medidas son otras (argentina-spawns.ts).
  */
-const MIN_SPACING = 14;
+export const MIN_SPACING = 14;
 
 /** Las señales del mar van a lo sumo a esta cantidad de pasos de celda de la costa. */
 const SEA_REACH = 8;
@@ -45,7 +46,7 @@ export function placeSpawns(
 ): Spawn[] {
   const random = createRandom(deriveSeed(seed, "señales"));
   const candidates = candidateCells(cells);
-  const quotas = allocate(SPAWN_COUNT, speciesPerHabitat(species));
+  const quotas = allocate(SPAWN_COUNT, countByHabitat(species));
   const taken: number[] = [];
   const spawns: Spawn[] = [];
 
@@ -127,12 +128,12 @@ function stepsToLand(cells: readonly HabitatName[]): number[] {
   return steps;
 }
 
-/** Cuántas especies tiene cada hábitat. */
-function speciesPerHabitat(
-  species: readonly Species[],
+/** Cuántas especies (o señales) tiene cada hábitat. */
+export function countByHabitat(
+  items: readonly { habitat: HabitatName }[],
 ): Record<HabitatName, number> {
   const counts = perHabitat(() => 0);
-  for (const { habitat } of species) counts[habitat] += 1;
+  for (const { habitat } of items) counts[habitat] += 1;
   return counts;
 }
 
@@ -140,7 +141,7 @@ function speciesPerHabitat(
  * Reparte `total` entre los hábitats en proporción a `weights`, con el método del mayor resto:
  * cada hábitat recibe la parte entera de su cuota, y las que faltan van a los de mayor resto.
  */
-function allocate(
+export function allocate(
   total: number,
   weights: Record<HabitatName, number>,
 ): Record<HabitatName, number> {
@@ -159,7 +160,7 @@ function allocate(
 }
 
 /** Saca `count` elementos al azar de `items`, sin repetir: como sacar de una bolsa. */
-function pickSome<T>(
+export function pickSome<T>(
   items: readonly T[],
   count: number,
   random: () => number,

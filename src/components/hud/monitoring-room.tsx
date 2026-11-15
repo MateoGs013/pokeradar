@@ -37,12 +37,16 @@ import { useSearchParam } from "@/hooks/use-search-param";
 import { useWeather } from "@/hooks/use-weather";
 import type { Boost } from "@/lib/boosts";
 import {
+  ARGENTINA_BOUNDS,
+  ARGENTINA_GRID,
+  ARGENTINA_RADAR_BASE,
+} from "@/lib/geo/argentina";
+import {
   downloadCsv,
   type LogEntry,
   reportFileName,
   toCsv,
 } from "@/lib/report";
-import { VIEDMA } from "@/lib/geo/viedma";
 import { REDUCED_MOTION_QUERY, systemMotion } from "@/lib/motion";
 import { NIGHT_BOOST } from "@/lib/night";
 import { playCry, playPing } from "@/lib/sound/sounds";
@@ -168,13 +172,30 @@ interface MonitoringRoomProps extends Omit<
   seed: number;
   /** Huella del mundo: si coincide entre local y producción, el mundo es el mismo. */
   hash: string;
+  /** Las señales del mapa real, en Argentina (argentina-spawns.ts). */
+  realSpawns: MapViewProps["spawns"];
 }
 
 export function MonitoringRoom({
   seed,
   hash,
+  realSpawns,
   ...mapProps
 }: MonitoringRoomProps) {
+  // Dónde se dibuja el mundo (docs/concepto.md, "El mapa híbrido"): `?modo=real` lo lleva al mapa
+  // real de Argentina, con sus señales, su niebla y el radar base en Viedma (argentina.ts). La URL
+  // se lee en el cliente: en el servidor es el mundo, y el mapa se monta recién en el cliente, ya
+  // con el modo de la URL.
+  const realMode = useSearchParam("modo") === "real";
+  const { places } = mapProps;
+  const spawns = realMode ? realSpawns : mapProps.spawns;
+  const bounds = realMode ? ARGENTINA_BOUNDS : mapProps.bounds;
+  const grid = realMode ? ARGENTINA_GRID : mapProps.grid;
+  const radarBase = realMode ? ARGENTINA_RADAR_BASE : mapProps.radarBase;
+  const frame = useMemo(
+    () => (realMode ? realFrame() : worldFrame(places)),
+    [realMode, places],
+  );
   const [detected, setDetected] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
@@ -187,7 +208,7 @@ export function MonitoringRoom({
   // Las señales variocolor: las que da la semilla, y la que fuerza la URL.
   const forcedShiny = useForcedShiny();
   const shiny: ReadonlySet<number> = new Set(
-    mapProps.spawns
+    spawns
       .map(({ speciesId }) => speciesId)
       .filter((id) => id === forcedShiny || isShiny(seed, id)),
   );
@@ -210,7 +231,7 @@ export function MonitoringRoom({
   const { settings, saved, hydrated } = useShiftSettings();
   // Un enlace compartido saltea el inicio de turno: abre la sala con la señal identificada, con los
   // ajustes de por defecto si no hay guardados.
-  const { shared, invalid } = useSharedSignal(mapProps.spawns);
+  const { shared, invalid } = useSharedSignal(spawns);
   const started = hydrated && (saved || shared !== null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   // El sonido suena si se prendió en los ajustes y los avisos no están silenciados: el botón de la
@@ -232,16 +253,6 @@ export function MonitoringRoom({
   // Lo último que pasó con el radar, a la vista: el resultado de una vuelta (la del radar base dice
   // también cómo seguir), la antena instalada o un punto inválido.
   const [radarStatus, setRadarStatus] = useState("");
-  // Dónde se dibuja el mundo (docs/concepto.md, "El mapa híbrido"): `?modo=real` lo lleva al mapa
-  // real de Río Negro, con el radar base en Viedma. La URL se lee en el cliente: en el servidor es
-  // el mundo, y el mapa se monta recién en el cliente, ya con el modo de la URL.
-  const realMode = useSearchParam("modo") === "real";
-  const { radarBase, places, spawns } = mapProps;
-  const frame = useMemo(
-    () =>
-      realMode ? realFrame(radarBase, VIEDMA, "Viedma") : worldFrame(places),
-    [realMode, radarBase, places],
-  );
   // La etiqueta de cada señal, la misma de su botón. Las señales se ubican al compilar y no
   // cambian: cambia solo con el marco.
   const labels = useMemo(
@@ -443,7 +454,7 @@ export function MonitoringRoom({
       endedAt: now,
       coverage,
       detected: detected.size,
-      total: mapProps.spawns.length,
+      total: spawns.length,
       antennas: antennas.length,
       entries: log,
     });
@@ -488,7 +499,7 @@ export function MonitoringRoom({
 
   // El punto elegido tiene que estar dentro del mundo: afuera no hay nada que despejar.
   const onInstall = ([lng, lat]: Position) => {
-    const [[west, south], [east, north]] = mapProps.bounds;
+    const [[west, south], [east, north]] = bounds;
     if (lng < west || lng > east || lat < south || lat > north) {
       const outside = "Ese punto está fuera del mundo";
       setRadarStatus(outside);
@@ -630,7 +641,7 @@ export function MonitoringRoom({
         </span>{" "}
         <span className="whitespace-nowrap">
           <span className="text-foreground">
-            {detected.size} de {mapProps.spawns.length}
+            {detected.size} de {spawns.length}
           </span>{" "}
           señales ·
         </span>{" "}
@@ -813,6 +824,10 @@ export function MonitoringRoom({
       </p>
       <MapLoader
         {...mapProps}
+        spawns={spawns}
+        bounds={bounds}
+        grid={grid}
+        radarBase={radarBase}
         antennas={antennas}
         installing={installing}
         onToggleInstall={toggleInstall}
