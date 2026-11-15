@@ -72,7 +72,7 @@ import { CoverageScale } from "./coverage-scale";
 import { ShiftEnd, type ShiftSummary } from "./shift-end";
 import { FIELD_LABEL, ShiftForm } from "./shift-form";
 import { ShiftLog } from "./shift-log";
-import { TEXT_LINK, ZoneLink } from "./zone-link";
+import { TEXT_LINK, ZoneLink, ZoneSwitch } from "./zone-link";
 
 const percent = new Intl.NumberFormat("es-AR", {
   style: "percent",
@@ -883,23 +883,32 @@ export function MonitoringRoom({
           )}
           {/* Las antenas, contadas con su marca del mapa: un rombo lleno por cada una instalada y uno
               vacío por cada lugar libre. Debajo, la acción del turno (llena) y la bitácora. */}
-          <div className="flex w-full flex-wrap items-center gap-2 lg:border-t lg:border-foreground/30 lg:pt-3">
-            <p className="flex basis-full items-center gap-2.5 whitespace-nowrap">
-              <span aria-hidden className="flex gap-2 pl-0.5">
-                {Array.from({ length: MAX_ANTENNAS }, (_, index) => (
-                  <span
-                    key={index}
-                    className={`size-2 rotate-45 border border-foreground ${index < antennas.length ? "bg-hud" : ""}`}
-                  />
-                ))}
-              </span>
-              <span>
-                Antenas{" "}
-                <span className="text-foreground">
-                  {antennas.length} de {MAX_ANTENNAS}
+          <div className="flex w-full flex-wrap items-center gap-2 lg:border-t lg:border-foreground/30 lg:pt-2">
+            <div className="flex min-h-5 basis-full items-center gap-2 pointer-coarse:min-h-9">
+              <p className="flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap font-stretch-condensed">
+                <span aria-hidden className="flex gap-1.5 pl-0.5">
+                  {Array.from({ length: MAX_ANTENNAS }, (_, index) => (
+                    <span
+                      key={index}
+                      className={`size-2 rotate-45 border border-foreground ${index < antennas.length ? "bg-hud" : ""}`}
+                    />
+                  ))}
                 </span>
-              </span>
-            </p>
+                <span>
+                  {/* En un celular angosto la palabra no entra al lado del cambio de zona: queda
+                    para el lector de pantalla, y los rombos dicen qué se cuenta. */}
+                  <span className="max-[379px]:sr-only">Antenas </span>
+                  <span className="text-foreground">
+                    {antennas.length} de {MAX_ANTENNAS}
+                  </span>
+                </span>
+              </p>
+              {/* La zona de operaciones, a la vista: antes solo se cambiaba desde el inicio de turno
+                  o los ajustes. El modo se lee en el cliente, así que aparece al hidratar, en una
+                  fila que ya reserva su alto: 20 px con mouse, lo que mide el control. Al tacto
+                  reserva 36 y el control mide 38 (sin probar si se nota al hidratar). */}
+              {hydrated && <ZoneSwitch mode={frame.mode} />}
+            </div>
             <Button
               variant="solid"
               aria-pressed={installing}
