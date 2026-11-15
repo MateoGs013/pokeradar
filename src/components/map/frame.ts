@@ -2,11 +2,12 @@
 // niebla, las señales y las antenas trabajan siempre en las coordenadas del mundo inventado, cerca
 // del ecuador, donde un grado de longitud y uno de latitud miden casi lo mismo. El marco las pasa a
 // las del mapa solo en el borde con MapLibre: en el modo mundo es la identidad; en el modo real,
-// lleva el mundo a Río Negro.
+// lleva el mundo a Argentina (argentina.ts).
+import { ARGENTINA_SCALE, fromReal, toReal, zoneOf } from "@/lib/geo/argentina";
 import type { Bounds } from "@/lib/geo/bounds";
 import type { Position, Spawn } from "@/lib/world/types";
 
-import { compassDirection, describePlace } from "./places";
+import { describePlace } from "./places";
 
 export type MapMode = "mundo" | "real";
 
@@ -23,7 +24,7 @@ export interface Frame {
   fromMap: (position: Position) => Position;
   /**
    * Cuántos niveles de zoom más hacen falta para ver el mundo del mismo tamaño en pantalla: cuenta
-   * la escala y, en el modo real, el estiramiento de Mercator.
+   * la escala del marco.
    */
   zoomOffset: number;
   /** Dónde está una señal, en palabras: para su botón y para la ficha. */
@@ -41,50 +42,19 @@ export function worldFrame(places: Parameters<typeof describePlace>[1]): Frame {
 }
 
 /**
- * Cuántos grados de latitud real mide un grado del mundo: los 12° de alto del mundo quedan en unos
- * 113 km, y los 16° de ancho, en unos 151 km.
+ * El mundo sobre el mapa real de Argentina, con sus propias señales (argentina-spawns.ts). El marco
+ * es lineal en Mercator (argentina.ts, toReal): un grado del mundo ocupa en pantalla lo que
+ * ARGENTINA_SCALE grados de longitud, en cualquier latitud.
  */
-const REAL_SCALE = 0.085;
-
-/** Kilómetros por grado de latitud. */
-const KM_PER_DEGREE = 111.32;
-
-/**
- * El mundo sobre el mapa real: el radar base (`anchor`, en el mundo) cae en `origin` (real). Lejos
- * del ecuador, un grado de longitud mide menos que uno de latitud (por el coseno de la latitud):
- * la longitud se estira en esa proporción, así un círculo del mundo sigue siendo un círculo en el
- * mapa (Mercator conserva las formas chicas).
- */
-export function realFrame(
-  anchor: Position,
-  origin: Position,
-  originName: string,
-): Frame {
-  const stretch = 1 / Math.cos((origin[1] * Math.PI) / 180);
+export function realFrame(): Frame {
   return {
     mode: "real",
-    toMap: ([lng, lat]) => [
-      origin[0] + (lng - anchor[0]) * REAL_SCALE * stretch,
-      origin[1] + (lat - anchor[1]) * REAL_SCALE,
-    ],
-    fromMap: ([lng, lat]) => [
-      anchor[0] + (lng - origin[0]) / (REAL_SCALE * stretch),
-      anchor[1] + (lat - origin[1]) / REAL_SCALE,
-    ],
-    // En Mercator, un grado del mundo ocupa en pantalla lo que `REAL_SCALE * stretch` grados de
-    // longitud del mapa: el zoom compensa los dos.
-    zoomOffset: Math.log2(1 / (REAL_SCALE * stretch)),
+    toMap: toReal,
+    fromMap: fromReal,
+    zoomOffset: Math.log2(1 / ARGENTINA_SCALE),
     // Sobre el mapa real, los biomas y los lugares inventados no corresponden a lo que se ve: la
-    // señal se ubica por la distancia y el rumbo desde el radar base.
-    describe: ({ position }) => {
-      const east = position[0] - anchor[0];
-      const north = position[1] - anchor[1];
-      const km = Math.round(
-        Math.hypot(east, north) * REAL_SCALE * KM_PER_DEGREE,
-      );
-      if (km < 1) return `la zona de ${originName}`;
-      return `la zona de ${originName}, a ${km} km al ${compassDirection(east, north)}`;
-    },
+    // señal se nombra por la zona real donde está.
+    describe: (spawn) => zoneOf(spawn).name,
   };
 }
 

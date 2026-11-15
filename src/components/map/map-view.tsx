@@ -27,7 +27,7 @@ import type { WeatherState } from "@/hooks/use-weather";
 import type { Boost } from "@/lib/boosts";
 import { reducedMotion } from "@/lib/motion";
 import type { MotionLevel } from "@/lib/shift";
-import { type Bounds, expandToAspect } from "@/lib/geo/bounds";
+import { type Bounds, clampToMap, expandToAspect } from "@/lib/geo/bounds";
 import type { PokemonDetail } from "@/lib/pokeapi/detail";
 import type {
   BiomeCollection,
@@ -189,19 +189,23 @@ function placeLayers(): SymbolLayerSpecification[] {
 
 /**
  * Límite del mapa: el mundo (`bounds`, en coordenadas del mundo) agrandado a la proporción actual del
- * contenedor y después pasado al mapa. Se agranda antes de convertir porque `expandToAspect` cuenta
- * la proporción en grados, que solo vale cerca del ecuador, como el mundo inventado: con los límites
- * ya en el mapa real, a la latitud de Viedma el límite salía angosto y el mundo quedaba cortado en
- * una pantalla apaisada. El marco estira la longitud justo para que el mundo conserve su forma.
+ * contenedor, pasado al mapa y recortado a lo que MapLibre acepta (`clampToMap`). Se agranda antes
+ * de convertir porque `expandToAspect` cuenta la proporción en grados, que solo vale cerca del
+ * ecuador, como el mundo inventado: lejos del ecuador, Mercator estira la latitud. El marco real es
+ * lineal en Mercator (frame.ts), así que en grados del mundo la proporción es la de la pantalla.
+ * Después se recorta porque el marco real agranda: en una pantalla muy angosta o muy ancha, el
+ * límite pasaría los 85° de latitud o los 179° de longitud (E-13).
  */
 function worldLimit(
   frame: Frame,
   bounds: Bounds,
   container: HTMLElement,
 ): Bounds {
-  return mapBounds(
-    frame,
-    expandToAspect(bounds, container.clientWidth / container.clientHeight),
+  return clampToMap(
+    mapBounds(
+      frame,
+      expandToAspect(bounds, container.clientWidth / container.clientHeight),
+    ),
   );
 }
 
@@ -515,7 +519,7 @@ export function MapView({
       // moverlo con las flechas). `locale` traduce ese nombre, que por defecto es "Map".
       locale: {
         "Map.Title":
-          frame.mode === "real" ? "Mapa de Río Negro" : "Mapa del mundo",
+          frame.mode === "real" ? "Mapa de Argentina" : "Mapa del mundo",
       },
       // Sin el control de atribución de MapLibre: abajo a la derecha, a 390 px queda debajo del
       // panel de las antenas. La del mapa real va en ese panel (monitoring-room.tsx).

@@ -49,3 +49,15 @@ export function expandToAspect(bounds: Bounds, aspect: number): Bounds {
     [east, Math.min(north + extra, MAX_LATITUDE)],
   ];
 }
+
+/**
+ * Recorta un límite ya en coordenadas del mapa a ±85° de latitud y ±179° de longitud, por lo mismo
+ * que `expandToAspect` no los pasa (ver arriba). Hace falta con el marco real (frame.ts), que lleva
+ * el mundo agrandado al mapa con otra escala.
+ */
+export function clampToMap([[west, south], [east, north]]: Bounds): Bounds {
+  return [
+    [Math.max(west, -MAX_LONGITUDE), Math.max(south, -MAX_LATITUDE)],
+    [Math.min(east, MAX_LONGITUDE), Math.min(north, MAX_LATITUDE)],
+  ];
+}
